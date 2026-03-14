@@ -235,7 +235,31 @@ app.post('/aprobar_pedido/:id', async (req, res) => {
         res.redirect('/pedidos');
     }
 });
+// ---------------- MÁQUINAS Y EQUIPOS ----------------
+app.get('/maquinas', async (req, res) => {
+    if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
+    
+    const { data: maquinas } = await supabase.from('maquinas').select('*').order('nombre', { ascending: true });
+    res.render('maquinas', { maquinas: maquinas || [] });
+});
 
+app.post('/agregar_maquina', async (req, res) => {
+    await supabase.from('maquinas').insert([{ 
+        nombre: req.body.nombre,
+        marca: req.body.marca,
+        modelo: req.body.modelo,
+        fabricante: req.body.fabricante,
+        codigo: req.body.codigo,
+        estado: req.body.estado,
+        observaciones: req.body.observaciones
+    }]);
+    res.redirect('/maquinas');
+});
+
+app.get('/eliminar_maquina/:id', async (req, res) => {
+    await supabase.from('maquinas').delete().eq('id', req.params.id);
+    res.redirect('/maquinas');
+});
 // ---------------- USUARIOS Y MANTENIMIENTO ----------------
 app.get('/usuarios', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
