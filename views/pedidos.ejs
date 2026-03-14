@@ -1,0 +1,137 @@
+<%- include('partials/header') %>
+
+<h1>📋 Órdenes de Producción / Envoltura</h1>
+<hr>
+
+<% if (session.rol === 'fabriquin' || session.rol === 'fabricacion') { %>
+    <h2>Generar Nueva Orden de Fabricación</h2>
+    <form action="/agregar_pedido" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+        <label><strong>¿Cuántos tabacos vas a fabricar?</strong></label><br><br>
+        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px;">
+        <button type="submit" style="background: #22c55e;">Generar Orden</button>
+    </form>
+    <hr>
+<% } %>
+
+<% if (session.rol === 'envolvedor') { %>
+    <h2>Solicitar Tabacos para Envolver</h2>
+    <form action="/agregar_pedido" method="POST" style="background: white; padding: 20px; border-radius: 8px; border-left: 5px solid #3b82f6;">
+        <label><strong>¿Cuántos tabacos vas a retirar para envolver?</strong></label><br><br>
+        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px;">
+        <button type="submit" style="background: #3b82f6;">Solicitar Material</button>
+    </form>
+    <hr>
+<% } %>
+
+<h2>Historial de Órdenes</h2>
+
+<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; display: flex; gap: 20px; align-items: center;">
+    <div>
+        <strong>🔎 Buscar Usuario: </strong><br>
+        <input type="text" id="inputUsuario" placeholder="Ej: rene, carlos..." style="width: 200px; padding: 6px; margin-top: 5px;">
+    </div>
+    <div>
+        <strong>⚙️ Filtrar por Tipo: </strong><br>
+        <select id="selectTipo" style="padding: 6px; margin-top: 5px; width: 150px;">
+            <option value="todos">Todos los pedidos</option>
+            <option value="fabricación">Solo Fabricación</option>
+            <option value="envoltura">Solo Envoltura</option>
+        </select>
+    </div>
+</div>
+
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Usuario</th>
+        <th>Tipo</th>
+        <th>Cantidad</th>
+        <th>Material Requerido</th>
+        <th>Estado</th>
+        <% if (session.rol === 'admin') { %>
+            <th>Acción Admin</th>
+        <% } %>
+    </tr>
+
+    <% pedidos.forEach(function(p) { %>
+    <tr class="fila-pedido">
+        <td><%= p.id %></td>
+        <td class="col-usuario" style="text-transform: capitalize;"><strong><%= p.usuario %></strong></td>
+        <td class="col-tipo">
+            <% if (p.material === 'Tabacos') { %> 🏭 Fabricación <% } else { %> 🎁 Envoltura <% } %>
+        </td>
+        <td><strong><%= p.cantidad %></strong> tabacos</td>
+        <td style="text-align: left;">
+            <% if (p.material === 'Tabacos') { %>
+                🍂 <b>Tripa:</b> <%= p.tripa_necesaria %> kg <br>
+                📦 <b>Capa:</b> <%= p.capa_necesaria %> kg <br>
+                🍁 <b>Capote:</b> <%= p.capote_necesario %> kg <br>
+                🧺 <b>Cestas:</b> <%= p.cestas_necesarias %>
+            <% } else { %>
+                📄 <b>Papel de Envoltura:</b> <%= p.papel_necesario %> kg <br>
+            <% } %>
+        </td>
+        <td>
+            <% if (p.estado === 'pendiente') { %> 🟡 Pendiente <% } %>
+            <% if (p.estado === 'aprobado') { %> 🟢 Aprobado <% } %>
+            <% if (p.estado === 'rechazado') { %> 🔴 Rechazado <% } %>
+        </td>
+        
+        <% if (session.rol === 'admin') { %>
+            <td>
+                <% if (p.estado === 'pendiente') { %>
+                    <form action="/aprobar_pedido/<%= p.id %>" method="POST" style="margin:0;">
+                        
+                        <% if (p.material === 'Tabacos') { %>
+                            <select name="cesta_seleccionada" required style="width:100%; margin-bottom: 5px;">
+                                <option value="">Elige color de cesta...</option>
+                                <% cestas_inventario.forEach(function(cesta) { %>
+                                    <option value="<%= cesta.material %>"><%= cesta.material %> (Disp: <%= cesta.cantidad %>)</option>
+                                <% }); %>
+                            </select>
+                            <br>
+                        <% } else { %>
+                            <input type="hidden" name="cesta_seleccionada" value="ninguna">
+                        <% } %>
+
+                        <button type="submit" style="background: #22c55e; margin-bottom: 5px; width: 100%;">✔ Aprobar</button>
+                    </form>
+                    <form action="/rechazar_pedido/<%= p.id %>" method="POST" style="margin:0;">
+                        <button type="submit" style="background: #ef4444; width: 100%;">✖ Rechazar</button>
+                    </form>
+                <% } else { %>
+                    -
+                <% } %>
+            </td>
+        <% } %>
+    </tr>
+    <% }); %>
+</table>
+
+<script>
+    function filtrarPedidos() {
+        let textoUsuario = document.getElementById('inputUsuario').value.toLowerCase();
+        let tipoSeleccionado = document.getElementById('selectTipo').value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-pedido');
+        
+        filas.forEach(fila => {
+            let nombreUsuario = fila.querySelector('.col-usuario').innerText.toLowerCase();
+            let tipoPedido = fila.querySelector('.col-tipo').innerText.toLowerCase();
+            
+            let coincideUsuario = nombreUsuario.includes(textoUsuario);
+            let coincideTipo = (tipoSeleccionado === 'todos') || tipoPedido.includes(tipoSeleccionado);
+            
+            if (coincideUsuario && coincideTipo) {
+                fila.style.display = ''; 
+            } else {
+                fila.style.display = 'none';
+            }
+        });
+    }
+
+    // Escuchamos cuando el admin escribe o cambia la opción
+    document.getElementById('inputUsuario').addEventListener('keyup', filtrarPedidos);
+    document.getElementById('selectTipo').addEventListener('change', filtrarPedidos);
+</script>
+
+<%- include('partials/footer') %>

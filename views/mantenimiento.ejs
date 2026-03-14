@@ -1,0 +1,42 @@
+<%- include('partials/header') %>
+
+<h1>🔧 Historial de Mantenimiento</h1>
+<hr>
+
+<h2>Registrar Mantenimiento</h2>
+<form action="/agregar_mantenimiento" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+    <input type="text" name="maquina" placeholder="Nombre de Máquina" required>
+    <select name="tipo">
+        <option value="Preventivo">Preventivo</option>
+        <option value="Correctivo">Correctivo</option>
+    </select>
+    <input type="text" name="descripcion" placeholder="Descripción de la falla o trabajo" required style="width: 250px;">
+    <input type="date" name="fecha" required>
+    <button type="submit" style="background: #22c55e;">Guardar Registro</button>
+</form>
+
+<hr>
+
+<h2>Registros Anteriores</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Máquina</th>
+        <th>Tipo</th>
+        <th>Descripción</th>
+        <th>Fecha</th>
+    </tr>
+    <% mantenimientos.forEach(function(m) { %>
+    <tr>
+        <td><%= m.id %></td>
+        <td><strong><%= m.maquina %></strong></td>
+        <td>
+            <% if (m.tipo === 'Preventivo') { %> 🔵 Preventivo <% } else { %> 🔴 Correctivo <% } %>
+        </td>
+        <td><%= m.descripcion %></td>
+        <td><%= m.fecha %></td>
+    </tr>
+    <% }); %>
+</table>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Gato Negro - Sistema</title>
+    <style>
+        body { margin:0; font-family:Arial; background:#f4f6f9; }
+        .topbar { background:#111; color:white; padding:15px; font-size:20px; }
+        .container { display:flex; }
+        .sidebar { width:230px; background:#222; color:white; height:100vh; padding:20px; }
+        .sidebar h2 { margin-top:0; }
+        .sidebar a { display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px; }
+        .sidebar a:hover { background:#444; }
+        .content { flex:1; padding:30px; }
+        .cards { display:flex; gap:20px; margin-bottom:30px; }
+        .card { background:white; padding:20px; flex:1; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
+        table { width:100%; border-collapse:collapse; background:white; }
+        th, td { padding:10px; border:1px solid #ddd; text-align:center; }
+        th { background:#333; color:white; }
+        form { margin-bottom:20px; }
+        input { padding:8px; margin-right:10px; }
+        button { padding:8px 15px; background:#111; color:white; border:none; border-radius:5px; cursor:pointer; }
+        button:hover { background:#333; }
+    </style>
+</head>
+<body>
+
+<div class="topbar">🐾 Gato Negro - Sistema de Gestión</div>
+<div class="container">
+
+<div class="sidebar">
+    <h2>Menú</h2>
+    <% if (session.rol === "admin") { %>
+        <a href="/inventario">📦 Inventario</a>
+        <a href="/mantenimiento">🔧 Mantenimiento</a>
+        <a href="/pedidos">📋 Pedidos</a>
+        <a href="/usuarios">👥 Usuarios</a>
+    <% } else if (session.rol === "fabricacion" || session.rol === "fabriquin" || session.rol === "envolvedor") { %>
+        <a href="/pedidos">📋 Pedidos</a>
+    <% } else if (session.rol === "mantenimiento") { %>
+        <a href="/mantenimiento">🔧 Mantenimiento</a>
+    <% } %>
+    <a href="/logout">🚪 Cerrar sesión</a>
+</div>
+
+<div class="content">

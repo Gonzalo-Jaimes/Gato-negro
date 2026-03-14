@@ -1,0 +1,114 @@
+<%- include('partials/header') %>
+
+<h1>📦 Panel de Inventario</h1>
+
+<div class="cards" style="flex-wrap: wrap;">
+    <% if (materiales.length === 0) { %>
+        <p style="color: #666; font-style: italic;">No hay materiales registrados.</p>
+    <% } %>
+    
+    <% materiales.forEach(function(m) { 
+        let nombre = m.material.toLowerCase();
+        let unidad = nombre.includes('cesta') ? 'unds' : 'kg';
+        let cantidadLimpia = parseFloat(m.cantidad).toFixed(2);
+        if (cantidadLimpia.endsWith('.00')) cantidadLimpia = parseInt(cantidadLimpia);
+    %>
+    <div class="card tarjeta-inventario" data-nombre="<%= nombre %>" style="border-left: 5px solid #333; min-width: 200px; flex: 1 1 200px;">
+        <h3 style="text-transform: capitalize; margin-top: 0;"><%= m.material %></h3>
+        <h2 style="margin-bottom: 0;"><%= cantidadLimpia %> <span style="font-size: 16px; color: #666;"><%= unidad %></span></h2>
+    </div>
+    <% }); %>
+</div>
+
+<hr>
+
+<h2>Ingresar Nuevo Bulto / Lote</h2>
+<form action="/agregar_material" method="POST" style="background: white; padding: 20px; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+    <input type="text" name="material" placeholder="Ej: capa cubana, papel..." required style="width: 250px;">
+    <input type="number" name="cantidad" step="0.01" placeholder="Cantidad" required style="width: 150px;">
+    <button type="submit" style="background: #22c55e;">➕ Registrar Ingreso</button>
+</form>
+
+<hr>
+
+<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px;">
+    <strong>🔎 Buscar material: </strong>
+    <input type="text" id="inputBusqueda" placeholder="Escribe 'capa', 'papel'..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+</div>
+
+<div style="display: flex; gap: 20px; flex-wrap: wrap;">
+    
+    <div style="flex: 1; min-width: 300px;">
+        <h3>📊 Stock Consolidado</h3>
+        <table>
+            <tr>
+                <th>Material</th>
+                <th>Stock Disponible</th>
+                <th>Ajustar</th>
+            </tr>
+            <% materiales.forEach(function(material) { 
+                let cantidadLimpiaT = parseFloat(material.cantidad).toFixed(2);
+                if (cantidadLimpiaT.endsWith('.00')) cantidadLimpiaT = parseInt(cantidadLimpiaT);
+                let unidadT = material.material.toLowerCase().includes('cesta') ? 'unds' : 'kg';
+            %>
+            <tr class="fila-total">
+                <td style="text-transform: capitalize;"><strong><%= material.material %></strong></td>
+                <td><%= cantidadLimpiaT %> <%= unidadT %></td>
+                <td>
+                    <a href="/eliminar/<%= material.id %>">
+                        <button style="background: #ef4444; padding: 4px 10px;">Vaciar</button>
+                    </a>
+                </td>
+            </tr>
+            <% }); %>
+        </table>
+    </div>
+
+    <div style="flex: 1; min-width: 400px;">
+        <h3>📅 Historial de Entradas (Kardex)</h3>
+        <table>
+            <tr>
+                <th>ID</th>
+                <th>Fecha Ingreso</th>
+                <th>Material</th>
+                <th>Kilos / Unds</th>
+            </tr>
+            <% historial.forEach(function(h) { 
+                let unidadH = h.material.toLowerCase().includes('cesta') ? 'unds' : 'kg';
+            %>
+            <tr class="fila-historial">
+                <td>#<%= h.id %></td>
+                <td><strong><%= h.fecha %></strong></td>
+                <td style="text-transform: capitalize;"><%= h.material %></td>
+                <td style="color: green; font-weight: bold;">+ <%= h.cantidad %> <%= unidadH %></td>
+            </tr>
+            <% }); %>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    document.getElementById('inputBusqueda').addEventListener('keyup', function() {
+        let textoBusqueda = this.value.toLowerCase();
+        
+        // Filtrar tarjetas
+        document.querySelectorAll('.tarjeta-inventario').forEach(tarjeta => {
+            tarjeta.style.display = tarjeta.getAttribute('data-nombre').includes(textoBusqueda) ? '' : 'none';
+        });
+
+        // Filtrar tabla Stock Total (columna 0 es material)
+        document.querySelectorAll('.fila-total').forEach(fila => {
+            let nombreMaterial = fila.cells[0].innerText.toLowerCase();
+            fila.style.display = nombreMaterial.includes(textoBusqueda) ? '' : 'none';
+        });
+
+        // Filtrar tabla Historial (columna 2 es material)
+        document.querySelectorAll('.fila-historial').forEach(fila => {
+            let nombreMaterial = fila.cells[2].innerText.toLowerCase();
+            fila.style.display = nombreMaterial.includes(textoBusqueda) ? '' : 'none';
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

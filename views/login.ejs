@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>Gato Negro - Sistema</title>
+
+<style>
+
+body{
+margin:0;
+font-family:Arial;
+background:linear-gradient(135deg,#1f1f1f,#444);
+height:100vh;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.login-box{
+background:white;
+padding:40px;
+border-radius:12px;
+width:350px;
+text-align:center;
+box-shadow:0 10px 25px rgba(0,0,0,0.3);
+}
+
+.logo{
+width:120px;
+margin-bottom:20px;
+}
+
+h1{
+margin:0;
+color:#222;
+}
+
+.subtitulo{
+color:#777;
+margin-bottom:25px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-bottom:15px;
+border:1px solid #ccc;
+border-radius:6px;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#000;
+color:white;
+border:none;
+border-radius:6px;
+font-size:16px;
+cursor:pointer;
+}
+
+button:hover{
+background:#333;
+}
+
+.footer{
+margin-top:20px;
+font-size:12px;
+color:#999;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="login-box">
+
+<img src="/img/logo.png" class="logo">
+
+<h1>Gato Negro</h1>
+
+<p class="subtitulo">Sistema de Gestión</p>
+
+<form action="/login" method="POST">
+
+<input type="text" name="usuario" placeholder="Usuario">
+
+<input type="password" name="password" placeholder="Contraseña">
+
+<button type="submit">Iniciar sesión</button>
+
+</form>
+
+<div class="footer">
+Sistema interno
+</div>
+
+</div>
+
+</body>
+
+</html>

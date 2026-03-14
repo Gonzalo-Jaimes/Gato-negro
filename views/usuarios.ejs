@@ -1,0 +1,47 @@
+<%- include('partials/header') %>
+
+<h1>👥 Gestión de Usuarios</h1>
+<hr>
+
+<h2>Crear nuevo usuario</h2>
+<form action="/agregar_usuario" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+    <input type="text" name="usuario" placeholder="Nombre de usuario" required>
+    <input type="password" name="password" placeholder="Contraseña" required>
+    <select name="rol">
+        <option value="admin">Admin</option>
+        <option value="fabriquin">Fabriquín</option>
+        <option value="envolvedor">Envolvedor</option>
+        <option value="mantenimiento">Mantenimiento</option>
+    </select>
+    <button type="submit" style="background: #22c55e;">Crear usuario</button>
+</form>
+
+<hr>
+
+<h2>Usuarios registrados</h2>
+<table>
+    <tr>
+        <th>ID</th>
+        <th>Usuario</th>
+        <th>Rol</th>
+        <th>Acción</th>
+    </tr>
+    <% usuarios.forEach(function(u) { %>
+    <tr>
+        <td><%= u.id %></td>
+        <td><strong><%= u.usuario %></strong></td>
+        <td style="text-transform: capitalize;"><%= u.rol %></td>
+        <td>
+            <% if (u.usuario !== 'admin') { %>
+                <a href="/eliminar_usuario/<%= u.id %>">
+                    <button style="background: #ef4444; padding: 4px 10px;">🗑 Eliminar</button>
+                </a>
+            <% } else { %>
+                -
+            <% } %>
+        </td>
+    </tr>
+    <% }); %>
+</table>
+
+<%- include('partials/footer') %>
