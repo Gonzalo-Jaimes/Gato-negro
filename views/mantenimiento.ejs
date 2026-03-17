@@ -1,42 +1,127 @@
 <%- include('partials/header') %>
 
-<h1>🔧 Historial de Mantenimiento</h1>
+<h1>🔧 Órdenes de Mantenimiento</h1>
 <hr>
 
-<h2>Registrar Mantenimiento</h2>
-<form action="/agregar_mantenimiento" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
-    <input type="text" name="maquina" placeholder="Nombre de Máquina" required>
-    <select name="tipo">
-        <option value="Preventivo">Preventivo</option>
-        <option value="Correctivo">Correctivo</option>
-    </select>
-    <input type="text" name="descripcion" placeholder="Descripción de la falla o trabajo" required style="width: 250px;">
-    <input type="date" name="fecha" required>
-    <button type="submit" style="background: #22c55e;">Guardar Registro</button>
+<h2>Generar Nueva Orden de Trabajo</h2>
+<form action="/agregar_mantenimiento" method="POST" style="background: white; padding: 20px; border-radius: 8px; border-left: 5px solid #ef4444; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+    
+    <div>
+        <label><strong>Fecha:</strong></label><br>
+        <input type="date" name="fecha" required style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Hora:</strong></label><br>
+        <input type="time" name="hora" required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Máquina / Equipo:</strong></label><br>
+        <select name="maquina" required style="width: 100%; padding: 8px;">
+            <option value="">Seleccione un equipo...</option>
+            <% maquinas.forEach(function(m) { %>
+                <option value="<%= m.nombre %>"><%= m.nombre %> (<%= m.codigo %>)</option>
+            <% }); %>
+        </select>
+    </div>
+    <div>
+        <label><strong>Tipo de Mantenimiento:</strong></label><br>
+        <select name="tipo" style="width: 100%; padding: 8px;">
+            <option value="Preventivo">🟢 Mantenimiento Preventivo</option>
+            <option value="Correctivo">🔴 Mantenimiento Correctivo</option>
+        </select>
+    </div>
+
+    <div style="grid-column: span 2;">
+        <label><strong>Descripción del Trabajo:</strong></label><br>
+        <input type="text" name="descripcion" placeholder="Ej: Cambio de rodamientos, limpieza general..." required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Tiempo de Parada (Minutos):</strong></label><br>
+        <input type="number" name="tiempo_min" placeholder="Ej: 120" value="0" style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Responsable (Hecho por):</strong></label><br>
+        <input type="text" name="hecho_por" placeholder="Ej: Don Gonzalo" required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Costo Mano de Obra ($):</strong></label><br>
+        <input type="number" step="0.01" name="costo_mo" value="0.00" style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Costo de Materiales ($):</strong></label><br>
+        <input type="number" step="0.01" name="costo_mat" value="0.00" style="width: 100%;">
+    </div>
+
+    <div style="grid-column: span 2;">
+        <label><strong>Estado de la Orden:</strong></label><br>
+        <select name="estado" style="width: 100%; padding: 8px; font-weight: bold;">
+            <option value="REALIZADO">✔ REALIZADO</option>
+            <option value="NO REALIZADO">✖ NO REALIZADO (Pendiente)</option>
+        </select>
+    </div>
+
+    <div style="grid-column: span 2; margin-top: 10px;">
+        <button type="submit" style="background: #ef4444; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Orden de Trabajo</button>
+    </div>
 </form>
 
 <hr>
 
-<h2>Registros Anteriores</h2>
+<h2>Historial de Órdenes de Trabajo</h2>
+
+<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px;">
+    <strong>🔎 Buscar mantenimiento: </strong>
+    <input type="text" id="inputBusqueda" placeholder="Buscar por máquina, responsable o fecha..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+</div>
+
 <table>
     <tr>
-        <th>ID</th>
+        <th>Nº Orden</th>
+        <th>Fecha / Hora</th>
         <th>Máquina</th>
         <th>Tipo</th>
-        <th>Descripción</th>
-        <th>Fecha</th>
+        <th>Responsable</th>
+        <th>Tiempos y Costos</th>
+        <th>Status</th>
     </tr>
-    <% mantenimientos.forEach(function(m) { %>
-    <tr>
-        <td><%= m.id %></td>
-        <td><strong><%= m.maquina %></strong></td>
+
+    <% mantenimientos.forEach(function(mtto) { %>
+    <tr class="fila-mtto">
+        <td><strong># <%= mtto.id %></strong></td>
+        <td><%= mtto.fecha %><br><small><%= mtto.hora %></small></td>
+        <td style="text-transform: capitalize;"><strong><%= mtto.maquina %></strong></td>
         <td>
-            <% if (m.tipo === 'Preventivo') { %> 🔵 Preventivo <% } else { %> 🔴 Correctivo <% } %>
+            <% if (mtto.tipo === 'Preventivo') { %> 🟢 Preventivo <% } else { %> 🔴 Correctivo <% } %>
         </td>
-        <td><%= m.descripcion %></td>
-        <td><%= m.fecha %></td>
+        <td style="text-transform: capitalize;"><%= mtto.hecho_por %></td>
+        <td style="text-align: left; font-size: 14px;">
+            ⏱️ <b>Tiempo:</b> <%= mtto.tiempo_min %> min <br>
+            👷 <b>M.O:</b> $<%= mtto.costo_mo %> <br>
+            ⚙️ <b>Mat:</b> $<%= mtto.costo_mat %>
+        </td>
+        <td>
+            <% if (mtto.estado === 'REALIZADO') { %> 
+                <span style="color: green; font-weight: bold;">✔ REALIZADO</span> 
+            <% } else { %> 
+                <span style="color: red; font-weight: bold;">✖ PENDIENTE</span> 
+            <% } %>
+        </td>
     </tr>
     <% }); %>
 </table>
+
+<script>
+    document.getElementById('inputBusqueda').addEventListener('keyup', function() {
+        let textoBusqueda = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-mtto');
+        
+        filas.forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(textoBusqueda) ? '' : 'none';
+        });
+    });
+</script>
 
 <%- include('partials/footer') %>

@@ -1,0 +1,73 @@
+<%- include('partials/header') %>
+
+<h1>📥 Recepción de Tareas (Fabriquines)</h1>
+<hr>
+
+<p style="color: #555;">Aquí aparecen los pedidos de fabricación que ya fueron <strong>aprobados</strong> y están a la espera de que el trabajador entregue los tabacos terminados.</p>
+
+<table>
+    <tr>
+        <th>Nº Orden</th>
+        <th>Fabriquín</th>
+        <th>Meta (Pedida)</th>
+        <th>Recepción / Entrega Real</th>
+    </tr>
+
+    <% if (locals.pedidos && locals.pedidos.length > 0) { %>
+        <% locals.pedidos.forEach(function(p) { %>
+        <tr style="background: white;">
+            <td><strong># <%= p.id %></strong><br><small><%= p.fecha %></small></td>
+            <td style="text-transform: capitalize; font-size: 16px;"><strong><%= p.usuario %></strong></td>
+            <td style="color: #2563eb; font-size: 18px;"><strong><%= p.cantidad %></strong> tabacos</td>
+            
+            <td style="padding: 15px; background: #f8fafc; border-left: 3px solid #3b82f6;">
+                <form action="/recibir_tarea/<%= p.id %>" method="POST" style="margin: 0; display: flex; gap: 10px; align-items: center;">
+                    
+                    <div>
+                        <label style="font-size: 12px; font-weight: bold;">Entregados:</label><br>
+                        <input type="number" name="entregado" id="entrega_<%= p.id %>" required placeholder="Ej: <%= p.cantidad %>" style="width: 100px; padding: 6px;" oninput="calcularRezago(<%= p.id %>, <%= p.cantidad %>)">
+                    </div>
+
+                    <div>
+                        <label style="font-size: 12px; font-weight: bold;">Cestas:</label><br>
+                        <input type="number" name="cestas_devueltas" value="0" style="width: 80px; padding: 6px;">
+                    </div>
+
+                    <div style="flex: 1; text-align: center;">
+                        <span id="rezago_<%= p.id %>" style="font-weight: bold; color: gray;">-</span>
+                    </div>
+
+                    <button type="submit" style="background: #3b82f6; padding: 10px 15px;">📥 Recibir</button>
+                </form>
+            </td>
+        </tr>
+        <% }); %>
+    <% } else { %>
+        <tr>
+            <td colspan="4" style="text-align: center; padding: 20px; color: gray;">
+                No hay tareas pendientes por recibir en este momento.
+            </td>
+        </tr>
+    <% } %>
+</table>
+
+<script>
+    function calcularRezago(id, meta) {
+        let input = document.getElementById('entrega_' + id).value;
+        let entregado = parseInt(input) || 0;
+        let diferencia = meta - entregado;
+        let spanRezago = document.getElementById('rezago_' + id);
+
+        if (diferencia > 0 && input !== "") {
+            spanRezago.innerHTML = `⚠️ Debe: <b style="color: red;">${diferencia}</b>`;
+        } else if (diferencia < 0) {
+            spanRezago.innerHTML = `✅ Extra: <b style="color: green;">+${Math.abs(diferencia)}</b>`;
+        } else if (input !== "") {
+            spanRezago.innerHTML = `✅ Completo`;
+        } else {
+            spanRezago.innerHTML = `-`;
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

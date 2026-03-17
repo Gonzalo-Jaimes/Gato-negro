@@ -1,114 +1,108 @@
 <%- include('partials/header') %>
 
-<h1>📦 Panel de Inventario</h1>
+<h1>📦 Control de Inventario y Kardex Diario</h1>
+<hr>
 
-<div class="cards" style="flex-wrap: wrap;">
-    <% if (materiales.length === 0) { %>
-        <p style="color: #666; font-style: italic;">No hay materiales registrados.</p>
-    <% } %>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
     
-    <% materiales.forEach(function(m) { 
-        let nombre = m.material.toLowerCase();
-        let unidad = nombre.includes('cesta') ? 'unds' : 'kg';
-        let cantidadLimpia = parseFloat(m.cantidad).toFixed(2);
-        if (cantidadLimpia.endsWith('.00')) cantidadLimpia = parseInt(cantidadLimpia);
-    %>
-    <div class="card tarjeta-inventario" data-nombre="<%= nombre %>" style="border-left: 5px solid #333; min-width: 200px; flex: 1 1 200px;">
-        <h3 style="text-transform: capitalize; margin-top: 0;"><%= m.material %></h3>
-        <h2 style="margin-bottom: 0;"><%= cantidadLimpia %> <span style="font-size: 16px; color: #666;"><%= unidad %></span></h2>
+    <div style="background: white; padding: 20px; border-radius: 8px; border-top: 5px solid #22c55e; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #16a34a;">🟢 Registrar Entrada (+)</h3>
+        <p style="font-size: 13px; color: #666;">Ingreso de materia prima, repuestos o producto terminado (bultos).</p>
+        <form action="/agregar_inventario" method="POST">
+            <label><strong>Categoría:</strong></label><br>
+            <select name="categoria" style="width: 100%; margin-bottom: 10px;" required>
+                <option value="Materia Prima">🟤 Materia Prima (Capa, Tripa, Cestas...)</option>
+                <option value="En Proceso">🟡 En Proceso (Tabacos en Bola, Envueltos)</option>
+                <option value="Producto Terminado">📦 Producto Terminado (Bultos 25, Bultos 50)</option>
+                <option value="Insumos Mtto">🔧 Insumos / Repuestos (Mantenimiento)</option>
+            </select>
+
+            <label><strong>Material / Producto:</strong></label><br>
+            <input type="text" name="material" placeholder="Ej: Bulto de 50, Capote..." required style="width: 100%; margin-bottom: 10px;">
+            
+            <label><strong>Cantidad:</strong></label><br>
+            <input type="number" step="0.01" name="cantidad" placeholder="Ej: 100" required style="width: 100%; margin-bottom: 10px;">
+            
+            <label><strong>Motivo / Descripción:</strong></label><br>
+            <input type="text" name="descripcion" placeholder="Ej: Compra a proveedor, Producción del día..." style="width: 100%; margin-bottom: 15px;">
+            
+            <button type="submit" style="width: 100%; background: #22c55e;">Registrar Entrada al Stock</button>
+        </form>
     </div>
-    <% }); %>
+
+    <div style="background: white; padding: 20px; border-radius: 8px; border-top: 5px solid #ef4444; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <h3 style="margin-top: 0; color: #dc2626;">🔴 Registrar Salida (-)</h3>
+        <p style="font-size: 13px; color: #666;">Entrega a fabriquines, uso en mantenimiento o despacho a camiones.</p>
+        <form action="/restar_inventario" method="POST">
+            <label><strong>Seleccionar de Bodega:</strong></label><br>
+            <select name="material_id" id="selectSalida" style="width: 100%; margin-bottom: 10px;" required onchange="document.getElementById('nombre_material').value = this.options[this.selectedIndex].text.split(' (Disp')[0];">
+                <option value="">Seleccione qué va a sacar...</option>
+                <% inventario.forEach(function(item) { %>
+                    <option value="<%= item.id %>"><%= item.material %> (Disp: <%= item.cantidad %>)</option>
+                <% }); %>
+            </select>
+            <input type="hidden" name="nombre_material" id="nombre_material">
+            
+            <label><strong>Cantidad a Retirar:</strong></label><br>
+            <input type="number" step="0.01" name="cantidad_salida" placeholder="Ej: 50" required style="width: 100%; margin-bottom: 10px;">
+            
+            <label><strong>Destino / A quién:</strong></label><br>
+            <input type="text" name="descripcion_salida" placeholder="Ej: Entregado a Fabriquin Juan, Camión Placa XYZ..." required style="width: 100%; margin-bottom: 15px;">
+            
+            <button type="submit" style="width: 100%; background: #ef4444;">Registrar Salida / Despacho</button>
+        </form>
+    </div>
+
 </div>
 
 <hr>
 
-<h2>Ingresar Nuevo Bulto / Lote</h2>
-<form action="/agregar_material" method="POST" style="background: white; padding: 20px; border-radius: 8px; display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-    <input type="text" name="material" placeholder="Ej: capa cubana, papel..." required style="width: 250px;">
-    <input type="number" name="cantidad" step="0.01" placeholder="Cantidad" required style="width: 150px;">
-    <button type="submit" style="background: #22c55e;">➕ Registrar Ingreso</button>
-</form>
-
-<hr>
-
-<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px;">
-    <strong>🔎 Buscar material: </strong>
-    <input type="text" id="inputBusqueda" placeholder="Escribe 'capa', 'papel'..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
-</div>
-
-<div style="display: flex; gap: 20px; flex-wrap: wrap;">
-    
-    <div style="flex: 1; min-width: 300px;">
-        <h3>📊 Stock Consolidado</h3>
+<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+    <div>
+        <h3>📊 Stock Actual Consolidado</h3>
         <table>
             <tr>
-                <th>Material</th>
-                <th>Stock Disponible</th>
-                <th>Ajustar</th>
+                <th>Categoría</th>
+                <th>Material / Producto</th>
+                <th>Stock Disp.</th>
+                <th>Acción</th>
             </tr>
-            <% materiales.forEach(function(material) { 
-                let cantidadLimpiaT = parseFloat(material.cantidad).toFixed(2);
-                if (cantidadLimpiaT.endsWith('.00')) cantidadLimpiaT = parseInt(cantidadLimpiaT);
-                let unidadT = material.material.toLowerCase().includes('cesta') ? 'unds' : 'kg';
-            %>
-            <tr class="fila-total">
-                <td style="text-transform: capitalize;"><strong><%= material.material %></strong></td>
-                <td><%= cantidadLimpiaT %> <%= unidadT %></td>
+            <% inventario.forEach(function(item) { %>
+            <tr>
+                <td style="font-size: 12px; font-weight: bold; color: #555;"><%= item.categoria %></td>
+                <td><strong><%= item.material %></strong></td>
+                <td style="font-size: 16px;"><strong><%= item.cantidad %></strong></td>
+                <td><a href="/eliminar_inventario/<%= item.id %>"><button style="background:#ef4444; padding:4px 8px; font-size:12px;">X</button></a></td>
+            </tr>
+            <% }); %>
+        </table>
+    </div>
+
+    <div>
+        <h3>📅 Kardex (Movimientos Diarios)</h3>
+        <table style="font-size: 14px;">
+            <tr>
+                <th>Fecha / Hora</th>
+                <th>Movimiento</th>
+                <th>Material</th>
+                <th>Detalle / Destino</th>
+            </tr>
+            <% movimientos.forEach(function(mov) { %>
+            <tr>
+                <td><strong><%= mov.fecha %></strong><br><small><%= mov.hora %></small></td>
                 <td>
-                    <a href="/eliminar/<%= material.id %>">
-                        <button style="background: #ef4444; padding: 4px 10px;">Vaciar</button>
-                    </a>
+                    <% if (mov.tipo_movimiento === 'ENTRADA') { %>
+                        <span style="color: green; font-weight: bold;">🟢 + <%= mov.cantidad %></span>
+                    <% } else { %>
+                        <span style="color: red; font-weight: bold;">🔴 - <%= mov.cantidad %></span>
+                    <% } %>
                 </td>
+                <td><%= mov.material %></td>
+                <td><small><b><%= mov.usuario %>:</b> <%= mov.descripcion %></small></td>
             </tr>
             <% }); %>
         </table>
     </div>
-
-    <div style="flex: 1; min-width: 400px;">
-        <h3>📅 Historial de Entradas (Kardex)</h3>
-        <table>
-            <tr>
-                <th>ID</th>
-                <th>Fecha Ingreso</th>
-                <th>Material</th>
-                <th>Kilos / Unds</th>
-            </tr>
-            <% historial.forEach(function(h) { 
-                let unidadH = h.material.toLowerCase().includes('cesta') ? 'unds' : 'kg';
-            %>
-            <tr class="fila-historial">
-                <td>#<%= h.id %></td>
-                <td><strong><%= h.fecha %></strong></td>
-                <td style="text-transform: capitalize;"><%= h.material %></td>
-                <td style="color: green; font-weight: bold;">+ <%= h.cantidad %> <%= unidadH %></td>
-            </tr>
-            <% }); %>
-        </table>
-    </div>
-
 </div>
-
-<script>
-    document.getElementById('inputBusqueda').addEventListener('keyup', function() {
-        let textoBusqueda = this.value.toLowerCase();
-        
-        // Filtrar tarjetas
-        document.querySelectorAll('.tarjeta-inventario').forEach(tarjeta => {
-            tarjeta.style.display = tarjeta.getAttribute('data-nombre').includes(textoBusqueda) ? '' : 'none';
-        });
-
-        // Filtrar tabla Stock Total (columna 0 es material)
-        document.querySelectorAll('.fila-total').forEach(fila => {
-            let nombreMaterial = fila.cells[0].innerText.toLowerCase();
-            fila.style.display = nombreMaterial.includes(textoBusqueda) ? '' : 'none';
-        });
-
-        // Filtrar tabla Historial (columna 2 es material)
-        document.querySelectorAll('.fila-historial').forEach(fila => {
-            let nombreMaterial = fila.cells[2].innerText.toLowerCase();
-            fila.style.display = nombreMaterial.includes(textoBusqueda) ? '' : 'none';
-        });
-    });
-</script>
 
 <%- include('partials/footer') %>

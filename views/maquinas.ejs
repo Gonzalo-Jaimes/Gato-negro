@@ -4,18 +4,20 @@
 <hr>
 
 <h2>Registrar Nuevo Equipo</h2>
-<form action="/agregar_maquina" method="POST" style="background: white; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+<form action="/agregar_maquina" method="POST" style="background: white; padding: 20px; border-radius: 8px; display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
     
     <div><label><strong>Máquina / Equipo:</strong></label><br><input type="text" name="nombre" placeholder="Ej: Horno Gardai" required style="width: 100%;"></div>
-    <div><label><strong>Marca:</strong></label><br><input type="text" name="marca" placeholder="Ej: Arenco" style="width: 100%;"></div>
+    <div><label><strong>Área:</strong></label><br><input type="text" name="area" placeholder="Ej: Empaque, Producción..." style="width: 100%;"></div>
+    <div><label><strong>Horas que trabaja x día:</strong></label><br><input type="number" name="horas_dia" value="8" style="width: 100%;"></div>
     
+    <div><label><strong>Marca:</strong></label><br><input type="text" name="marca" placeholder="Ej: Arenco" style="width: 100%;"></div>
     <div><label><strong>Modelo:</strong></label><br><input type="text" name="modelo" placeholder="Ej: Caldera" style="width: 100%;"></div>
     <div><label><strong>Fabricante:</strong></label><br><input type="text" name="fabricante" placeholder="Ej: Alemania" style="width: 100%;"></div>
     
-    <div><label><strong>Código Interno:</strong></label><br><input type="text" name="codigo" placeholder="Ej: SE-HG-04" style="width: 100%;"></div>
+    <div><label><strong>Código / # Serie:</strong></label><br><input type="text" name="codigo" placeholder="Ej: SE-HG-04" style="width: 100%;"></div>
     <div>
         <label><strong>Estado:</strong></label><br>
-        <select name="estado" style="width: 100%; padding: 6px;">
+        <select name="estado" style="width: 100%; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
             <option value="Funcional">🟢 Funcional</option>
             <option value="Falla Menor">🟡 Falla Menor</option>
             <option value="No Funcional">🔴 No Funcional</option>
@@ -23,45 +25,45 @@
         </select>
     </div>
 
-    <div style="grid-column: span 2;"><label><strong>Observaciones:</strong></label><br><input type="text" name="observaciones" placeholder="Detalles adicionales..." style="width: 100%;"></div>
+    <div style="grid-column: span 3;"><label><strong>Otras Observaciones:</strong></label><br><input type="text" name="observaciones" placeholder="Ninguna" style="width: 100%;"></div>
     
-    <div style="grid-column: span 2;">
-        <button type="submit" style="background: #22c55e; width: 100%; padding: 10px; font-size: 16px;">💾 Guardar Máquina</button>
+    <div style="grid-column: span 3;">
+        <button type="submit" style="background: #22c55e; width: 100%; padding: 12px; font-size: 16px; border-radius: 6px;">💾 Guardar Máquina</button>
     </div>
 </form>
 
 <hr>
 
-<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px;">
+<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
     <strong>🔎 Buscar máquina: </strong>
-    <input type="text" id="inputBusqueda" placeholder="Buscar por nombre, código, marca..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+    <input type="text" id="inputBusqueda" placeholder="Buscar por nombre, código, marca, área..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
 </div>
 
 <table>
     <tr>
         <th>Código</th>
         <th>Máquina / Equipo</th>
+        <th>Ubicación / Trabajo</th>
         <th>Marca - Modelo</th>
         <th>Estado</th>
-        <th>Observaciones</th>
         <th>Acción</th>
     </tr>
 
     <% maquinas.forEach(function(m) { %>
     <tr class="fila-maquina">
         <td><strong><%= m.codigo %></strong></td>
-        <td class="col-busqueda" style="text-transform: capitalize;"><%= m.nombre %></td>
-        <td class="col-busqueda"><%= m.marca %> - <%= m.modelo %><br><small>(<%= m.fabricante %>)</small></td>
+        <td style="text-transform: capitalize;"><%= m.nombre %></td>
+        <td><b>Área:</b> <%= m.area %><br><small>⏱️ <%= m.horas_dia %> hrs/día</small></td>
+        <td><%= m.marca %> - <%= m.modelo %><br><small>(<%= m.fabricante %>)</small></td>
         <td>
-            <% if (m.estado === 'Funcional') { %> 🟢 Funcional <% } %>
-            <% if (m.estado === 'Falla Menor') { %> 🟡 Falla Menor <% } %>
-            <% if (m.estado === 'No Funcional') { %> 🔴 No Funcional <% } %>
-            <% if (m.estado === 'Guardada') { %> ⚪ Guardada <% } %>
+            <% if (m.estado === 'Funcional') { %> <span style="color: green; font-weight: bold;">🟢 Funcional</span> <% } %>
+            <% if (m.estado === 'Falla Menor') { %> <span style="color: #d97706; font-weight: bold;">🟡 Falla Menor</span> <% } %>
+            <% if (m.estado === 'No Funcional') { %> <span style="color: red; font-weight: bold;">🔴 No Funcional</span> <% } %>
+            <% if (m.estado === 'Guardada') { %> <span style="color: gray; font-weight: bold;">⚪ Guardada</span> <% } %>
         </td>
-        <td><%= m.observaciones %></td>
         <td>
             <a href="/eliminar_maquina/<%= m.id %>">
-                <button style="background: #ef4444; padding: 4px 10px;">🗑 Borrar</button>
+                <button style="background: #ef4444; padding: 6px 12px;">🗑 Borrar</button>
             </a>
         </td>
     </tr>

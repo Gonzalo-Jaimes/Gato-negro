@@ -49,13 +49,12 @@ app.get('/', (req, res) => res.render('login'));
 app.post('/login', async (req, res) => {
     const { usuario, password } = req.body;
     
-    // Consulta a Supabase
     const { data: resultado, error } = await supabase
         .from('usuarios')
         .select('*')
         .eq('usuario', usuario)
         .eq('password', password)
-        .single(); // single() porque esperamos 1 solo usuario
+        .single(); 
 
     if (error || !resultado) return res.send(mostrarAlerta('Oops...', 'Usuario o contraseña incorrectos!', 'error', '/'));
     
@@ -74,37 +73,69 @@ app.get('/logout', (req, res) => {
     res.redirect('/'); 
 });
 
-// ---------------- INVENTARIO E HISTORIAL ----------------
+// ---------------- INVENTARIO Y KARDEX ----------------
 app.get('/inventario', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    // Pedimos datos a Supabase simultáneamente
-    const { data: materiales } = await supabase.from('inventario').select('*').order('material', { ascending: true });
-    const { data: historial } = await supabase.from('historial_ingresos').select('*').order('id', { ascending: false });
+    const { data: inventario } = await supabase.from('inventario').select('*').order('categoria', { ascending: true }).order('material', { ascending: true });
+    const { data: movimientos } = await supabase.from('movimientos').select('*').order('fecha', { ascending: false }).order('hora', { ascending: false });
     
-    res.render('inventario', { materiales: materiales || [], historial: historial || [] });
+    res.render('inventario', { inventario: inventario || [], movimientos: movimientos || [] });
 });
 
-app.post('/agregar_material', async (req, res) => {
-    const material = req.body.material.toLowerCase().trim();
-    const cantidad = parseFloat(req.body.cantidad); 
-    const fecha = new Date().toISOString().split('T')[0];
-
-    // 1. Guardar Historial
-    await supabase.from('historial_ingresos').insert([{ material, cantidad, fecha }]);
-
-    // 2. Sumar al Total
-    const { data: fila } = await supabase.from('inventario').select('*').eq('material', material).single();
+app.post('/agregar_inventario', async (req, res) => {
+    const { material, cantidad, categoria, descripcion } = req.body;
+    const cantNum = parseFloat(cantidad);
     
-    if (fila) {
-        await supabase.from('inventario').update({ cantidad: fila.cantidad + cantidad }).eq('id', fila.id);
+    const { data: existente } = await supabase.from('inventario').select('*').eq('material', material).single();
+    if (existente) {
+        await supabase.from('inventario').update({ cantidad: existente.cantidad + cantNum, categoria: categoria }).eq('id', existente.id);
     } else {
-        await supabase.from('inventario').insert([{ material, cantidad }]);
+        await supabase.from('inventario').insert([{ material, cantidad: cantNum, categoria }]);
+    }
+    
+    const hoy = new Date();
+    const fechaLocal = new Date(hoy.getTime() - (4 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    
+    await supabase.from('movimientos').insert([{
+        fecha: fechaLocal,
+        hora: hoy.toTimeString().split(' ')[0].substring(0, 5),
+        tipo_movimiento: 'ENTRADA',
+        material: material,
+        cantidad: cantNum,
+        usuario: req.session.usuario || 'Admin',
+        descripcion: descripcion || 'Ingreso manual'
+    }]);
+    
+    res.redirect('/inventario');
+});
+
+app.post('/restar_inventario', async (req, res) => {
+    const { material_id, cantidad_salida, descripcion_salida, nombre_material } = req.body;
+    const cantNum = parseFloat(cantidad_salida);
+    
+    const { data: existente } = await supabase.from('inventario').select('*').eq('id', material_id).single();
+    
+    if (existente && existente.cantidad >= cantNum) {
+        await supabase.from('inventario').update({ cantidad: existente.cantidad - cantNum }).eq('id', existente.id);
+        
+        const hoy = new Date();
+        const fechaLocal = new Date(hoy.getTime() - (4 * 60 * 60 * 1000)).toISOString().split('T')[0];
+
+        await supabase.from('movimientos').insert([{
+            fecha: fechaLocal,
+            hora: hoy.toTimeString().split(' ')[0].substring(0, 5),
+            tipo_movimiento: 'SALIDA',
+            material: nombre_material,
+            cantidad: cantNum,
+            usuario: req.session.usuario || 'Admin',
+            descripcion: descripcion_salida || 'Salida a producción / Despacho'
+        }]);
     }
     res.redirect('/inventario');
 });
 
-app.get('/eliminar/:id', async (req, res) => {
+app.get('/eliminar_inventario/:id', async (req, res) => {
     await supabase.from('inventario').delete().eq('id', req.params.id);
     res.redirect('/inventario');
 });
@@ -131,6 +162,7 @@ app.get('/pedidos', async (req, res) => {
             p.cestas_necesarias = Math.ceil(factor * 3);
         } else {
             p.papel_necesario = +(factor * 1.5).toFixed(2);
+            p.tabacos_necesarios = p.cantidad; 
         }
         return p;
     });
@@ -158,7 +190,7 @@ app.post('/rechazar_pedido/:id', async (req, res) => {
     res.redirect('/pedidos');
 });
 
-// ---------------- APROBAR PEDIDO (ESCUDO NUBE) ----------------
+// ---------------- APROBAR PEDIDO (ESCUDO NUBE Y KARDEX) ----------------
 app.post('/aprobar_pedido/:id', async (req, res) => {
     const idPedido = req.params.id;
     const cestaSeleccionada = req.body.cesta_seleccionada || "ninguna"; 
@@ -168,6 +200,20 @@ app.post('/aprobar_pedido/:id', async (req, res) => {
 
     let factor = pedido.cantidad / 1500;
     const { data: inv } = await supabase.from('inventario').select('*');
+
+    const registrarMovimiento = async (material_nombre, cant) => {
+        const hoy = new Date();
+        const fechaLocal = new Date(hoy.getTime() - (4 * 60 * 60 * 1000)).toISOString().split('T')[0];
+        await supabase.from('movimientos').insert([{
+            fecha: fechaLocal,
+            hora: hoy.toTimeString().split(' ')[0].substring(0, 5),
+            tipo_movimiento: 'SALIDA',
+            material: material_nombre,
+            cantidad: cant,
+            usuario: req.session.usuario || 'Admin',
+            descripcion: `Aprobado pedido #${pedido.id} para ${pedido.usuario}`
+        }]);
+    };
 
     // --- LÓGICA FABRIQUÍN ---
     if (pedido.material === 'Tabacos') {
@@ -194,20 +240,23 @@ app.post('/aprobar_pedido/:id', async (req, res) => {
 
         if (falta !== "") return res.send(mostrarAlerta('¡Stock Insuficiente!', falta, 'warning'));
 
-        // Descontar inventario específico
         for (let item of inv) {
             let m = item.material.toLowerCase();
             if ((m.includes('tripa') || m.includes('material')) && tripaReq > 0) {
                 await supabase.from('inventario').update({ cantidad: item.cantidad - tripaReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, tripaReq); tripaReq = 0;
             }
             if (m.includes('capa') && capaReq > 0) {
                 await supabase.from('inventario').update({ cantidad: item.cantidad - capaReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, capaReq); capaReq = 0;
             }
             if (m.includes('capote') && capoteReq > 0) {
                 await supabase.from('inventario').update({ cantidad: item.cantidad - capoteReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, capoteReq); capoteReq = 0;
             }
             if (m === cestaSeleccionada.toLowerCase() && cestasReq > 0) {
                 await supabase.from('inventario').update({ cantidad: item.cantidad - cestasReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, cestasReq); cestasReq = 0;
             }
         }
         await supabase.from('pedidos').update({ estado: 'aprobado' }).eq('id', idPedido);
@@ -216,24 +265,108 @@ app.post('/aprobar_pedido/:id', async (req, res) => {
     // --- LÓGICA ENVOLVEDOR ---
     } else if (pedido.material === 'Envoltura') {
         let papelReq = +(factor * 1.5).toFixed(2);
-        let dispPapel = 0;
+        let tabacosReq = pedido.cantidad; 
+        
+        let dispPapel = 0, dispTabacos = 0;
         
         inv.forEach(item => {
-            if(item.material.toLowerCase().includes('papel')) dispPapel += item.cantidad; 
+            let m = item.material.toLowerCase().trim();
+            if(m.includes('papel')) dispPapel += item.cantidad; 
+            if(m === 'tabacos' || m === 'tabaco') dispTabacos += item.cantidad; 
         });
 
-        if (dispPapel < papelReq) {
-            return res.send(mostrarAlerta('¡Falta Papel!', `Requiere: <b>${papelReq} kg</b><br>Tienes: <b>${dispPapel} kg</b> en bodega.`, 'warning'));
+        let faltaEnv = "";
+        if (dispPapel < papelReq) faltaEnv += `Falta Papel (${dispPapel}/${papelReq} kg).<br>`;
+        if (dispTabacos < tabacosReq) faltaEnv += `Faltan Tabacos (${dispTabacos}/${tabacosReq} unds).<br>`;
+
+        if (faltaEnv !== "") {
+            return res.send(mostrarAlerta('¡Falta Material!', faltaEnv, 'warning'));
         }
 
         for (let item of inv) {
-            if (item.material.toLowerCase().includes('papel')) {
+            let m = item.material.toLowerCase().trim();
+            if (m.includes('papel') && papelReq > 0) {
                 await supabase.from('inventario').update({ cantidad: item.cantidad - papelReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, papelReq); papelReq = 0;
+            }
+            if ((m === 'tabacos' || m === 'tabaco') && tabacosReq > 0) {
+                await supabase.from('inventario').update({ cantidad: item.cantidad - tabacosReq }).eq('id', item.id);
+                await registrarMovimiento(item.material, tabacosReq); tabacosReq = 0;
             }
         }
         await supabase.from('pedidos').update({ estado: 'aprobado' }).eq('id', idPedido);
         res.redirect('/pedidos');
     }
+});
+// ---------------- RECEPCIÓN DE TAREAS ----------------
+app.get('/recepcion', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    // Solo mostramos pedidos APROBADOS de TABACOS que aún no se han recibido
+    const { data: pedidos } = await supabase.from('pedidos')
+        .select('*')
+        .eq('estado', 'aprobado')
+        .eq('material', 'Tabacos')
+        .order('id', { ascending: true });
+        
+    res.render('recepcion', { pedidos: pedidos || [] });
+});
+
+app.post('/recibir_tarea/:id', async (req, res) => {
+    const idPedido = req.params.id;
+    const tabacosEntregados = parseInt(req.body.entregado) || 0;
+    const cestasDevueltas = parseInt(req.body.cestas_devueltas) || 0;
+
+    // 1. Buscamos el pedido original para saber cuánto se le había pedido (Meta)
+    const { data: pedido } = await supabase.from('pedidos').select('*').eq('id', idPedido).single();
+    if (!pedido) return res.redirect('/recepcion');
+
+    // 2. Calculamos la deuda (Rezago)
+    const rezagoCalculado = pedido.cantidad - tabacosEntregados;
+
+    // 3. Actualizamos el pedido: Lo marcamos 'completado' y guardamos lo que trajo y lo que debe
+    await supabase.from('pedidos').update({ 
+        estado: 'completado', 
+        entregado: tabacosEntregados,
+        rezago: rezagoCalculado
+    }).eq('id', idPedido);
+
+    // 4. Sumar los tabacos al Inventario (Buscamos la palabra 'Tabacos' sin importar mayúsculas)
+    const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
+    
+    if (invTabacos) {
+        await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacosEntregados }).eq('id', invTabacos.id);
+    } else {
+        await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: tabacosEntregados, categoria: 'En Proceso' }]);
+    }
+
+    // 5. Registrar la ENTRADA de tabacos en el Súper Kardex
+    const hoy = new Date();
+    const fechaLocal = new Date(hoy.getTime() - (4 * 60 * 60 * 1000)).toISOString().split('T')[0];
+    const horaLocal = hoy.toTimeString().split(' ')[0].substring(0, 5);
+
+    let descripcionKardex = `Recepción de tarea. Orden #${idPedido}.`;
+    if (rezagoCalculado > 0) descripcionKardex += ` (Quedó debiendo: ${rezagoCalculado} tabacos)`;
+
+    await supabase.from('movimientos').insert([{
+        fecha: fechaLocal,
+        hora: horaLocal,
+        tipo_movimiento: 'ENTRADA',
+        material: 'Tabacos',
+        cantidad: tabacosEntregados,
+        usuario: req.session.usuario || 'Admin',
+        descripcion: descripcionKardex
+    }]);
+
+    // 6. Si devolvió cestas, las sumamos
+    if (cestasDevueltas > 0) {
+        const { data: invCestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
+        if (invCestas && invCestas.length > 0) {
+            await supabase.from('inventario').update({ cantidad: invCestas[0].cantidad + cestasDevueltas }).eq('id', invCestas[0].id);
+        }
+    }
+
+    res.redirect('/recepcion');
 });
 // ---------------- MÁQUINAS Y EQUIPOS ----------------
 app.get('/maquinas', async (req, res) => {
@@ -244,15 +377,23 @@ app.get('/maquinas', async (req, res) => {
 });
 
 app.post('/agregar_maquina', async (req, res) => {
-    await supabase.from('maquinas').insert([{ 
+    const { error } = await supabase.from('maquinas').insert([{ 
         nombre: req.body.nombre,
+        area: req.body.area,
         marca: req.body.marca,
         modelo: req.body.modelo,
+        horas_dia: parseInt(req.body.horas_dia) || 8,
         fabricante: req.body.fabricante,
         codigo: req.body.codigo,
         estado: req.body.estado,
-        observaciones: req.body.observaciones
+        observaciones: req.body.observaciones || 'Ninguna'
     }]);
+
+    if (error) {
+        console.error("❌ ERROR DE SUPABASE AL GUARDAR MÁQUINA:", error);
+        return res.send("Hubo un error al guardar. Revisa la terminal negra de Visual Studio.");
+    }
+
     res.redirect('/maquinas');
 });
 
@@ -260,6 +401,7 @@ app.get('/eliminar_maquina/:id', async (req, res) => {
     await supabase.from('maquinas').delete().eq('id', req.params.id);
     res.redirect('/maquinas');
 });
+
 // ---------------- USUARIOS Y MANTENIMIENTO ----------------
 app.get('/usuarios', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
@@ -277,14 +419,32 @@ app.get('/eliminar_usuario/:id', async (req, res) => {
     res.redirect('/usuarios');
 });
 
+// ---------------- MANTENIMIENTO ----------------
 app.get('/mantenimiento', async (req, res) => {
     if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
+    
+    const { data: maquinas } = await supabase.from('maquinas').select('nombre, codigo').order('nombre');
     const { data: mantenimientos } = await supabase.from('mantenimiento').select('*').order('id', { ascending: false });
-    res.render('mantenimiento', { mantenimientos: mantenimientos || [] });
+    
+    res.render('mantenimiento', { 
+        maquinas: maquinas || [], 
+        mantenimientos: mantenimientos || [] 
+    });
 });
 
 app.post('/agregar_mantenimiento', async (req, res) => {
-    await supabase.from('mantenimiento').insert([req.body]);
+    await supabase.from('mantenimiento').insert([{ 
+        fecha: req.body.fecha,
+        hora: req.body.hora,
+        maquina: req.body.maquina,
+        tipo: req.body.tipo,
+        descripcion: req.body.descripcion,
+        tiempo_min: parseInt(req.body.tiempo_min) || 0,
+        costo_mo: parseFloat(req.body.costo_mo) || 0,
+        costo_mat: parseFloat(req.body.costo_mat) || 0,
+        hecho_por: req.body.hecho_por,
+        estado: req.body.estado
+    }]);
     res.redirect('/mantenimiento');
 });
 
@@ -293,4 +453,4 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => console.log(`🐾 Servidor Gato Negro corriendo en http://localhost:${PORT}`));
 }
-module.exports = app; // <-- Vercel necesita esta línea para funcionar
+module.exports = app;
