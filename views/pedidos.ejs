@@ -47,21 +47,22 @@
         <th>Tipo</th>
         <th>Cantidad</th>
         <th>Material Requerido</th>
-        <th>Estado</th>
+        <th style="width: 120px;">Estado</th>
         <% if (session.rol === 'admin') { %>
-            <th>Acción Admin</th>
+            <th style="width: 150px;">Acción Admin</th>
         <% } %>
     </tr>
 
     <% pedidos.forEach(function(p) { %>
-    <tr class="fila-pedido">
+    <tr class="fila-pedido" style="background: white;">
         <td><%= p.id %></td>
         <td class="col-usuario" style="text-transform: capitalize;"><strong><%= p.usuario %></strong></td>
         <td class="col-tipo">
             <% if (p.material === 'Tabacos') { %> 🏭 Fabricación <% } else { %> 🎁 Envoltura <% } %>
         </td>
-        <td><strong><%= p.cantidad %></strong> tabacos</td>
-        <td style="text-align: left;">
+        <td style="font-size: 16px;"><strong><%= p.cantidad %></strong> tabacos</td>
+        
+        <td style="text-align: left; font-size: 13px;">
             <% if (p.material === 'Tabacos') { %>
                 🍂 <b>Tripa:</b> <%= p.tripa_necesaria %> kg <br>
                 📦 <b>Capa:</b> <%= p.capa_necesaria %> kg <br>
@@ -72,22 +73,28 @@
                 📄 <b>Papel:</b> <%= p.papel_necesario %> kg <br>
             <% } %>
         </td>
-        <td>
-            <% if (p.estado === 'pendiente') { %> 🟡 Pendiente <% } %>
-            <% if (p.estado === 'aprobado') { %> 🟢 Aprobado <% } %>
-            <% if (p.estado === 'rechazado') { %> 🔴 Rechazado <% } %>
+
+        <td style="text-align: center;">
+            <% if (p.estado === 'pendiente') { %> 
+                <span style="color: #d97706; font-weight: bold; background: #fef3c7; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🟡 Pendiente</span>
+            <% } else if (p.estado === 'aprobado') { %> 
+                <span style="color: #2563eb; font-weight: bold; background: #dbeafe; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🔵 En Proceso</span>
+            <% } else if (p.estado === 'completado') { %> 
+                <span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 4px 8px; border-radius: 10px; font-size: 13px;">✅ Completado</span>
+            <% } else if (p.estado === 'rechazado') { %> 
+                <span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🔴 Rechazado</span>
+            <% } %>
         </td>
         
         <% if (session.rol === 'admin') { %>
-            <td>
+            <td style="text-align: center;">
                 <% if (p.estado === 'pendiente') { %>
                     <form action="/aprobar_pedido/<%= p.id %>" method="POST" style="margin:0;">
-                        
                         <% if (p.material === 'Tabacos') { %>
-                            <select name="cesta_seleccionada" required style="width:100%; margin-bottom: 5px;">
-                                <option value="">Elige color de cesta...</option>
+                            <select name="cesta_seleccionada" required style="width:100%; margin-bottom: 5px; font-size: 12px; padding: 4px;">
+                                <option value="">Elige cesta...</option>
                                 <% cestas_inventario.forEach(function(cesta) { %>
-                                    <option value="<%= cesta.material %>"><%= cesta.material %> (Disp: <%= cesta.cantidad %>)</option>
+                                    <option value="<%= cesta.material %>"><%= cesta.material %> (<%= cesta.cantidad %>)</option>
                                 <% }); %>
                             </select>
                             <br>
@@ -95,13 +102,15 @@
                             <input type="hidden" name="cesta_seleccionada" value="ninguna">
                         <% } %>
 
-                        <button type="submit" style="background: #22c55e; margin-bottom: 5px; width: 100%;">✔ Aprobar</button>
+                        <button type="submit" style="background: #22c55e; margin-bottom: 5px; width: 100%; font-size: 12px; padding: 5px;">✔ Aprobar</button>
                     </form>
+                    
                     <form action="/rechazar_pedido/<%= p.id %>" method="POST" style="margin:0;">
-                        <button type="submit" style="background: #ef4444; width: 100%;">✖ Rechazar</button>
+                        <button type="submit" style="background: #ef4444; width: 100%; font-size: 12px; padding: 5px;">✖ Rechazar</button>
                     </form>
+                
                 <% } else { %>
-                    -
+                    <span style="color: gray; font-style: italic; font-size: 13px;">✔️ Gestionado</span>
                 <% } %>
             </td>
         <% } %>

@@ -1,108 +1,116 @@
 <%- include('partials/header') %>
 
-<h1>📦 Control de Inventario y Kardex Diario</h1>
-<hr>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+<div style="display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h1 style="margin-bottom: 5px;">📦 Stock Actual en Bodega</h1>
+        <p style="color: gray; margin-top: 0;">Resumen visual de todos los materiales disponibles clasificados por categoría.</p>
+    </div>
     
-    <div style="background: white; padding: 20px; border-radius: 8px; border-top: 5px solid #22c55e; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <h3 style="margin-top: 0; color: #16a34a;">🟢 Registrar Entrada (+)</h3>
-        <p style="font-size: 13px; color: #666;">Ingreso de materia prima, repuestos o producto terminado (bultos).</p>
-        <form action="/agregar_inventario" method="POST">
-            <label><strong>Categoría:</strong></label><br>
-            <select name="categoria" style="width: 100%; margin-bottom: 10px;" required>
-                <option value="Materia Prima">🟤 Materia Prima (Capa, Tripa, Cestas...)</option>
-                <option value="En Proceso">🟡 En Proceso (Tabacos en Bola, Envueltos)</option>
-                <option value="Producto Terminado">📦 Producto Terminado (Bultos 25, Bultos 50)</option>
-                <option value="Insumos Mtto">🔧 Insumos / Repuestos (Mantenimiento)</option>
-            </select>
-
-            <label><strong>Material / Producto:</strong></label><br>
-            <input type="text" name="material" placeholder="Ej: Bulto de 50, Capote..." required style="width: 100%; margin-bottom: 10px;">
-            
-            <label><strong>Cantidad:</strong></label><br>
-            <input type="number" step="0.01" name="cantidad" placeholder="Ej: 100" required style="width: 100%; margin-bottom: 10px;">
-            
-            <label><strong>Motivo / Descripción:</strong></label><br>
-            <input type="text" name="descripcion" placeholder="Ej: Compra a proveedor, Producción del día..." style="width: 100%; margin-bottom: 15px;">
-            
-            <button type="submit" style="width: 100%; background: #22c55e;">Registrar Entrada al Stock</button>
-        </form>
-    </div>
-
-    <div style="background: white; padding: 20px; border-radius: 8px; border-top: 5px solid #ef4444; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
-        <h3 style="margin-top: 0; color: #dc2626;">🔴 Registrar Salida (-)</h3>
-        <p style="font-size: 13px; color: #666;">Entrega a fabriquines, uso en mantenimiento o despacho a camiones.</p>
-        <form action="/restar_inventario" method="POST">
-            <label><strong>Seleccionar de Bodega:</strong></label><br>
-            <select name="material_id" id="selectSalida" style="width: 100%; margin-bottom: 10px;" required onchange="document.getElementById('nombre_material').value = this.options[this.selectedIndex].text.split(' (Disp')[0];">
-                <option value="">Seleccione qué va a sacar...</option>
-                <% inventario.forEach(function(item) { %>
-                    <option value="<%= item.id %>"><%= item.material %> (Disp: <%= item.cantidad %>)</option>
-                <% }); %>
-            </select>
-            <input type="hidden" name="nombre_material" id="nombre_material">
-            
-            <label><strong>Cantidad a Retirar:</strong></label><br>
-            <input type="number" step="0.01" name="cantidad_salida" placeholder="Ej: 50" required style="width: 100%; margin-bottom: 10px;">
-            
-            <label><strong>Destino / A quién:</strong></label><br>
-            <input type="text" name="descripcion_salida" placeholder="Ej: Entregado a Fabriquin Juan, Camión Placa XYZ..." required style="width: 100%; margin-bottom: 15px;">
-            
-            <button type="submit" style="width: 100%; background: #ef4444;">Registrar Salida / Despacho</button>
-        </form>
-    </div>
-
-</div>
-
-<hr>
-
-<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
-    <div>
-        <h3>📊 Stock Actual Consolidado</h3>
-        <table>
-            <tr>
-                <th>Categoría</th>
-                <th>Material / Producto</th>
-                <th>Stock Disp.</th>
-                <th>Acción</th>
-            </tr>
-            <% inventario.forEach(function(item) { %>
-            <tr>
-                <td style="font-size: 12px; font-weight: bold; color: #555;"><%= item.categoria %></td>
-                <td><strong><%= item.material %></strong></td>
-                <td style="font-size: 16px;"><strong><%= item.cantidad %></strong></td>
-                <td><a href="/eliminar_inventario/<%= item.id %>"><button style="background:#ef4444; padding:4px 8px; font-size:12px;">X</button></a></td>
-            </tr>
-            <% }); %>
-        </table>
-    </div>
-
-    <div>
-        <h3>📅 Kardex (Movimientos Diarios)</h3>
-        <table style="font-size: 14px;">
-            <tr>
-                <th>Fecha / Hora</th>
-                <th>Movimiento</th>
-                <th>Material</th>
-                <th>Detalle / Destino</th>
-            </tr>
-            <% movimientos.forEach(function(mov) { %>
-            <tr>
-                <td><strong><%= mov.fecha %></strong><br><small><%= mov.hora %></small></td>
-                <td>
-                    <% if (mov.tipo_movimiento === 'ENTRADA') { %>
-                        <span style="color: green; font-weight: bold;">🟢 + <%= mov.cantidad %></span>
-                    <% } else { %>
-                        <span style="color: red; font-weight: bold;">🔴 - <%= mov.cantidad %></span>
-                    <% } %>
-                </td>
-                <td><%= mov.material %></td>
-                <td><small><b><%= mov.usuario %>:</b> <%= mov.descripcion %></small></td>
-            </tr>
-            <% }); %>
-        </table>
+    <div style="background: white; padding: 10px 15px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; width: 300px;">
+        <span style="font-size: 20px; margin-right: 10px;">🔍</span>
+        <input type="text" id="buscadorStock" onkeyup="filtrarTarjetas()" placeholder="Buscar material o categoría..." style="border: none; outline: none; width: 100%; font-size: 16px;">
     </div>
 </div>
+
+<hr style="margin-bottom: 30px;">
+
+<% 
+    // Lógica para agrupar inteligentemente
+    let categorias = {};
+    if (locals.inventario) {
+        locals.inventario.forEach(item => {
+            let nombreM = item.material.toLowerCase();
+            let catOriginal = item.categoria || 'Otros';
+            let catFinal = '';
+
+            // 1. FORZAMOS GRUPOS PERSONALIZADOS (Tus reglas)
+            if (nombreM.includes('cesta')) {
+                catFinal = '🧺 Cestas (Todos los colores)';
+            } else if (nombreM.includes('tabaco')) {
+                catFinal = '🚬 Tabacos (Normales, Anillados, Envoltura)';
+            } 
+            // 2. SI NO ES CESTA NI TABACO, USA SU CATEGORÍA NORMAL CON EMOJIS
+            else {
+                if (catOriginal === 'Materia Prima') catFinal = '🟤 Materia Prima';
+                else if (catOriginal === 'En Proceso') catFinal = '🟡 En Proceso';
+                else if (catOriginal === 'Producto Terminado') catFinal = '📦 Producto Terminado';
+                else if (catOriginal === 'Insumos' || catOriginal.includes('Mtto')) catFinal = '🔧 Insumos y Repuestos';
+                else catFinal = '📁 ' + catOriginal;
+            }
+
+            // Agrupamos en la lista
+            if (!categorias[catFinal]) categorias[catFinal] = [];
+            categorias[catFinal].push(item);
+        });
+    }
+%>
+
+<% if (Object.keys(categorias).length > 0) { %>
+    <% for (const [nombreCategoria, items] of Object.entries(categorias)) { %>
+        
+        <h2 class="titulo-categoria" style="color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px;">
+            <%= nombreCategoria %>
+        </h2>
+
+        <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px;">
+            <% items.forEach(function(item) { 
+                // Colores de fondo suaves y bordes
+                let colorBorde = "#3b82f6"; // Azul default
+                let colorFondo = "#ffffff";
+                let nombreM = item.material.toLowerCase();
+                
+                if (nombreM.includes("capa")) { colorBorde = "#eab308"; colorFondo = "#fefce8"; }
+                else if (nombreM.includes("capote")) { colorBorde = "#d97706"; colorFondo = "#fffbeb"; }
+                else if (nombreM.includes("tripa") || nombreM.includes("material")) { colorBorde = "#84cc16"; colorFondo = "#f7fee7"; }
+                else if (nombreM.includes("cesta")) { colorBorde = "#64748b"; colorFondo = "#f8fafc"; }
+                else if (nombreM.includes("papel")) { colorBorde = "#8b5cf6"; colorFondo = "#f5f3ff"; }
+                else if (nombreM.includes("tabaco")) { colorBorde = "#1f2937"; colorFondo = "#f3f4f6"; }
+                else if (nombreCategoria.includes("Producto")) { colorBorde = "#10b981"; colorFondo = "#ecfdf5"; }
+            %>
+                <div class="tarjeta-material" data-nombre="<%= item.material.toLowerCase() %>" data-cat="<%= nombreCategoria.toLowerCase() %>" style="background: <%= colorFondo %>; border-left: 6px solid <%= colorBorde %>; padding: 20px; border-radius: 8px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s;">
+                    <h3 style="margin: 0 0 10px 0; color: #333; text-transform: capitalize; font-size: 18px;"><%= item.material %></h3>
+                    
+                    <h1 style="margin: 0; color: #111; font-size: 32px; font-weight: 900;"><%= item.cantidad %> <small style="font-size: 14px; color: gray; font-weight: normal;">uds/kg</small></h1>
+                </div>
+            <% }); %>
+        </div>
+
+    <% } %>
+<% } else { %>
+    <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
+        <h2 style="color: gray;">Tu bodega está vacía.</h2>
+        <p>Ve a "🔄 Entradas y Salidas" para registrar tu primer material.</p>
+    </div>
+<% } %>
+
+<script>
+    function filtrarTarjetas() {
+        let input = document.getElementById('buscadorStock').value.toLowerCase();
+        let tarjetas = document.getElementsByClassName('tarjeta-material');
+        let titulos = document.getElementsByClassName('titulo-categoria');
+
+        // Mostrar/Ocultar tarjetas
+        for (let i = 0; i < tarjetas.length; i++) {
+            let nombre = tarjetas[i].getAttribute('data-nombre');
+            let categoria = tarjetas[i].getAttribute('data-cat');
+            if (nombre.includes(input) || categoria.includes(input)) {
+                tarjetas[i].style.display = "block";
+            } else {
+                tarjetas[i].style.display = "none";
+            }
+        }
+
+        // Mostrar/Ocultar títulos de categoría si están vacíos
+        Array.from(titulos).forEach(titulo => {
+            let contenedorTarjetas = titulo.nextElementSibling;
+            let tarjetasVisibles = Array.from(contenedorTarjetas.children).filter(t => t.style.display !== 'none');
+            if (tarjetasVisibles.length === 0) {
+                titulo.style.display = 'none';
+            } else {
+                titulo.style.display = 'block';
+            }
+        });
+    }
+</script>
 
 <%- include('partials/footer') %>

@@ -38,7 +38,15 @@
     <h2>Menú</h2>
     
     <% if (session.rol === "admin") { %>
-        <a href="/inventario">📦 Inventario</a>
+        <div style="margin-bottom: 5px;">
+    <a href="#" onclick="document.getElementById('submenu-inv').style.display = document.getElementById('submenu-inv').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+        📦 Inventario ▾
+    </a>
+    <div id="submenu-inv" style="display: none; background-color: #2a2a2a; border-left: 3px solid #f59e0b; margin-left: 10px;">
+        <a href="/inventario" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📊 Stock (Tarjetas)</a>
+        <a href="/movimientos" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔄 Entradas y Salidas</a>
+    </div>
+</div>
         <a href="/pedidos">📋 Pedidos</a>
         <a href="/recepcion">📥 Recepción Tareas</a> <a href="/maquinas">⚙️ Máquinas</a>
         <a href="/mantenimiento">🔧 Mantenimiento</a>

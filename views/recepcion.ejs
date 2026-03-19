@@ -3,7 +3,7 @@
 <h1>📥 Recepción de Tareas (Fabriquines)</h1>
 <hr>
 
-<p style="color: #555;">Aquí aparecen los pedidos de fabricación que ya fueron <strong>aprobados</strong> y están a la espera de que el trabajador entregue los tabacos terminados.</p>
+<p style="color: #555;">Aquí aparecen los pedidos que están a la espera de que el trabajador entregue los tabacos terminados.</p>
 
 <table>
     <tr>
@@ -25,19 +25,19 @@
                     
                     <div>
                         <label style="font-size: 12px; font-weight: bold;">Entregados:</label><br>
-                        <input type="number" name="entregado" id="entrega_<%= p.id %>" required placeholder="Ej: <%= p.cantidad %>" style="width: 100px; padding: 6px;" oninput="calcularRezago(<%= p.id %>, <%= p.cantidad %>)">
+                        <input type="number" name="entregado" id="entrega_<%= p.id %>" required placeholder="Ej: <%= p.cantidad %>" style="width: 100px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" oninput="calcularRezago(<%= p.id %>, <%= p.cantidad %>)">
                     </div>
 
                     <div>
                         <label style="font-size: 12px; font-weight: bold;">Cestas:</label><br>
-                        <input type="number" name="cestas_devueltas" value="0" style="width: 80px; padding: 6px;">
+                        <input type="number" name="cestas_devueltas" value="0" style="width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
                     </div>
 
                     <div style="flex: 1; text-align: center;">
                         <span id="rezago_<%= p.id %>" style="font-weight: bold; color: gray;">-</span>
                     </div>
 
-                    <button type="submit" style="background: #3b82f6; padding: 10px 15px;">📥 Recibir</button>
+                    <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">📥 Recibir</button>
                 </form>
             </td>
         </tr>
@@ -46,6 +46,46 @@
         <tr>
             <td colspan="4" style="text-align: center; padding: 20px; color: gray;">
                 No hay tareas pendientes por recibir en este momento.
+            </td>
+        </tr>
+    <% } %>
+</table>
+
+<br><br>
+<h2 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 30px;">📊 Estado de Cuentas (Rezagos Acumulados)</h2>
+<p style="color: #555;">Resumen total de los fabriquines que deben tabacos o que han entregado excedentes en días anteriores.</p>
+
+<table style="width: 100%; max-width: 600px;">
+    <tr>
+        <th style="background: #222;">Fabriquín</th>
+        <th style="background: #222;">Balance de Tabacos</th>
+    </tr>
+
+    <% if (locals.listaRezagos && locals.listaRezagos.length > 0) { %>
+        <% locals.listaRezagos.forEach(function(r) { %>
+        <tr style="background: white;">
+            <td style="text-transform: capitalize; font-size: 16px;"><strong><%= r.usuario %></strong></td>
+            
+            <td style="display: flex; gap: 10px; align-items: center;">
+                <% if (r.total > 0) { %>
+                    <span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 5px 10px; border-radius: 20px;">⚠️ Debe: <%= r.total %> tabacos</span>
+                    
+                    <form action="/abonar_deuda" method="POST" style="margin: 0; display: flex; gap: 5px;">
+                        <input type="hidden" name="usuario" value="<%= r.usuario %>">
+                        <input type="number" name="cantidad_abono" max="<%= r.total %>" placeholder="Abonar..." required style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                        <button type="submit" style="background: #16a34a; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer;">Pagar</button>
+                    </form>
+
+                <% } else { %>
+                    <span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 5px 10px; border-radius: 20px;">✅ Excedente a favor: +<%= Math.abs(r.total) %> tabacos</span>
+                <% } %>
+            </td>
+            </tr>
+        <% }); %>
+    <% } else { %>
+        <tr>
+            <td colspan="2" style="text-align: center; padding: 20px; color: gray;">
+                Todos los fabriquines están a paz y salvo. 🎉
             </td>
         </tr>
     <% } %>
