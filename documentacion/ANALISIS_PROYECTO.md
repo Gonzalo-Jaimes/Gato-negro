@@ -1,7 +1,7 @@
 # Análisis del Proyecto: Gato Negro
 ## Sistema de Gestión de Inventario y Producción
 
-**Versión**: 1.4  
+**Versión**: 1.5  
 **Fecha de Análisis**: Marzo 2026  
 **Estado**: En Desarrollo  
 **Ambiente de Despliegue**: Vercel (Node.js) + Supabase (Base de Datos)
