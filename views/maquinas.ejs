@@ -12,6 +12,8 @@
     
     <div><label><strong>Marca:</strong></label><br><input type="text" name="marca" placeholder="Ej: Arenco" style="width: 100%;"></div>
     <div><label><strong>Modelo:</strong></label><br><input type="text" name="modelo" placeholder="Ej: Caldera" style="width: 100%;"></div>
+    <div><label><strong>Frec. Mtto (Días):</strong></label><br><input type="number" name="frecuencia_mtto_dias" value="30" style="width: 100%;"></div>
+    
     <div><label><strong>Fabricante:</strong></label><br><input type="text" name="fabricante" placeholder="Ej: Alemania" style="width: 100%;"></div>
     
     <div><label><strong>Código / # Serie:</strong></label><br><input type="text" name="codigo" placeholder="Ej: SE-HG-04" style="width: 100%;"></div>
@@ -45,7 +47,7 @@
         <th>Máquina / Equipo</th>
         <th>Ubicación / Trabajo</th>
         <th>Marca - Modelo</th>
-        <th>Estado</th>
+        <th>Salud y Costos</th>
         <th>Acción</th>
     </tr>
 
@@ -56,10 +58,24 @@
         <td><b>Área:</b> <%= m.area %><br><small>⏱️ <%= m.horas_dia %> hrs/día</small></td>
         <td><%= m.marca %> - <%= m.modelo %><br><small>(<%= m.fabricante %>)</small></td>
         <td>
-            <% if (m.estado === 'Funcional') { %> <span style="color: green; font-weight: bold;">🟢 Funcional</span> <% } %>
-            <% if (m.estado === 'Falla Menor') { %> <span style="color: #d97706; font-weight: bold;">🟡 Falla Menor</span> <% } %>
-            <% if (m.estado === 'No Funcional') { %> <span style="color: red; font-weight: bold;">🔴 No Funcional</span> <% } %>
-            <% if (m.estado === 'Guardada') { %> <span style="color: gray; font-weight: bold;">⚪ Guardada</span> <% } %>
+            <% if (m.estado === 'Funcional') { %> <span style="color: green; font-weight: bold;">🟢 Funcional</span><br> <% } %>
+            <% if (m.estado === 'Falla Menor') { %> <span style="color: #d97706; font-weight: bold;">🟡 Falla Menor</span><br> <% } %>
+            <% if (m.estado === 'No Funcional') { %> <span style="color: red; font-weight: bold;">🔴 No Funcional</span><br> <% } %>
+            <% if (m.estado === 'Guardada') { %> <span style="color: gray; font-weight: bold;">⚪ Guardada</span><br> <% } %>
+            
+            <hr style="margin: 5px 0; border: 0; border-top: 1px solid #eee;">
+            
+            <% if (m.dias_para_mtto === "Sin Registro") { %>
+                <span style="color: gray; font-size: 13px;">Sin Mtto Prev.</span>
+            <% } else if (m.dias_para_mtto <= 0) { %>
+                <span style="color: red; font-weight: bold; font-size: 13px;">🚨 ¡Mtto Atrasado! (<%= Math.abs(m.dias_para_mtto) %>d)</span>
+            <% } else if (m.dias_para_mtto <= 7) { %>
+                <span style="color: #f59e0b; font-weight: bold; font-size: 13px;">⚠️ Próximo Mtto: <%= m.dias_para_mtto %>d</span>
+            <% } else { %>
+                <span style="color: green; font-size: 13px;">🟢 Mtto al Día (<%= m.dias_para_mtto %>d)</span>
+            <% } %>
+
+            <br><span style="font-size: 13px;">💰 <b>$<%= m.costo_historico %></b> invertidos</span>
         </td>
         <td>
             <a href="/eliminar_maquina/<%= m.id %>">

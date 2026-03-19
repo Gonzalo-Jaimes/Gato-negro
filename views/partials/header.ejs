@@ -1,6 +1,8 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gato Negro - Sistema</title>
     <style>
         body { margin:0; font-family:Arial; background:#f4f6f9; }
@@ -27,6 +29,18 @@
         input, select { padding:8px; margin-right:10px; border: 1px solid #ccc; border-radius: 4px;}
         button { padding:8px 15px; background:#111; color:white; border:none; border-radius:5px; cursor:pointer; }
         button:hover { background:#333; }
+        
+        /* RESPONSIVIDAD MÓVIL (Magia para Celulares) */
+        @media (max-width: 768px) {
+            .container { flex-direction: column; }
+            .sidebar { width: auto; padding: 15px; }
+            .content { padding: 15px; }
+            /* Evitar que las tablas rompan el diseño en celular */
+            table { display: block; overflow-x: auto; white-space: nowrap; }
+            /* Los formularios de varias columnas deben pasar a 1 sola columna */
+            form { grid-template-columns: 1fr !important; }
+            .cards { flex-direction: column; }
+        }
     </style>
 </head>
 <body>
@@ -48,16 +62,34 @@
     </div>
 </div>
         <a href="/pedidos">📋 Pedidos</a>
-        <a href="/recepcion">📥 Recepción Tareas</a> <a href="/maquinas">⚙️ Máquinas</a>
-        <a href="/mantenimiento">🔧 Mantenimiento</a>
+        <a href="/recepcion">📥 Recepción Tareas</a> 
+
+        <div style="margin-top: 10px; margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-maq').style.display = document.getElementById('submenu-maq').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+                ⚙️ Equipos y Mtto ▾
+            </a>
+            <div id="submenu-maq" style="display: none; background-color: #2a2a2a; border-left: 3px solid #2563eb; margin-left: 10px;">
+                <a href="/maquinas" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">⚙️ Inventario Máquinas</a>
+                <a href="/mantenimiento" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔧 Órdenes de Trabajo</a>
+                <a href="/maquinas/qrs" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🖨️ Códigos QR y Fichas</a>
+            </div>
+        </div>
         <a href="/usuarios">👥 Usuarios</a>
         
     <% } else if (session.rol === "fabricacion" || session.rol === "fabriquin" || session.rol === "envolvedor") { %>
         <a href="/pedidos">📋 Pedidos</a>
         
     <% } else if (session.rol === "mantenimiento") { %>
-        <a href="/maquinas">⚙️ Máquinas</a>
-        <a href="/mantenimiento">🔧 Mantenimiento</a>
+        <div style="margin-top: 10px; margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-maq-mtto').style.display = document.getElementById('submenu-maq-mtto').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+                ⚙️ Equipos y Mtto ▾
+            </a>
+            <div id="submenu-maq-mtto" style="display: block; background-color: #2a2a2a; border-left: 3px solid #ef4444; margin-left: 10px;">
+                <a href="/maquinas" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">⚙️ Inventario Máquinas</a>
+                <a href="/mantenimiento" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔧 Órdenes de Trabajo</a>
+                <a href="/maquinas/qrs" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🖨️ Códigos QR y Fichas</a>
+            </div>
+        </div>
     <% } %>
     
     <hr style="border-color: #444; margin: 20px 0;">

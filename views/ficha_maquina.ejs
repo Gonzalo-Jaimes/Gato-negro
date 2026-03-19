@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ficha Técnica: <%= maquina.nombre %></title>
+    <!-- CSS minimalista para carga rápida y diseño corporativo -->
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #333; }
+        .ficha-container { max-width: 800px; margin: auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 6px solid #2563eb; }
+        .header-excel { display: flex; border: 2px solid #000; background: white; margin-bottom: 0; align-items: stretch; }
+        .header-excel .logo-box { width: 220px; border-right: 2px solid #000; display: flex; justify-content: center; align-items: center; padding: 5px; background: #000; }
+        .header-excel .logo-box img { max-width: 100%; max-height: 90px; }
+        .header-excel .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 10px; font-family: Arial, sans-serif; font-size: 15px; font-weight: bold; line-height: 1.3; color: #000; }
+        .title-excel { border: 2px solid #000; border-top: none; background: #d1d5db; text-align: center; padding: 8px; font-weight: bold; font-family: Arial, sans-serif; color: #000; margin-bottom: 20px; font-size: 14px; text-transform: uppercase; }
+
+        .datos-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px; background: #f8f9fa; padding: 20px; border-radius: 8px; border: 1px solid #eee; }
+        
+        /* COMPATIBILIDAD CON CELULARES */
+        @media (max-width: 600px) { 
+            body { padding: 10px; }
+            .ficha-container { padding: 15px; }
+            .header-excel { flex-direction: column; align-items: center; }
+            .header-excel .logo-box { width: 100%; border-right: none; border-bottom: 2px solid #000; padding: 10px 0; }
+            .header-excel .info-box span { font-size: 12px; }
+            .datos-grid { grid-template-columns: 1fr; } 
+            .historial-title { flex-direction: column; gap: 10px; text-align: center; }
+            .panel-financiero { flex-direction: column; gap: 15px; }
+            .panel-financiero > div { border-left: none !important; padding-left: 0 !important; border-bottom: 1px solid #475569; padding-bottom: 15px; }
+            .panel-financiero > div:last-child { border-bottom: none; padding-bottom: 0; }
+        }
+        
+        .dato-item strong { display: block; font-size: 12px; color: #888; text-transform: uppercase; margin-bottom: 2px; }
+        .dato-item span { font-size: 16px; font-weight: 500; color: #222; }
+        
+        .historial-title { display: flex; align-items: center; justify-content: space-between; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-bottom: 20px; }
+        .historial-title h2 { margin: 0; font-size: 20px; color: #111; }
+        
+        .mtto-card { background: white; border: 1px solid #e0e0e0; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 6px; margin-bottom: 15px; }
+        .mtto-card.preventivo { border-left-color: #10b981; }
+        .mtto-card.correctivo { border-left-color: #ef4444; }
+        
+        .mtto-header { display: flex; justify-content: space-between; margin-bottom: 10px; font-size: 14px; color: #555; border-bottom: 1px solid #f0f0f0; padding-bottom: 8px; }
+        .mtto-desc { font-size: 15px; margin-bottom: 10px; color: #333; line-height: 1.5; }
+        .mtto-footer { display: flex; flex-wrap: wrap; gap: 15px; justify-content: space-between; font-size: 13px; color: #666; background: #f9fafb; padding: 10px; border-radius: 4px; border: 1px solid #f0f0f0; }
+        
+        .btn-imprimir { display: block; width: 100%; padding: 15px; background: #111; color: white; text-align: center; text-decoration: none; font-weight: bold; border-radius: 6px; margin-top: 30px; cursor: pointer; border: none; font-size: 16px; transition: background 0.2s; }
+        .btn-imprimir:hover { background: #333; }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .ficha-container { box-shadow: none; border-top: 4px solid #000; padding: 0; max-width: 100%; }
+            .btn-imprimir { display: none; }
+            .mtto-card { page-break-inside: avoid; border: 1px solid #ccc; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="ficha-container">
+    <!-- Encabezado Corporativo idéntico al Excel de la empresa -->
+    <div class="header-excel">
+        <div class="logo-box">
+            <img src="/img/logo.png" alt="Gato Negro Logo">
+        </div>
+        <div class="info-box">
+            <span>FABRICA DE TABACOS GATO NEGRO</span>
+            <span>RIF. V- 06676738-4 GONZALO JAIMES BASTOS</span>
+            <span>CARRERA 14 CASA N° 13-47 SECTOR PINTO SALINAS</span>
+            <span>SAN ANTONIO ESTADO TACHIRA</span>
+        </div>
+    </div>
+    
+    <div class="title-excel">
+        DATOS GENERALES DE LA MÁQUINA / EQUIPO
+    </div>
+
+    <div class="datos-grid">
+        <div class="dato-item"><strong>Nombre del Equipo</strong><span><%= maquina.nombre %></span></div>
+        <div class="dato-item"><strong>Código Asignado</strong><span><%= maquina.codigo %></span></div>
+        <div class="dato-item"><strong>Marca / Modelo</strong><span><%= maquina.marca %> - <%= maquina.modelo %></span></div>
+        <div class="dato-item"><strong>Fabricante</strong><span><%= maquina.fabricante %></span></div>
+        <div class="dato-item"><strong>Área / Ubicación</strong><span><%= maquina.area %></span></div>
+        <div class="dato-item"><strong>Horas de Trabajo / Día</strong><span><%= maquina.horas_dia %> hrs</span></div>
+        <div class="dato-item"><strong>Estado Actual</strong>
+            <span style="color: <%= maquina.estado === 'Funcional' ? '#10b981' : (maquina.estado === 'No Funcional' ? '#ef4444' : '#f59e0b') %>; font-weight: bold;">
+                <%= maquina.estado %>
+            </span>
+        </div>
+        <div class="dato-item"><strong>Frecuencia Mtto.</strong><span>Cada <%= maquina.frecuencia_mtto_dias || 30 %> días</span></div>
+        <div class="dato-item" style="grid-column: 1 / -1;"><strong>Observaciones</strong><span><%= maquina.observaciones || 'Ninguna' %></span></div>
+    </div>
+
+    <!-- PANEL FINANCIERO -->
+    <div class="panel-financiero" style="background: #1e293b; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+        <div>
+            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Correctivos</span>
+            <span style="font-size: 22px; font-weight: bold; color: #ef4444;">$<%= maquina.costo_correctivo || 0 %></span>
+        </div>
+        <div style="border-left: 1px solid #475569; padding-left: 20px;">
+            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Preventivos</span>
+            <span style="font-size: 22px; font-weight: bold; color: #10b981;">$<%= maquina.costo_preventivo || 0 %></span>
+        </div>
+        <div style="border-left: 1px solid #475569; padding-left: 20px;">
+            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💵 Inversión Total</span>
+            <span style="font-size: 22px; font-weight: bold;">$<%= maquina.costo_total || 0 %></span>
+        </div>
+    </div>
+
+    <div class="historial-title">
+        <h2>📋 Historial Clínico (Mantenimientos)</h2>
+        <span style="background: #eee; padding: 4px 10px; border-radius: 20px; font-size: 12px; font-weight: bold;"><%= historial.length %> Registros</span>
+    </div>
+
+    <% if (historial.length === 0) { %>
+        <p style="text-align: center; color: #888; padding: 20px; background: #f9f9f9; border-radius: 6px; border: 1px dashed #ccc;">
+            Este equipo no tiene mantenimientos registrados en su hoja de vida aún.
+        </p>
+    <% } else { %>
+        <% historial.forEach(function(mtto) { %>
+            <div class="mtto-card <%= mtto.tipo.toLowerCase() %>">
+                <div class="mtto-header">
+                    <strong>
+                        <% if (mtto.tipo === 'Preventivo') { %> 🟢 Preventivo <% } else { %> 🔴 Correctivo <% } %>
+                    </strong>
+                    <span>📅 <%= mtto.fecha %> a las <%= mtto.hora %></span>
+                </div>
+                
+                <div class="mtto-desc">
+                    <strong>Trabajo Realizado:</strong> <%= mtto.descripcion %>
+                </div>
+                
+                <div class="mtto-footer">
+                    <span>👷 Por: <strong><%= mtto.hecho_por %></strong></span>
+                    <span>⏱️ Tiempo: <strong><%= mtto.tiempo_min %> min</strong></span>
+                    <span style="<%= mtto.estado === 'REALIZADO' ? 'color: green;' : 'color: red;' %>">
+                        <strong><%= mtto.estado %></strong>
+                    </span>
+                </div>
+            </div>
+        <% }); %>
+    <% } %>
+
+    <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Ficha Técnica</button>
+</div>
+
+</body>
+</html>

@@ -2,6 +2,7 @@ const express = require('express');
 const session = require('express-session');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js'); 
+const QRCode = require('qrcode');
 
 const app = express();
 
@@ -451,8 +452,35 @@ app.post('/abonar_deuda', async (req, res) => {
 app.get('/maquinas', async (req, res) => {
     if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
     
+    // Traemos datos de máquinas y de mantenimientos
     const { data: maquinas } = await supabase.from('maquinas').select('*').order('nombre', { ascending: true });
-    res.render('maquinas', { maquinas: maquinas || [] });
+    const { data: mantenimientos } = await supabase.from('mantenimiento').select('*');
+
+    // Procesamos la lógica de Alertas y Costos
+    const maquinasProcesadas = (maquinas || []).map(m => {
+        // Encontrar mantenimientos de esta máquina
+        const mttosMaquina = (mantenimientos || []).filter(mtto => mtto.maquina === m.nombre);
+        
+        let costo_total = 0;
+        mttosMaquina.forEach(mtto => {
+           if (mtto.estado === 'REALIZADO') costo_total += (mtto.costo_mo || 0) + (mtto.costo_mat || 0);
+        });
+        m.costo_historico = costo_total;
+
+        // Calcular alerta preventiva
+        if (m.ultimo_mtto) {
+            const fechaUltimo = new Date(m.ultimo_mtto + 'T00:00:00'); // Evitar fallos de zona horaria
+            const fechaActual = new Date();
+            const diasTranscurridos = Math.floor((fechaActual - fechaUltimo) / (1000 * 60 * 60 * 24));
+            const limite = m.frecuencia_mtto_dias || 30;
+            m.dias_para_mtto = limite - diasTranscurridos;
+        } else {
+            m.dias_para_mtto = "Sin Registro";
+        }
+        return m;
+    });
+
+    res.render('maquinas', { maquinas: maquinasProcesadas });
 });
 
 app.post('/agregar_maquina', async (req, res) => {
@@ -465,7 +493,8 @@ app.post('/agregar_maquina', async (req, res) => {
         fabricante: req.body.fabricante,
         codigo: req.body.codigo,
         estado: req.body.estado,
-        observaciones: req.body.observaciones || 'Ninguna'
+        observaciones: req.body.observaciones || 'Ninguna',
+        frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30 // NUEVO DATO INTELIGENTE
     }]);
 
     if (error) {
@@ -479,6 +508,53 @@ app.post('/agregar_maquina', async (req, res) => {
 app.get('/eliminar_maquina/:id', async (req, res) => {
     await supabase.from('maquinas').delete().eq('id', req.params.id);
     res.redirect('/maquinas');
+});
+
+// --- FICHA TÉCNICA DIGITAL (CV DE LA MÁQUINA) ---
+app.get('/maquinas/ficha/:id', async (req, res) => {
+    const maquinaId = req.params.id;
+    
+    const { data: maquina } = await supabase.from('maquinas').select('*').eq('id', maquinaId).single();
+    if (!maquina) return res.send("<h2>❌ Máquina no encontrada en el sistema.</h2>");
+
+    const { data: mantenimientos } = await supabase.from('mantenimiento')
+        .select('*')
+        .eq('maquina', maquina.nombre)
+        .order('fecha', { ascending: false })
+        .order('hora', { ascending: false });
+
+    // Calculamos el dinero invertido
+    let costoPreventivo = 0;
+    let costoCorrectivo = 0;
+    
+    if (mantenimientos) {
+        mantenimientos.forEach(mtto => {
+            if (mtto.estado === 'REALIZADO') {
+                const totalMtto = (mtto.costo_mo || 0) + (mtto.costo_mat || 0);
+                if (mtto.tipo === 'Preventivo') costoPreventivo += totalMtto;
+                if (mtto.tipo === 'Correctivo') costoCorrectivo += totalMtto;
+            }
+        });
+    }
+    
+    maquina.costo_preventivo = costoPreventivo;
+    maquina.costo_correctivo = costoCorrectivo;
+    maquina.costo_total = costoPreventivo + costoCorrectivo;
+
+    res.render('ficha_maquina', { 
+        maquina: maquina, 
+        historial: mantenimientos || [] 
+    });
+});
+
+// --- PANEL CENTRAL DE QRs (VISTA ADMINISTRATIVA) ---
+app.get('/maquinas/qrs', async (req, res) => {
+    // Solo permitimos acceso a admin y mantenimiento
+    if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
+    
+    const { data: maquinas } = await supabase.from('maquinas').select('*').order('nombre', { ascending: true });
+    
+    res.render('maquinas_qrs', { maquinas: maquinas || [] });
 });
 
 // ---------------- USUARIOS Y MANTENIMIENTO ----------------
@@ -524,6 +600,14 @@ app.post('/agregar_mantenimiento', async (req, res) => {
         hecho_por: req.body.hecho_por,
         estado: req.body.estado
     }]);
+
+    // SI EL MTTO ES PREVENTIVO, REINICIAMOS EL CONTADOR DE LA MÁQUINA
+    if (req.body.tipo === 'Preventivo' && req.body.estado === 'REALIZADO') {
+        const tiempo = obtenerHoraColombia();
+        // Usamos la fecha real insertada para reiniciar o la de hoy si no mandan
+        await supabase.from('maquinas').update({ ultimo_mtto: req.body.fecha || tiempo.fecha }).eq('nombre', req.body.maquina);
+    }
+
     res.redirect('/mantenimiento');
 });
 
@@ -532,4 +616,35 @@ const PORT = process.env.PORT || 3000;
 if (process.env.NODE_ENV !== 'production') {
     app.listen(PORT, () => console.log(`🐾 Servidor Gato Negro corriendo en http://localhost:${PORT}`));
 }
+
+// --- GENERADOR DE CÓDIGOS QR PARA MÁQUINAS ---
+app.get('/maquina/:id/qr', async (req, res) => {
+    const maquinaId = req.params.id;
+    
+    // 1. Detectamos automáticamente si estamos en Vercel (Production) o en Localhost
+    const baseURL = process.env.NODE_ENV === 'production'
+        ? 'https://gato-negro.vercel.app' // URL Real (Vercel)
+        : `http://localhost:${PORT}`;     // URL Local (Tu PC)
+
+    // 2. Definimos a qué URL va a apuntar el QR (A la futura ficha técnica)
+    const urlDeLaFicha = `${baseURL}/maquinas/ficha/${maquinaId}`;
+
+    try {
+        // 3. Generamos el código QR como un Buffer de imagen PNG
+        const qrBuffer = await QRCode.toBuffer(urlDeLaFicha, {
+            type: 'png',
+            margin: 1,
+            width: 250 // Tamaño de la imagen
+        });
+
+        // 4. Se lo enviamos al navegador como si fuera una foto normal
+        res.type('png');
+        res.send(qrBuffer);
+
+    } catch (error) {
+        console.error('Error generando QR:', error);
+        res.status(500).send('Error al generar el Código QR.');
+    }
+});
+
 module.exports = app;

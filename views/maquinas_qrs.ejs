@@ -1,0 +1,63 @@
+<%- include('partials/header') %>
+
+<h1>🖨️ Panel de Códigos QR</h1>
+<hr>
+
+<p>Aquí puedes visualizar e imprimir las etiquetas QR de todos los equipos. Al escanearlas físicamente, abrirán la Ficha Técnica correspondiente de la máquina.</p>
+
+<div style="margin-bottom: 20px;" class="btn-imprimir">
+    <button onclick="window.print()" style="background: #2563eb; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold;">🖨️ Imprimir Todas las Etiquetas</button>
+</div>
+
+<div class="qrs-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+    <% if (maquinas.length === 0) { %>
+        <p>No hay máquinas registradas en el sistema todavía.</p>
+    <% } else { %>
+        <% maquinas.forEach(function(m) { %>
+            <div class="qr-card" style="background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; width: 230px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-inside: avoid;">
+                <h3 style="margin: 0 0 5px; font-size: 18px; color: #111;"><%= m.nombre %></h3>
+                <p style="margin: 0 0 15px; font-size: 13px; color: #555; font-weight: bold; text-transform: uppercase;">Cód: <%= m.codigo %></p>
+                
+                <div style="border: 2px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px; background: #fafafa;">
+                    <img src="/maquina/<%= m.id %>/qr" alt="QR de <%= m.nombre %>" style="width: 100%; max-width: 180px; display: block; margin: auto;">
+                </div>
+                
+                <a href="/maquinas/ficha/<%= m.id %>" class="btn-ficha" target="_blank" style="display: inline-block; padding: 8px 15px; background: #111; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; width: 80%; transition: background 0.2s;">📄 Abrir Ficha Técnica</a>
+            </div>
+        <% }); %>
+    <% } %>
+</div>
+
+<style>
+    .btn-ficha:hover { background: #333 !important; }
+    
+    @media print {
+        /* Ocultar elementos de la interfaz de usuario regular durante la impresión */
+        body { background: white !important; }
+        .sidebar, .topbar, h1, hr, p, .btn-imprimir { display: none !important; }
+        .content { padding: 0 !important; margin: 0 !important; }
+        
+        .qrs-container { 
+            display: grid !important; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; 
+            gap: 15px !important; 
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .qr-card { 
+            width: 100% !important; 
+            max-width: none !important; 
+            box-shadow: none !important; 
+            border: 2px solid #000 !important; 
+            border-radius: 0 !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 20px !important;
+        }
+        
+        /* Ocultar el botón dentro de la tarjeta al imprimir */
+        .qr-card .btn-ficha { display: none !important; }
+    }
+</style>
+
+<%- include('partials/footer') %>
