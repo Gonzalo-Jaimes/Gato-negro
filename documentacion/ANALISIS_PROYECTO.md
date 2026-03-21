@@ -1,9 +1,9 @@
 # Análisis del Proyecto: Gato Negro
 ## Sistema de Gestión de Inventario y Producción
 
-**Versión**: 1.5.2  
-**Fecha de Análisis**: Marzo 2026  
-**Estado**: En Desarrollo  
+**Versión**: 1.6.0  
+**Fecha de Actualización**: Marzo 2026 (Refactorización de Nómina y Linting)  
+**Estado**: En Producción Activa  
 **Ambiente de Despliegue**: Vercel (Node.js) + Supabase (Base de Datos)
 
 ---
@@ -332,7 +332,12 @@ Rezago = Cantidad Original - Tabacos Entregados
   - Listado de máquinas disponibles
   - Historial de mantenimientos realizados
 
-#### 6.2 Registrar Mantenimiento
+#### 6.2 Alertas Predictivas e Inversión (Novedad V1.5+)
+- **Mecanismo**: El backend (`server.js`) calcula al vuelo los días restantes para el próximo servicio cruzando la `frecuencia_mtto_dias` y la fecha del `ultimo_mtto`. 
+- **Semáforo Web**: La interfaz asigna colores (Verde, Amarillo, Rojo) según el grado de urgencia del equipo.
+- **Finanzas**: Se totaliza el `costo_mo` (Mano de obra) + `costo_mat` (Materiales), otorgando automáticamente un panel de *Inversión Acumulada Histórica* por máquina.
+
+#### 6.3 Registrar Mantenimiento
 - **Ruta**: `POST /agregar_mantenimiento`
 - **Parámetros**: 
   - fecha, hora, maquina, tipo, descripcion
@@ -358,16 +363,40 @@ Rezago = Cantidad Original - Tabacos Entregados
 
 ---
 
+### 8. **Módulo de Facturación, Nómina y Cestas (Fase 5)**
+**Archivos**: `server.js`, `views/nomina.ejs`, `views/cierre_diario.ejs`, `views/factura.ejs`, `views/recepcion.ejs`
+
+#### 8.1 Flujo Automatizado de Recepción a Nómina
+- **Mecanismo**: El administrador recibe tabacos (`GET /recepcion`). Al confirmar (`POST /recibir_tarea/:id`), el sistema inyecta automáticamente la ganancia en pesos colombianos al empleado basado en una tarifa corporativa fija ($150,000 COP por millar / $150 COP unidad).
+- **Control de Cestas Plásticas**: Se verifica la relación de tabacos recibidos frente a las cestas devueltas (1 cesta por cada ~500 tabacos). Cestas faltantes se registran automáticamente como deudas físicas/rezagos en el perfil del fabriquin.
+
+#### 8.2 Dashboard del Fabriquín (Cierre Diario)
+- **Ruta**: `GET /cierre_diario`
+- **Visibilidad**: Exclusivo Fabriquín.
+- **Acción**: Sólo lectura. El empleado visualiza su balance semanal a favor, sus deudas de cestas o vales manuales, y el pago neto estimado a cobrar (Totalmente en formato $ COP).
+
+#### 8.3 Panel de Nómina y Recibo de Pago (Admin)
+- **Rutas**: `GET /nomina`, `GET /factura_nomina/:usuario`, `POST /pagar_nomina/:usuario`, `POST /agregar_deuda`
+- **Visibilidad**: Admin
+- **Acción**: Libro mayor para liquidaciones semanales. El administrador asigna vales/rezagos y emite un recibo formal imprimible (`factura.ejs`) que incluye el Documento de Identificación (C.I/RUT) del empleado y áreas firmables para asentar la orden legalmente antes de darle "PAGADO" en sistema.
+
+#### 8.4 Abonos Diferidos y Rezagos Mixtos
+- **Ruta**: `POST /abonar_rezago`
+- **Mecanismo**: Si un fabriquin entrega incompleto, el sistema guarda una deuda (`rezago`). Posteriormente, el administrador puede saldar tanto Tabacos faltantes como Cestas devueltas desde una misma interfaz unificada. Esto reinyecta el material al Inventario, documenta el movimiento en el Kardex y le ingresa el dinero correspondiente al fabriquin en su Nómina pendiente de la semana.
+
+---
+
 ## 🗄️ Base de Datos
 
 ### Esquema de Supabase
 
 #### Tabla: `usuarios`
 ```sql
-id          INTEGER (PK, AI)
-usuario     TEXT
-password    TEXT
-rol         TEXT
+id              INTEGER (PK, AI)
+usuario         TEXT
+password        TEXT
+rol             TEXT
+identificacion  TEXT (Opcional - Documento de Identidad C.I/RUT)
 ```
 
 **Roles disponibles**:
@@ -651,23 +680,22 @@ app.use(session({
 - ✅ Sesiones HTTP seguras
 - ✅ Base de datos Supabase con control de acceso
 - ✅ Uso de SDK oficial de Supabase
-- ✅ URLs directas para eliminar (mejor sería POST)
 - ✅ Arquitectura separada Frontend/Backend
+- ✅ Módulo EJS optimizado: Motor de plantillas validado estáticamente libre de inyecciones sintácticas agresivas, totalmente pasivo frente a Lintering de código de UI / Compatibilidad garantizada para navegadores webkit para impresión (`print-color-adjust`).
 
 ---
 
-## 📊 Estado y Próximas Mejoras
-
-### Estado Actual: **En Desarrollo**
+### Estado Actual: **En Producción Activa / Versión 1.6**
 
 **Características Completadas** ✅:
 - Sistema de login y autenticación básica
 - Gestión de inventario y kardex
 - Creación y aprobación de pedidos
-- Módulo de recepción y rezagos
-- Gestión de máquinas
-- Módulo de mantenimiento
-- Gestión de usuarios
+- Módulo de recepción automatizado (Nómina y Cestas Plásticas)
+- Gestión de máquinas y Fichas Técnicas (Mantenimiento, Códigos QRs y Visualización móvil)
+- Módulo de mantenimiento (Alertas predictivas e inversión acumulada)
+- Dashboard de Nómina y Facturación (Pesos Colombianos $ COP y Vales)
+- Gestión de usuarios (Con integración de Documentos de Identidad)
 - Despliegue en Vercel
 
 **Problemas Conocidos** ⚠️:
@@ -675,7 +703,7 @@ app.use(session({
 - Exposición de credenciales de BD
 - Contraseñas sin encriptación
 - Falta de validación CSRF
-- Gestión de errores mejorable
+- Gestión de errores temporal (Uso de try-catch nativo)
 
 ### Nuevas Funcionalidades Pendientes (El Plan de Acción)
 
@@ -683,13 +711,6 @@ app.use(session({
    - *Recuperación*: Configurar envío de correo ("Olvidé mi contraseña").
    - *Registro Nuevos Empleados*: Formulario para fabriquines (aprobación manual del Admin requerida).
    - *Botón de Contacto*: Opción de contacto directo por WhatsApp para nuevos registros.
-
-2. **Facturación y Pagos (El Dinero 💰)**
-   - *Cierre del Fabriquín*: Opción para reportar entregas y generar recibo/factura de pago.
-   - *Estado de Pagos (Admin)*: Panel integral para gestionar recibos pagados y pendientes (sincronizado con Pizarra de Deudores).
-
-3. **Módulo de Mantenimiento al 100% (Adiós al Excel)**
-   - Integrar toda la lógica del Excel original (alertas preventivas, costos totales de reparación por máquina, etc.) con el nuevo diseño del sistema.
 
 ### Mejoras Técnicas Recomendadas (Prioridad)
 
@@ -732,16 +753,21 @@ NODE_ENV=production
 SESSION_SECRET=tu_secreto_aqui
 ```
 
-### Scripts Útiles
+### Scripts Útiles del Proyecto
 ```bash
-# Iniciar servidor
-npm start
+# Iniciar servidor principal
+node server.js
 
-# Crear usuario admin (usar primero)
+# Crear usuario admin por terminal (Legado)
 python crear_admin.py
 
-# Limpiar BD y recrear tablas
+# Limpiar BD y recrear tablas SQLite (Legado)
 python database.py
+
+# Scripts de Mantenimiento Supabase (Añadidos en V1.6)
+node limpiar_spam.js      # Limpiador de bóveda por spam click
+node limpiar_fantasma.js  # Reparador de abonos incompletos en BD
+node fix_db.js            # Ajustador de inflación (COP) manual
 ```
 
 ### Zona Horaria por Defecto

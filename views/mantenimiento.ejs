@@ -99,8 +99,8 @@
         <td style="text-transform: capitalize;"><%= mtto.hecho_por %></td>
         <td style="text-align: left; font-size: 14px;">
             ⏱️ <b>Tiempo:</b> <%= mtto.tiempo_min %> min <br>
-            👷 <b>M.O:</b> $<%= mtto.costo_mo %> <br>
-            ⚙️ <b>Mat:</b> $<%= mtto.costo_mat %>
+            👷 <b>M.O:</b> $<%= mtto.costo_mo.toLocaleString('es-CO') %> COP<br>
+            ⚙️ <b>Mat:</b> $<%= mtto.costo_mat.toLocaleString('es-CO') %> COP
         </td>
         <td>
             <% if (mtto.estado === 'REALIZADO') { %> 

@@ -75,7 +75,7 @@
                 <span style="color: green; font-size: 13px;">🟢 Mtto al Día (<%= m.dias_para_mtto %>d)</span>
             <% } %>
 
-            <br><span style="font-size: 13px;">💰 <b>$<%= m.costo_historico %></b> invertidos</span>
+            <br><span style="font-size: 13px;">💰 <b>$<%= m.costo_historico.toLocaleString('es-CO') %> COP</b> invertidos</span>
         </td>
         <td>
             <a href="/eliminar_maquina/<%= m.id %>">

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo de Nómina - <%= usuario %></title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #f4f6f9; margin: 0; padding: 20px; color: #111; }
+        .factura-container { max-width: 800px; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-top: 6px solid #111; position: relative; }
+        
+        .header-excel { display: flex; border: 2px solid #000; background: white; margin-bottom: 20px; align-items: stretch; }
+        .header-excel .logo-box { width: 200px; border-right: 2px solid #000; display: flex; justify-content: center; align-items: center; padding: 10px; background: #000; }
+        .header-excel .logo-box img { max-width: 100%; max-height: 80px; }
+        .header-excel .info-box { flex: 1; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 15px; font-weight: bold; line-height: 1.4; font-size: 14px; }
+        
+        .datos-trabajador { border: 2px solid #000; padding: 15px; margin-bottom: 20px; font-size: 15px; background: #fdfdfd; }
+        .datos-trabajador div { margin-bottom: 8px; }
+        
+        .tabla-factura { width: 100%; border-collapse: collapse; margin-bottom: 25px; }
+        .tabla-factura th, .tabla-factura td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 14px; }
+        .tabla-factura th { background: #e5e7eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        
+        .total-box { display: flex; justify-content: flex-end; margin-top: 10px; }
+        .total-box div { border: 2px solid #000; padding: 10px 20px; font-size: 18px; font-weight: bold; background: #d1d5db; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        
+        .firmas { display: flex; justify-content: space-around; margin-top: 60px; text-align: center; font-weight: bold; }
+        .firmas div { width: 40%; border-top: 2px solid #000; padding-top: 10px; }
+        
+        /* BOTONERA NO IMPRIMIBLE */
+        .acciones-flotantes { text-align: center; margin-top: 40px; padding: 20px; background: #e0e7ff; border-radius: 8px; border: 1px dashed #4f46e5; }
+        .btn { padding: 12px 25px; font-size: 16px; font-weight: bold; border: none; border-radius: 5px; cursor: pointer; text-decoration: none; margin: 0 10px; }
+        .btn-imprimir { background: #1f2937; color: white; }
+        .btn-pagar { background: #10b981; color: white; }
+        
+        @media print {
+            body { background: white; padding: 0; }
+            .factura-container { box-shadow: none; border: none; padding: 0; }
+            .acciones-flotantes { display: none; }
+            .header-excel, .tabla-factura, .datos-trabajador, .firmas { page-break-inside: avoid; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="factura-container">
+    
+    <div class="header-excel">
+        <div class="logo-box">
+            <img src="/img/logo.png" alt="Gato Negro">
+        </div>
+        <div class="info-box">
+            <span style="font-size: 18px; font-weight: 900; text-transform: uppercase;">RECIBO DE NÓMINA - PRODUCCIÓN</span>
+            <span>FABRICA DE TABACOS GATO NEGRO</span>
+            <span>RIF. V- 06676738-4 GONZALO JAIMES BASTOS</span>
+            <span>SAN ANTONIO - ESTADO TÁCHIRA</span>
+        </div>
+    </div>
+    
+    <div class="datos-trabajador">
+        <div><strong>FABRIQUÍN / EMPLEADO:</strong> <span style="text-transform: uppercase;"><%= usuario %></span></div>
+        <div><strong>DOCUMENTO (C.I/RUT):</strong> <span style="text-transform: uppercase;"><%= documento %></span></div>
+        <div><strong>FECHA DE CORTE:</strong> <%= fecha %></div>
+        <div><strong>ESTATUS:</strong> LIQUIDACIÓN SEMANAL</div>
+    </div>
+    
+    <!-- INGRESOS (PRODUCCIÓN) -->
+    <h3 style="margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">1. Detalle de Producción (A Pagar)</h3>
+    <table class="tabla-factura">
+        <thead>
+            <tr>
+                <th>Fecha Ingreso</th>
+                <th>Concepto</th>
+                <th>Cantidad Fabricada</th>
+                <th>Tarifa / Unidad</th>
+                <th>Subtotal (COP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (produccion.length === 0) { %>
+                <tr><td colspan="5">No reportó producción para este corte.</td></tr>
+            <% } else { %>
+                <% produccion.forEach(p => { %>
+                    <tr>
+                        <td><%= p.fecha %></td>
+                        <td>Fabricación de Tabacos</td>
+                        <td><%= p.cantidad_producida.toLocaleString('es-CO') %> UND</td>
+                        <td>$<%= parseFloat(p.precio_por_unidad).toLocaleString('es-CO') %></td>
+                        <td style="font-weight: bold;">$<%= parseFloat(p.total_ganado).toLocaleString('es-CO') %></td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+    
+    <div class="total-box" style="margin-bottom: 30px;">
+        <div style="background: white; border: none; padding-right: 0;">SUBTOTAL PRODUCIDO: <span style="color: #059669; margin-left:15px;">$<%= subtotal.toLocaleString('es-CO') %> COP</span></div>
+    </div>
+    
+    <!-- DESCUENTOS (VALES) -->
+    <% if (deudas.length > 0) { %>
+    <h3 style="margin-bottom: 5px; text-transform: uppercase; font-size: 14px;">2. Detalle de Deducciones (Vales / Adelantos)</h3>
+    <table class="tabla-factura">
+        <thead>
+            <tr>
+                <th>Fecha Emisión</th>
+                <th>Concepto Deducción</th>
+                <th>Monto a Descontar (COP)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% deudas.forEach(d => { %>
+                <tr>
+                    <td><%= d.fecha %></td>
+                    <td style="text-transform: uppercase;"><%= d.concepto %></td>
+                    <td style="font-weight: bold; color: #ef4444;">$<%= parseFloat(d.monto_deuda).toLocaleString('es-CO') %></td>
+                </tr>
+            <% }) %>
+        </tbody>
+    </table>
+    
+    <div class="total-box">
+        <div style="background: white; border: none; padding-right: 0;">TOTAL DEDUCCIONES: <span style="color: #ef4444; margin-left:15px;">-$<%= descuentos.toLocaleString('es-CO') %> COP</span></div>
+    </div>
+    <% } %>
+
+    <!-- GRAN TOTAL -->
+    <div class="total-box" style="margin-top: 30px; border-top: 2px dashed #000; padding-top: 20px;">
+        <div style="font-size: 22px;">TOTAL NETO A PAGAR: <span style="margin-left: 20px;"><%= total_neto >= 0 ? '$' + total_neto.toLocaleString('es-CO') : '-$' + Math.abs(total_neto).toLocaleString('es-CO') %> COP</span></div>
+    </div>
+    
+    <div style="margin-top: 20px; font-size: 13px; text-align: justify; color: #444;">
+        Por medio del presente documento certifico que he recibido la suma arriba especificada a mi entera satisfacción por concepto del trabajo de destajo / fabricación de tabacos en <strong>Fábrica Gato Negro</strong>, y reconozco íntegramente los descuentos aplicados por la administración si existieran.
+    </div>
+    
+    <!-- ÁREA DE FIRMAS -->
+    <div class="firmas">
+        <div>
+            Firma El Pagador<br>
+            <span style="font-weight: normal; font-size: 12px;">Departamento de Administración</span>
+        </div>
+        <div>
+            Firma Recibí Conforme<br>
+            <span style="font-weight: normal; font-size: 12px; text-transform: uppercase;"><%= usuario %> (C.I: <%= documento %>)</span>
+        </div>
+    </div>
+    
+    <!-- ACCIONES DE SOFTWARE (No sale en el papel) -->
+    <div class="acciones-flotantes">
+        <h3 style="margin-top: 0; color: #3730a3;">Pasos para el Cierre de Caja (Sistema)</h3>
+        <p style="font-size: 14px; margin-bottom: 20px;">1. Imprime esta factura para los registros físicos. <br> 2. Haz que el afiliado firme el recibo.<br> 3. Al entregar el dinero ($<%= total_neto.toLocaleString('es-CO') %>) pulsa el botón verde para asentar como <strong>PAGADO</strong> la semana.</p>
+        
+        <div style="display: flex; justify-content: center;">
+            <button class="btn btn-imprimir" onclick="window.print()">🖨️ Paso 1: Imprimir Recibo</button>
+            <form action="/pagar_nomina/<%= usuario %>" method="POST" onsubmit="return confirm('¿Confirmas que ya entregaste el efectivo y el empleado firmó? Esto cerrará y reiniciará su semana.');">
+                <button type="submit" class="btn btn-pagar">✅ Paso 2: Marcar como PAGADO en el Servidor</button>
+            </form>
+        </div>
+        
+        <div style="margin-top: 15px;">
+            <a href="/nomina" style="color: #6366f1; font-weight: bold; text-decoration: none;">🔙 Cancelar y Volver a la Lista</a>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

@@ -1,0 +1,108 @@
+<%- include('partials/header') %>
+
+<div class="header-card" style="background: #111; border-top: 5px solid #10b981; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-between; align-items: center;">
+    <div>
+        <h2 style="margin: 0;">💵 Control de Nómina y Pagos</h2>
+        <p style="margin-top: 5px; color: #ccc;">Administración Central de Destajo - Gato Negro</p>
+    </div>
+</div>
+
+<div style="display: grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+
+    <!-- PANEL PRINCIPAL DE PAGOS -->
+    <div>
+        <h3 style="color: #374151; margin-top: 0;">📄 Nómina Pendiente a Pagar (Semana)</h3>
+        <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+            <table style="width: 100%; border-collapse: collapse; text-align: center;">
+                <thead style="background: #111; color: white;">
+                    <tr>
+                        <th style="padding: 12px;">Fabriquín</th>
+                        <th style="padding: 12px;">Producción ($)</th>
+                        <th style="padding: 12px; background: #991b1b;">Deuda (-)</th>
+                        <th style="padding: 12px; background: #065f46;">A PAGAR ($)</th>
+                        <th style="padding: 12px;">Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (nomina.length === 0) { %>
+                        <tr><td colspan="5" style="padding: 20px;">No hay empleados registrados.</td></tr>
+                    <% } else { %>
+                        <% nomina.forEach(n => { %>
+                            <% if (n.pago_neto > 0) { %>
+                            <tr style="border-bottom: 1px solid #f3f4f6; background-color: #f0fdf4;">
+                            <% } else { %>
+                            <tr style="border-bottom: 1px solid #f3f4f6;">
+                            <% } %>
+                                <td style="padding: 15px; font-weight: bold; text-transform: capitalize;"><%= n.usuario %></td>
+                                <td style="padding: 15px; color: #059669; font-weight: bold;">$<%= n.ganancia_pendiente.toLocaleString('es-CO') %> COP</td>
+                                <td style="padding: 15px; color: #ef4444; font-weight: bold;">$<%= n.deuda_activa.toLocaleString('es-CO') %> COP</td>
+                                <% if (n.pago_neto >= 0) { %>
+                                <td style="padding: 15px; font-size: 18px; font-weight: bold; color: #1d4ed8;">
+                                <% } else { %>
+                                <td style="padding: 15px; font-size: 18px; font-weight: bold; color: #ef4444;">
+                                <% } %>
+                                    $<%= n.pago_neto.toLocaleString('es-CO') %> COP
+                                </td>
+                                <td style="padding: 15px;">
+                                    <% if (n.ganancia_pendiente > 0 || n.deuda_activa > 0) { %>
+                                        <a href="/factura_nomina/<%= n.usuario %>" style="display:inline-block; background: #111; color: white; text-decoration:none; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                                            📄 Generar Factura
+                                        </a>
+                                    <% } else { %>
+                                        <span style="color: #9ca3af; font-size: 12px;">Sin Novedad</span>
+                                    <% } %>
+                                </td>
+                            </tr>
+                        <% }) %>
+                    <% } %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- PANEL LATERAL DE DEUDAS Y VALES -->
+    <div>
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; border-top: 4px solid #ef4444; margin-bottom: 20px;">
+            <h3 style="margin-top: 0; color: #ef4444; border-bottom: 1px solid #fee2e2; padding-bottom: 10px;">🔴 Otorgar Vale / Rezagos</h3>
+            <form action="/agregar_deuda" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
+                
+                <label style="font-size: 13px; font-weight: bold; color: #6b7280;">Empleado / Fabriquín</label>
+                <select name="usuario" required style="padding: 10px; border-radius: 4px; border: 1px solid #d1d5db;">
+                    <% nomina.forEach(n => { %>
+                        <option value="<%= n.usuario %>"><%= n.usuario %></option>
+                    <% }) %>
+                </select>
+
+                <label style="font-size: 13px; font-weight: bold; color: #6b7280;">Monto Adicionado ($)</label>
+                <input type="number" step="0.01" name="monto" required placeholder="0.00" style="padding: 10px; border-radius: 4px; border: 1px solid #d1d5db;">
+
+                <label style="font-size: 13px; font-weight: bold; color: #6b7280;">Concepto / Razón</label>
+                <input type="text" name="concepto" required placeholder="Ej: Vale por mercado, Adelanto..." style="padding: 10px; border-radius: 4px; border: 1px solid #d1d5db;">
+
+                <button type="submit" style="background: #ef4444; color: white; border: none; padding: 10px; font-weight: bold; border-radius: 4px; cursor: pointer; margin-top: 10px;">
+                    Cargar Deuda a la Cuenta
+                </button>
+            </form>
+        </div>
+
+        <div style="background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+            <h3 style="margin-top: 0; color: #374151; font-size: 15px;">📋 Vales Activos en el Sistema</h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                <% if (deudas_activas.length === 0) { %>
+                    <li style="color: #9ca3af; font-size: 13px;">No hay deudas sin cobrar.</li>
+                <% } else { %>
+                    <% deudas_activas.forEach(d => { %>
+                        <li style="padding: 10px; border-bottom: 1px solid #f3f4f6; font-size: 13px;">
+                            <strong style="color: #ef4444;">$<%= d.monto_deuda.toLocaleString('es-CO') %> COP</strong> descontar a <strong><%= d.usuario %></strong><br>
+                            <span style="color: #6b7280; font-size: 11px;"><%= d.concepto %> (<%= d.fecha %>)</span>
+                        </li>
+                    <% }) %>
+                <% } %>
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+</div>
+</body></html>

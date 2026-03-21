@@ -90,9 +90,13 @@
         <div class="dato-item"><strong>Área / Ubicación</strong><span><%= maquina.area %></span></div>
         <div class="dato-item"><strong>Horas de Trabajo / Día</strong><span><%= maquina.horas_dia %> hrs</span></div>
         <div class="dato-item"><strong>Estado Actual</strong>
-            <span style="color: <%= maquina.estado === 'Funcional' ? '#10b981' : (maquina.estado === 'No Funcional' ? '#ef4444' : '#f59e0b') %>; font-weight: bold;">
-                <%= maquina.estado %>
-            </span>
+            <% if (maquina.estado === 'Funcional') { %>
+                <span style="color: #10b981; font-weight: bold;"><%= maquina.estado %></span>
+            <% } else if (maquina.estado === 'No Funcional') { %>
+                <span style="color: #ef4444; font-weight: bold;"><%= maquina.estado %></span>
+            <% } else { %>
+                <span style="color: #f59e0b; font-weight: bold;"><%= maquina.estado %></span>
+            <% } %>
         </div>
         <div class="dato-item"><strong>Frecuencia Mtto.</strong><span>Cada <%= maquina.frecuencia_mtto_dias || 30 %> días</span></div>
         <div class="dato-item" style="grid-column: 1 / -1;"><strong>Observaciones</strong><span><%= maquina.observaciones || 'Ninguna' %></span></div>
@@ -102,15 +106,15 @@
     <div class="panel-financiero" style="background: #1e293b; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
         <div>
             <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Correctivos</span>
-            <span style="font-size: 22px; font-weight: bold; color: #ef4444;">$<%= maquina.costo_correctivo || 0 %></span>
+            <span style="font-size: 22px; font-weight: bold; color: #ef4444;">$<%= (maquina.costo_correctivo || 0).toLocaleString('es-CO') %> COP</span>
         </div>
         <div style="border-left: 1px solid #475569; padding-left: 20px;">
             <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Preventivos</span>
-            <span style="font-size: 22px; font-weight: bold; color: #10b981;">$<%= maquina.costo_preventivo || 0 %></span>
+            <span style="font-size: 22px; font-weight: bold; color: #10b981;">$<%= (maquina.costo_preventivo || 0).toLocaleString('es-CO') %> COP</span>
         </div>
         <div style="border-left: 1px solid #475569; padding-left: 20px;">
             <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💵 Inversión Total</span>
-            <span style="font-size: 22px; font-weight: bold;">$<%= maquina.costo_total || 0 %></span>
+            <span style="font-size: 22px; font-weight: bold;">$<%= (maquina.costo_total || 0).toLocaleString('es-CO') %> COP</span>
         </div>
     </div>
 
@@ -137,12 +141,15 @@
                     <strong>Trabajo Realizado:</strong> <%= mtto.descripcion %>
                 </div>
                 
-                <div class="mtto-footer">
+                <div class="mtto-footer" style="padding: 12px; font-size: 14px;">
                     <span>👷 Por: <strong><%= mtto.hecho_por %></strong></span>
                     <span>⏱️ Tiempo: <strong><%= mtto.tiempo_min %> min</strong></span>
-                    <span style="<%= mtto.estado === 'REALIZADO' ? 'color: green;' : 'color: red;' %>">
-                        <strong><%= mtto.estado %></strong>
-                    </span>
+                    <span>💸 Costo: <strong style="color: #374151;">$<%= ((parseFloat(mtto.costo_mo) || 0) + (parseFloat(mtto.costo_mat) || 0)).toLocaleString('es-CO') %> COP</strong></span>
+                    <% if (mtto.estado === 'REALIZADO') { %>
+                        <span style="color: #10b981;"><strong><%= mtto.estado %></strong></span>
+                    <% } else { %>
+                        <span style="color: #ef4444;"><strong><%= mtto.estado %></strong></span>
+                    <% } %>
                 </div>
             </div>
         <% }); %>

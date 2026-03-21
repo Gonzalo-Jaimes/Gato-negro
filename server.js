@@ -334,20 +334,25 @@ app.get('/recepcion', async (req, res) => {
         .order('id', { ascending: true });
 
     const { data: completados } = await supabase.from('pedidos')
-        .select('usuario, rezago')
+        .select('usuario, rezago, rezago_cestas')
         .eq('estado', 'completado');
 
     let resumenRezagos = {};
     if (completados) {
         completados.forEach(p => {
-            if (!resumenRezagos[p.usuario]) resumenRezagos[p.usuario] = 0;
-            resumenRezagos[p.usuario] += (p.rezago || 0); 
+            if (!resumenRezagos[p.usuario]) resumenRezagos[p.usuario] = { tabacos: 0, cestas: 0 };
+            resumenRezagos[p.usuario].tabacos += (parseInt(p.rezago) || 0); 
+            resumenRezagos[p.usuario].cestas += (parseInt(p.rezago_cestas) || 0); 
         });
     }
 
     let listaRezagos = Object.keys(resumenRezagos).map(usuario => {
-        return { usuario: usuario, total: resumenRezagos[usuario] };
-    }).filter(r => r.total !== 0); 
+        return { 
+            usuario: usuario, 
+            total: resumenRezagos[usuario].tabacos, 
+            faltan_cestas: resumenRezagos[usuario].cestas 
+        };
+    }).filter(r => r.total !== 0 || r.faltan_cestas > 0); 
 
     res.render('recepcion', { 
         pedidos: pedidos || [],
@@ -361,14 +366,21 @@ app.post('/recibir_tarea/:id', async (req, res) => {
     const cestasDevueltas = parseInt(req.body.cestas_devueltas) || 0;
 
     const { data: pedido } = await supabase.from('pedidos').select('*').eq('id', idPedido).single();
-    if (!pedido) return res.redirect('/recepcion');
+    
+    // 🛡️ BLOQUEO ANTI-SPAM CLICKS: Si no existe o ya fue completado, abortar la transacción.
+    if (!pedido || pedido.estado === 'completado') {
+        return res.redirect('/recepcion');
+    }
 
     const rezagoCalculado = pedido.cantidad - tabacosEntregados;
+    const cestasEsperadas = Math.ceil(pedido.cantidad / 500); // Promedio corporativo
+    const cestasFaltantes = (cestasEsperadas - cestasDevueltas) > 0 ? (cestasEsperadas - cestasDevueltas) : 0;
 
     await supabase.from('pedidos').update({ 
         estado: 'completado', 
         entregado: tabacosEntregados,
-        rezago: rezagoCalculado
+        rezago: rezagoCalculado,
+        rezago_cestas: cestasFaltantes
     }).eq('id', idPedido);
 
     const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
@@ -401,50 +413,129 @@ app.post('/recibir_tarea/:id', async (req, res) => {
 
     if (cestasDevueltas > 0) {
         const { data: invCestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
+        
+        let nomCesta = 'Cestas Plásticas';
         if (invCestas && invCestas.length > 0) {
+            nomCesta = invCestas[0].material;
             await supabase.from('inventario').update({ cantidad: invCestas[0].cantidad + cestasDevueltas }).eq('id', invCestas[0].id);
+        } else {
+            await supabase.from('inventario').insert([{ material: nomCesta, cantidad: cestasDevueltas, categoria: 'Herramientas' }]);
         }
+        
+        // Mágicamente lo metemos al kardex para que el admin lo vea en Entradas y Salidas
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha,
+            hora: tiempo.hora,
+            tipo_movimiento: 'ENTRADA',
+            material: nomCesta,
+            cantidad: cestasDevueltas,
+            usuario: req.session.usuario || 'Admin',
+            descripcion: `Devolución formal de cestas por ${pedido.usuario}`
+        }]);
+    }
+
+    // ==========================================
+    // 🪄 NUEVO: INTEGRACIÓN AUTOMÁTICA CON NÓMINA Y CESTAS
+    // ==========================================
+    const precio_por_tabaco = 150; // 150 COP la unidad, 150.000 el millar
+    const ganancia = tabacosEntregados * precio_por_tabaco;
+    
+    // Inyectar en la nómina (Producción del Fabriquín) automáticamente
+    if (tabacosEntregados > 0) {
+        await supabase.from('produccion_fabriquines').insert([{
+            fecha: tiempo.fecha,
+            usuario: pedido.usuario,
+            cantidad_producida: tabacosEntregados,
+            precio_por_unidad: precio_por_tabaco,
+            total_ganado: ganancia,
+            estado: 'PENDIENTE'
+        }]);
+    }
+
+    // Registrar en sistema de cobros de nómina física
+    if (cestasFaltantes > 0) {
+        await supabase.from('deudores_fabriquines').insert([{
+            fecha: tiempo.fecha,
+            usuario: pedido.usuario,
+            monto_deuda: 0, 
+            concepto: `Faltan ${cestasFaltantes} Cesta(s) Plástica(s)`,
+            estado: 'ACTIVA'
+        }]);
     }
 
     res.redirect('/recepcion');
 });
 
-// --- ABONAR DEUDA DIRECTAMENTE ---
-app.post('/abonar_deuda', async (req, res) => {
-    const { usuario, cantidad_abono } = req.body;
-    const abono = parseInt(cantidad_abono);
+// --- ABONAR REZAGOS (TABACOS Y CESTAS) ---
+app.post('/abonar_rezago', async (req, res) => {
+    const { usuario, cantidad_tabacos, cantidad_cestas } = req.body;
+    const tabacos = parseInt(cantidad_tabacos) || 0;
+    const cestas = parseInt(cantidad_cestas) || 0;
     
-    if (!abono || abono <= 0) return res.redirect('/recepcion');
+    if (tabacos <= 0 && cestas <= 0) return res.redirect('/recepcion');
 
     const tiempo = obtenerHoraColombia();
 
-    // 1. Creamos un "pedido fantasma" completado con rezago negativo para restar la deuda
+    // 1. Pedido fantasma maestro para saldar
     await supabase.from('pedidos').insert([{
         usuario: usuario,
-        material: 'Abono Deuda',
+        material: 'Abono Multi-Rezago',
         cantidad: 0,
-        entregado: abono,
-        rezago: -abono, 
+        entregado: tabacos,
+        rezago: -tabacos, 
+        rezago_cestas: -cestas,
         estado: 'completado',
         fecha: tiempo.fecha
     }]);
 
-    // 2. Sumamos los tabacos al inventario
-    const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
-    if (invTabacos) {
-        await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + abono }).eq('id', invTabacos.id);
+    // 2. Procesar Tabacos (Inventario, Nómina y Kardex)
+    if (tabacos > 0) {
+        const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
+        if (invTabacos) {
+            await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacos }).eq('id', invTabacos.id);
+        }
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
+            material: 'Tabacos', cantidad: tabacos, usuario: req.session.usuario || 'Admin',
+            descripcion: `Abono/Devolución de rezagos de tabacos de ${usuario}.`
+        }]);
+        
+        // ¡Magia! Si devuelve tabacos, ¡Significa que los fabricó y HAY QUE PAGÁRSELOS! 💰
+        const precio = 150;
+        await supabase.from('produccion_fabriquines').insert([{
+            fecha: tiempo.fecha,
+            usuario: usuario,
+            cantidad_producida: tabacos,
+            precio_por_unidad: precio,
+            total_ganado: tabacos * precio,
+            estado: 'PENDIENTE'
+        }]);
     }
 
-    // 3. Lo registramos en el Kardex
-    await supabase.from('movimientos').insert([{
-        fecha: tiempo.fecha,
-        hora: tiempo.hora,
-        tipo_movimiento: 'ENTRADA',
-        material: 'Tabacos',
-        cantidad: abono,
-        usuario: req.session.usuario || 'Admin',
-        descripcion: `Abono manual de deuda del fabriquin ${usuario}.`
-    }]);
+    // 3. Procesar Cestas (Inventario y Kardex)
+    if (cestas > 0) {
+        const { data: invCestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
+        let nomCesta = 'Cestas Plásticas';
+        if (invCestas && invCestas.length > 0) {
+            nomCesta = invCestas[0].material;
+            await supabase.from('inventario').update({ cantidad: invCestas[0].cantidad + cestas }).eq('id', invCestas[0].id);
+        } else {
+            await supabase.from('inventario').insert([{ material: nomCesta, cantidad: cestas, categoria: 'Herramientas' }]);
+        }
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
+            material: nomCesta, cantidad: cestas, usuario: req.session.usuario || 'Admin',
+            descripcion: `Abono/Devolución de cestas rezagadas de ${usuario}.`
+        }]);
+        
+        // Limpiar la deuda penal (física) en su perfil
+        const { data: deuda } = await supabase.from('deudores_fabriquines').select('*')
+            .eq('usuario', usuario).eq('estado', 'ACTIVA').ilike('concepto', '%Cesta%').limit(1);
+        if (deuda && deuda.length > 0) {
+            await supabase.from('deudores_fabriquines').update({ estado: 'COBRADA' }).eq('id', deuda[0].id);
+        }
+    }
 
     res.redirect('/recepcion');
 });
@@ -645,6 +736,115 @@ app.get('/maquina/:id/qr', async (req, res) => {
         console.error('Error generando QR:', error);
         res.status(500).send('Error al generar el Código QR.');
     }
+});
+
+// ==================== FASE 5: NÓMINA Y FACTURACIÓN ====================
+
+// --- PANEL DEL FABRIQUÍN (Cierre Diario) ---
+app.get('/cierre_diario', async (req, res) => {
+    if (!req.session.rol || (req.session.rol !== 'fabriquin' && req.session.rol !== 'fabricacion' && req.session.rol !== 'envolvedor')) return res.redirect('/');
+    
+    const usuario = req.session.usuario;
+    
+    // Obtener producción de la semana (estado PENDIENTE)
+    const { data: produccion } = await supabase.from('produccion_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'PENDIENTE').order('fecha', { ascending: false });
+        
+    // Ganancia acumulada
+    let ganancia_semana = 0;
+    if (produccion) produccion.forEach(p => ganancia_semana += parseFloat(p.total_ganado || 0));
+    
+    // Obtener deuda activa
+    const { data: deudas } = await supabase.from('deudores_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'ACTIVA');
+        
+    let deuda_total = 0;
+    if (deudas) deudas.forEach(d => deuda_total += parseFloat(d.monto_deuda || 0));
+    
+    res.render('cierre_diario', { 
+        produccion: produccion || [], 
+        ganancia_semana, 
+        deuda_total, 
+        saldo_neto: ganancia_semana - deuda_total,
+        usuario 
+    });
+});
+
+    // Produccion manual del fabriquin fue removida. El Admin lo carga automático desde /recepcion.
+
+// --- PANEL DE NÓMINA (ADMINISTRADOR) ---
+app.get('/nomina', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const { data: usuarios } = await supabase.from('usuarios').select('*').in('rol', ['fabriquin', 'fabricacion', 'envolvedor']);
+    const { data: prod_pendientes } = await supabase.from('produccion_fabriquines').select('*').eq('estado', 'PENDIENTE');
+    const { data: deudas_activas } = await supabase.from('deudores_fabriquines').select('*').eq('estado', 'ACTIVA');
+    
+    const nomina = (usuarios || []).map(u => {
+        let ganancia = 0;
+        let deudas = 0;
+        (prod_pendientes || []).forEach(p => { if (p.usuario === u.usuario) ganancia += parseFloat(p.total_ganado); });
+        (deudas_activas || []).forEach(d => { if (d.usuario === u.usuario) deudas += parseFloat(d.monto_deuda); });
+        
+        u.ganancia_pendiente = ganancia;
+        u.deuda_activa = deudas;
+        u.pago_neto = ganancia - deudas;
+        return u;
+    });
+    
+    res.render('nomina', { nomina, deudas_activas: deudas_activas || [] });
+});
+
+// --- GENERAR FACTURA IMPRIMIBLE ---
+app.get('/factura_nomina/:usuario', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const userToPay = req.params.usuario;
+    
+    const { data: userData } = await supabase.from('usuarios').select('identificacion').eq('usuario', userToPay).single();
+    const documento = (userData && userData.identificacion) ? userData.identificacion : '123456789';
+
+    const { data: produccion } = await supabase.from('produccion_fabriquines').select('*').eq('usuario', userToPay).eq('estado', 'PENDIENTE');
+    const { data: deudas } = await supabase.from('deudores_fabriquines').select('*').eq('usuario', userToPay).eq('estado', 'ACTIVA');
+    
+    let subtotal = 0;
+    (produccion || []).forEach(p => subtotal += parseFloat(p.total_ganado));
+    
+    let descuentos = 0;
+    (deudas || []).forEach(d => descuentos += parseFloat(d.monto_deuda));
+    
+    const total_neto = subtotal - descuentos;
+    
+    res.render('factura', { 
+        usuario: userToPay, 
+        produccion: produccion || [], 
+        deudas: deudas || [], 
+        subtotal, 
+        descuentos, 
+        total_neto,
+        fecha: obtenerHoraColombia().fecha,
+        documento
+    });
+});
+
+app.post('/pagar_nomina/:usuario', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const userToPay = req.params.usuario;
+    
+    await supabase.from('produccion_fabriquines').update({ estado: 'PAGADO' }).eq('usuario', userToPay).eq('estado', 'PENDIENTE');
+    await supabase.from('deudores_fabriquines').update({ estado: 'COBRADA' }).eq('usuario', userToPay).eq('estado', 'ACTIVA');
+    res.redirect('/nomina');
+});
+
+app.post('/agregar_deuda', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    await supabase.from('deudores_fabriquines').insert([{
+        fecha: req.body.fecha || obtenerHoraColombia().fecha,
+        usuario: req.body.usuario,
+        monto_deuda: parseFloat(req.body.monto),
+        concepto: req.body.concepto,
+        estado: 'ACTIVA'
+    }]);
+    res.redirect('/nomina');
 });
 
 module.exports = app;
