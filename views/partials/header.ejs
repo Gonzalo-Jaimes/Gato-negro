@@ -11,7 +11,7 @@
         
         /* SIDEBAR ESTÉTICO */
         .sidebar { width:230px; background:#222; color:white; padding:20px; flex-shrink: 0; transition: margin-left 0.3s ease, padding 0.3s ease, width 0.3s ease; overflow: hidden; }
-        .sidebar.sidebar-hidden { margin-left: -270px; padding-left: 0; padding-right: 0; width: 0; border: none; }
+        .sidebar.collapsed { margin-left: -270px; padding-left: 0; padding-right: 0; width: 0; border: none; }
         .sidebar h2 { margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px; }
         .sidebar a { display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px; transition: 0.2s; }
         .sidebar a:hover { background:#444; padding-left: 15px; } /* Efecto hover elegante */
@@ -36,24 +36,32 @@
             .container { flex-direction: column; }
             .sidebar { width: auto; padding: 15px; }
             .content { padding: 15px; }
-            /* Evitar que las tablas rompan el diseño en celular */
-            table { display: block; overflow-x: auto; white-space: nowrap; }
-            /* Los formularios de varias columnas deben pasar a 1 sola columna */
-            form { grid-template-columns: 1fr !important; }
-            .cards { flex-direction: column; }
-            .sidebar.sidebar-hidden { margin-left: 0; display: none; } /* En celular ocultar por display para no romper el flex column */
+            /* Ocultar barra en celular por defecto */
+            .sidebar { display: none; width: auto; padding: 15px; }
+            .sidebar.mobile-open { display: block; margin-left: 0; }
+            .sidebar.collapsed { display: none; }
         }
     </style>
+    <script>
+        function toggleNav() {
+            const sb = document.getElementById('main-sidebar');
+            if (window.innerWidth <= 768) {
+                sb.classList.toggle('mobile-open');
+            } else {
+                sb.classList.toggle('collapsed');
+            }
+        }
+    </script>
 </head>
 <body>
 
 <div class="topbar" style="display: flex; justify-content: space-between; align-items: center;">
     <span>🐾 Gato Negro - Sistema</span>
-    <button onclick="document.getElementById('main-sidebar').classList.toggle('sidebar-hidden')" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
+    <button onclick="toggleNav()" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
 </div>
 <div class="container">
 
-<div class="sidebar sidebar-hidden" id="main-sidebar">
+<div class="sidebar" id="main-sidebar">
     <h2>Menú</h2>
     
     <% if (session.rol === "admin") { %>
