@@ -1,7 +1,6 @@
-require('dotenv').config();
 const { createClient } = require('@supabase/supabase-js');
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_KEY;
+const supabaseUrl = 'https://jgvnqumkzfwruhjglics.supabase.co';
+const supabaseKey = 'sb_publishable_XXDhaCrrjj_DVUdxh04wFg_9dwm1_jQ';
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function duplicatorHunter() {
