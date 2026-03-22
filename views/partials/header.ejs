@@ -40,6 +40,32 @@
         html.dark-mode h1, html.dark-mode h2, html.dark-mode h3 { color: #f3f4f6; }
         html.dark-mode input, html.dark-mode select { background: #222; color: white; border-color: #444; }
         
+        /* OVERRIDES NUCLEARES MODO OSCURO (V1.7.4.1) */
+        /* Seleccionamos cualquier div, form o tr que tenga código incrustado de fondos blancos o grises claros */
+        html.dark-mode [style*="background: white"],
+        html.dark-mode [style*="background-color: white"],
+        html.dark-mode [style*="background-color: #f0fdf4"],
+        html.dark-mode [style*="background: #fff"],
+        html.dark-mode [class*="card"] {
+            background-color: #111111 !important;
+            background: #111111 !important;
+            color: #e5e7eb !important;
+            border-color: #333 !important;
+        }
+
+        html.dark-mode [style*="border: 1px solid #e5e7eb"],
+        html.dark-mode [style*="border-bottom: 1px solid #f3f4f6"] {
+            border-color: #333 !important;
+        }
+        
+        /* Ajuste de brillo para topografías inyectadas (Deudas/Ganancias) */
+        html.dark-mode td[style*="color: #059669"], html.dark-mode span[style*="color: #059669"] { color: #34d399 !important; }
+        html.dark-mode td[style*="color: #ef4444"], html.dark-mode span[style*="color: #ef4444"] { color: #f87171 !important; }
+        html.dark-mode td[style*="color: #1d4ed8"], html.dark-mode span[style*="color: #1d4ed8"] { color: #60a5fa !important; }
+        html.dark-mode div[style*="color: #059669"] { color: #34d399 !important; }
+        html.dark-mode div[style*="color: #ef4444"] { color: #f87171 !important; }
+        html.dark-mode td[style*="color: black"], html.dark-mode span[style*="color: black"] { color: #fff !important; }
+
         form { margin-bottom:20px; }
         input, select { padding:8px; margin-right:10px; border: 1px solid #ccc; border-radius: 4px;}
         button { padding:8px 15px; background:#111; color:white; border:none; border-radius:5px; cursor:pointer; }
