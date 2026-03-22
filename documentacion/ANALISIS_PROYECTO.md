@@ -20,7 +20,8 @@
 8. [Flujos de Negocio Principales](#flujos-de-negocio-principales)
 9. [Características Técnicas Destacadas](#características-técnicas-destacadas)
 10. [Consideraciones de Seguridad](#consideraciones-de-seguridad)
-11. [Estado y Próximas Mejoras](#estado-y-próximas-mejoras)
+11. [Historial de Versiones (Bitácora)](#historial-de-versiones-bitácora)
+12. [Estado y Próximas Mejoras](#estado-y-próximas-mejoras)
 
 ---
 
@@ -682,6 +683,23 @@ app.use(session({
 - ✅ Uso de SDK oficial de Supabase
 - ✅ Arquitectura separada Frontend/Backend
 - ✅ Módulo EJS optimizado: Motor de plantillas validado estáticamente libre de inyecciones sintácticas agresivas, totalmente pasivo frente a Lintering de código de UI / Compatibilidad garantizada para navegadores webkit para impresión (`print-color-adjust`).
+
+---
+
+## 📝 Historial de Versiones (Bitácora)
+
+El proyecto ha escalado bajo una filosofía ágil (Metodología Scrum), documentando su crecimiento gradual desde un prototipo hasta un ERP de manufactura:
+
+| Versión | Hito Principal (Release) | Detalles de la Actualización |
+|---------|-------------------------|------------------------------|
+| **v1.0** | MVP y Base de Datos Local | Configuración inicial con login, sistema crudo de pedidos (SQLite y Python Flask, luego migrado) sin control en la nube. |
+| **v1.2** | Migración Cloud | Inyección del ecosistema a Supabase (PostgreSQL) para multi-dispositivo y almacenamiento de Kardex remoto en tiempo real. |
+| **v1.3**| Trazabilidad de Rezagos | Integración del libro mayor `deudores_fabriquines` para el control exhaustivo de Cestas Plásticas robadas/perdidas y producto incompleto. |
+| **v1.4**| Fichas Clínicas (Mantenimiento) | Módulo QR para inventariar tornillos, refacciones y horas-hombre invertidas en el mantenimiento preventivo y correctivo del taller. |
+| **v1.5**| Automatización de Finanzas | Creación del panel *Cierre Diario* que lee la carga de inventario y la transforma a Pesos Colombianos (COP) automáticamente. Emisión de Tickets PDF de Pago. |
+| **v1.6**| Dashboard Analítico Múltiple| Separación del inventario por categoría (Anillados, Normales) y gráficas visuales Chart.js que contrastan el pago total de nóminas contra las ventas/ingresos brutos de Gato Negro. |
+| **v1.7.0**| Nóminas Duales y Tercerización| Expansión algorítmica para el pago por bultos de 25 y 50 cajitas, multiplicador matemático oculto (1 cesta = 1500 tabacos descontados) y Migración de Datos de 4 archivos Excel a Supabase (45 usuarios nuevos inyectados automatizadamente).|
+| **v1.7.2**| Estética Móvil y Redes Sociales| Refinamiento del MVC, menús colapsables estilo Hamburguesa inteligente, interactividades Hover en celdas y enrutado nativo a WhatsApp e Instagram. Actual estado de Producción de la empresa bajo el entorno Vercel. |
 
 ---
 
