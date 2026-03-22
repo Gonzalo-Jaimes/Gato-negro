@@ -27,17 +27,18 @@
         tr:nth-child(even) { background-color: #f9fafb; }
         tr:hover { background-color: #e0f2fe; transition: background-color 0.2s; }
         
-        /* MODO OSCURO (DARK MODE) GLOBAL */
-        body.dark-mode { background: #121212; color: #e5e7eb; }
-        body.dark-mode .topbar { background: #000; border-bottom: 1px solid #333; }
-        body.dark-mode .sidebar { background: #1a1a1a; border-right: 1px solid #333; }
-        body.dark-mode .card { background: #1e1e1e; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
-        body.dark-mode table { background: #1e1e1e; border-color: #444; color: #e5e7eb; }
-        body.dark-mode th, body.dark-mode td { border-color: #444; }
-        body.dark-mode tr:nth-child(even) { background-color: #2a2a2a; }
-        body.dark-mode tr:hover { background-color: #374151; }
-        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color: #f3f4f6; }
-        body.dark-mode input, body.dark-mode select { background: #333; color: white; border-color: #555; }
+        /* MODO OSCURO (DARK MODE) GLOBAL PERSISTENTE */
+        html.dark-mode body { background: #000000; color: #e5e7eb; }
+        html.dark-mode .topbar { background: #000000; border-bottom: 1px solid #333; }
+        html.dark-mode .sidebar { background: #0a0a0a; border-right: 1px solid #333; }
+        html.dark-mode .card { background: #111111; box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
+        html.dark-mode table { background: #111111; border-color: #333; color: #e5e7eb; }
+        html.dark-mode th { background: #1a1a1a; color: white; border-color: #333; }
+        html.dark-mode td { border-color: #333; }
+        html.dark-mode tr:nth-child(even) { background-color: #0a0a0a; }
+        html.dark-mode tr:hover { background-color: #1a1a1a; }
+        html.dark-mode h1, html.dark-mode h2, html.dark-mode h3 { color: #f3f4f6; }
+        html.dark-mode input, html.dark-mode select { background: #222; color: white; border-color: #444; }
         
         form { margin-bottom:20px; }
         input, select { padding:8px; margin-right:10px; border: 1px solid #ccc; border-radius: 4px;}
@@ -56,6 +57,15 @@
         }
     </style>
     <script>
+        /* Recuperar Preferencia Visual */
+        if (localStorage.getItem('gato-dark-mode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+
+        function toggleDarkMode() {
+            document.documentElement.classList.toggle('dark-mode');
+            localStorage.setItem('gato-dark-mode', document.documentElement.classList.contains('dark-mode'));
+        }
         function toggleNav() {
             const sb = document.getElementById('main-sidebar');
             if (window.innerWidth <= 768) {
@@ -71,7 +81,7 @@
 <div class="topbar" style="display: flex; justify-content: space-between; align-items: center;">
     <span>🐈‍⬛ Gato Negro - Sistema</span>
     <div>
-        <button onclick="document.body.classList.toggle('dark-mode')" style="background: transparent; color: white; font-size: 20px; border: none; cursor: pointer; padding: 0 10px;" title="Modo Oscuro">🌙</button>
+        <button onclick="toggleDarkMode()" style="background: transparent; color: white; font-size: 20px; border: none; cursor: pointer; padding: 0 10px;" title="Modo Oscuro">🌙</button>
         <button onclick="toggleNav()" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
     </div>
 </div>
