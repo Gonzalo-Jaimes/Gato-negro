@@ -80,6 +80,7 @@ app.post('/login', async (req, res) => {
     if (resultado.rol === "admin") return res.redirect("/inventario");
     if (resultado.rol === "fabriquin" || resultado.rol === "fabricacion" || resultado.rol === "envolvedor") return res.redirect("/pedidos");
     if (resultado.rol === "mantenimiento") return res.redirect("/mantenimiento");
+    if (resultado.rol === "anillador" || resultado.rol === "empacador") return res.redirect("/cierre_diario");
     
     res.send("Rol no válido");
 });
@@ -167,6 +168,34 @@ app.get('/eliminar_inventario/:id', async (req, res) => {
     res.redirect('/inventario');
 });
 
+// ---------------- VENTAS (MÓDULO FINANCIERO) ----------------
+app.post('/registrar_venta', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const { material_id, cantidad_vendida, valor_venta, nombre_material } = req.body;
+    const cantNum = parseFloat(cantidad_vendida);
+    const valorNum = parseInt(valor_venta) || 0;
+    
+    const { data: existente } = await supabase.from('inventario').select('*').eq('id', material_id).single();
+    
+    if (existente && existente.cantidad >= cantNum) {
+        await supabase.from('inventario').update({ cantidad: existente.cantidad - cantNum }).eq('id', existente.id);
+        
+        const tiempo = obtenerHoraColombia();
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha,
+            hora: tiempo.hora,
+            tipo_movimiento: 'SALIDA',
+            material: nombre_material,
+            cantidad: cantNum,
+            usuario: req.session.usuario || 'Admin',
+            descripcion: `[VENTA] $${valorNum.toLocaleString('es-CO')} COP`
+        }]);
+    }
+    res.redirect('/movimientos');
+});
+
 // ---------------- PEDIDOS ----------------
 app.get('/pedidos', async (req, res) => {
     if (!req.session.rol) return res.redirect('/');
@@ -182,7 +211,7 @@ app.get('/pedidos', async (req, res) => {
 
     const pedidosCalculados = (pedidos || []).map(p => {
         let factor = p.cantidad / 1500; 
-        if (p.material === 'Tabacos') {
+        if (p.material && p.material.includes('Tabacos')) {
             p.tripa_necesaria = +(factor * 35).toFixed(2);
             p.capa_necesaria = +(factor * 9).toFixed(2);
             p.capote_necesario = +(factor * 5).toFixed(2);
@@ -200,7 +229,7 @@ app.get('/pedidos', async (req, res) => {
 app.post('/agregar_pedido', async (req, res) => {
     const cantidad_tabacos = req.body.cantidad_tabacos;
     const tiempo = obtenerHoraColombia();
-    const tipoPedido = req.session.rol === 'envolvedor' ? 'Envoltura' : 'Tabacos';
+    const tipoPedido = req.session.rol === 'envolvedor' ? 'Envoltura' : (req.body.tipo_tabaco || 'Tabacos Normales');
 
     await supabase.from('pedidos').insert([{ 
         material: tipoPedido, 
@@ -241,7 +270,7 @@ app.post('/aprobar_pedido/:id', async (req, res) => {
         }]);
     };
 
-    if (pedido.material === 'Tabacos') {
+    if (pedido.material && pedido.material.includes('Tabacos')) {
         let tripaReq = +(factor * 35).toFixed(2);
         let capaReq = +(factor * 9).toFixed(2);
         let capoteReq = +(factor * 5).toFixed(2);
@@ -330,7 +359,7 @@ app.get('/recepcion', async (req, res) => {
     const { data: pedidos } = await supabase.from('pedidos')
         .select('*')
         .eq('estado', 'aprobado')
-        .eq('material', 'Tabacos')
+        .in('material', ['Tabacos Normales', 'Tabacos Anillados'])
         .order('id', { ascending: true });
 
     const { data: completados } = await supabase.from('pedidos')
@@ -383,7 +412,7 @@ app.post('/recibir_tarea/:id', async (req, res) => {
         rezago_cestas: cestasFaltantes
     }).eq('id', idPedido);
 
-    const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
+    const { data: invTabacos } = await supabase.from('inventario').select('*').eq('material', pedido.material).single();
     
     if (invTabacos) {
         await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacosEntregados }).eq('id', invTabacos.id);
@@ -490,13 +519,13 @@ app.post('/abonar_rezago', async (req, res) => {
 
     // 2. Procesar Tabacos (Inventario, Nómina y Kardex)
     if (tabacos > 0) {
-        const { data: invTabacos } = await supabase.from('inventario').select('*').ilike('material', 'Tabacos').single();
+        const { data: invTabacos } = await supabase.from('inventario').select('*').eq('material', req.body.tipo_tabaco || 'Tabacos Normales').single();
         if (invTabacos) {
             await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacos }).eq('id', invTabacos.id);
         }
         await supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
-            material: 'Tabacos', cantidad: tabacos, usuario: req.session.usuario || 'Admin',
+            material: req.body.tipo_tabaco || 'Tabacos Normales', cantidad: tabacos, usuario: req.session.usuario || 'Admin',
             descripcion: `Abono/Devolución de rezagos de tabacos de ${usuario}.`
         }]);
         
@@ -742,7 +771,8 @@ app.get('/maquina/:id/qr', async (req, res) => {
 
 // --- PANEL DEL FABRIQUÍN (Cierre Diario) ---
 app.get('/cierre_diario', async (req, res) => {
-    if (!req.session.rol || (req.session.rol !== 'fabriquin' && req.session.rol !== 'fabricacion' && req.session.rol !== 'envolvedor')) return res.redirect('/');
+    const rolesPermitidos = ['fabriquin', 'fabricacion', 'envolvedor', 'anillador', 'empacador'];
+    if (!req.session.rol || !rolesPermitidos.includes(req.session.rol)) return res.redirect('/');
     
     const usuario = req.session.usuario;
     
@@ -760,13 +790,19 @@ app.get('/cierre_diario', async (req, res) => {
         
     let deuda_total = 0;
     if (deudas) deudas.forEach(d => deuda_total += parseFloat(d.monto_deuda || 0));
+
+    // Novedad: Obtener historial de tareas recibidas del Admin
+    const { data: tareas_asignadas } = await supabase.from('pedidos')
+        .select('*').eq('usuario', usuario).order('id', { ascending: false });
     
     res.render('cierre_diario', { 
         produccion: produccion || [], 
         ganancia_semana, 
         deuda_total, 
         saldo_neto: ganancia_semana - deuda_total,
-        usuario 
+        usuario,
+        tareas_asignadas: tareas_asignadas || [],
+        session: req.session
     });
 });
 
@@ -845,6 +881,175 @@ app.post('/agregar_deuda', async (req, res) => {
         estado: 'ACTIVA'
     }]);
     res.redirect('/nomina');
+});
+
+// --- MÓDULO 7: DESPACHOS DE ANILLADO Y EMPAQUE ---
+app.get('/despachos_empaque', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const { data: usuarios } = await supabase.from('usuarios').select('*').in('rol', ['anillador', 'empacador']);
+    const { data: inventario } = await supabase.from('inventario').select('*').gt('cantidad', 0);
+    const { data: despachos_activos } = await supabase.from('pedidos').select('*').eq('estado', 'aprobado');
+    
+    // Filtrar solo los despachos aprobados de anilladores y empacadores
+    let despachosRoles = [];
+    if (despachos_activos && usuarios) {
+        despachos_activos.forEach(d => {
+            if (usuarios.find(u => u.usuario === d.usuario)) despachosRoles.push(d);
+        });
+    }
+
+    res.render('despacho_empaque', { session: req.session, usuarios, inventario, despachos_activos: despachosRoles });
+});
+
+app.post('/asignar_despacho', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const { usuario, material_id, material_nombre, cantidad, unidad_medida } = req.body;
+    let cantNum = parseFloat(cantidad);
+    
+    let desc = `Despacho a ${usuario} para tarea de empaque/anillado.`;
+    
+    // Novedad: Si entregan cestas de anillado, el descuento en inventario es x1500
+    if (unidad_medida === 'cestas') {
+        desc = `Despacho de ${cantNum} Cestas a ${usuario} para tarea de anillado.`;
+        cantNum = cantNum * 1500;
+    }
+
+    const { data: inv } = await supabase.from('inventario').select('*').eq('id', material_id).single();
+    if (inv && inv.cantidad >= cantNum) {
+        await supabase.from('inventario').update({ cantidad: inv.cantidad - cantNum }).eq('id', inv.id);
+        const tiempo = obtenerHoraColombia();
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA',
+            material: material_nombre, cantidad: cantNum, usuario: req.session.usuario || 'Admin',
+            descripcion: desc
+        }]);
+
+        await supabase.from('pedidos').insert([{
+            material: material_nombre, cantidad: cantNum, usuario: usuario,
+            fecha: tiempo.fecha, estado: 'aprobado', entregado: 0, rezago: cantNum
+        }]);
+    }
+    res.redirect('/despachos_empaque');
+});
+
+app.get('/recepcion_empaque', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const { data: despachos } = await supabase.from('pedidos').select('*').eq('estado', 'aprobado');
+    const { data: usuarios } = await supabase.from('usuarios').select('usuario, rol');
+    
+    let despachosRoles = [];
+    if (despachos && usuarios) {
+        despachos.forEach(d => {
+            let userMatch = usuarios.find(u => u.usuario === d.usuario);
+            if (userMatch && (userMatch.rol === 'anillador' || userMatch.rol === 'empacador')) {
+                d.rol_usuario = userMatch.rol;
+                despachosRoles.push(d);
+            }
+        });
+    }
+
+    res.render('recepcion_empaque', { session: req.session, despachos_pendientes: despachosRoles });
+});
+
+app.post('/recibir_empaque/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const idPedido = req.params.id;
+    const { rol, usuario, cestas_anilladas, bultos_50, bultos_25, cajas_50_sueltas, cajas_25_sueltas } = req.body;
+    const tiempo = obtenerHoraColombia();
+    
+    // Tarifas Configurables Base (Phase 7)
+    const TARIFA_ANILLADO = 12000;
+    const TARIFA_BULTO50 = 10000;
+    const TARIFA_BULTO25 = 7000;
+    // Bulto de 50 trae 25 cajas. Bulto de 25 trae 50 cajas.
+    const TARIFA_CAJA50 = TARIFA_BULTO50 / 25; // 400 COP
+    const TARIFA_CAJA25 = TARIFA_BULTO25 / 50; // 140 COP
+    
+    // Helpers
+    async function invAdd(matName, cant, cat) {
+        const { data: i } = await supabase.from('inventario').select('*').eq('material', matName).single();
+        if (i) await supabase.from('inventario').update({ cantidad: i.cantidad + cant }).eq('id', i.id);
+        else await supabase.from('inventario').insert([{ material: matName, cantidad: cant, categoria: cat }]);
+    }
+    async function pagar(user, cant, precio, t) {
+        await supabase.from('produccion_fabriquines').insert([{
+            fecha: t.fecha, usuario: user, cantidad_producida: cant, precio_por_unidad: precio,
+            total_ganado: cant * precio, estado: 'PENDIENTE'
+        }]);
+    }
+
+    if (rol === 'anillador') {
+        let numCestas = parseInt(cestas_anilladas) || 0;
+        if (numCestas > 0) {
+            await invAdd('Tabacos Anillados', numCestas * 1500, 'Producto Terminado');
+            await pagar(usuario, numCestas, TARIFA_ANILLADO, tiempo);
+        }
+    } else {
+        let n50 = parseInt(bultos_50) || 0, n25 = parseInt(bultos_25) || 0;
+        let c50 = parseInt(cajas_50_sueltas) || 0, c25 = parseInt(cajas_25_sueltas) || 0;
+        
+        if (n50 > 0) { await invAdd('Bultos de 50', n50, 'Producto Terminado'); await pagar(usuario, n50, TARIFA_BULTO50, tiempo); }
+        if (n25 > 0) { await invAdd('Bultos de 25', n25, 'Producto Terminado'); await pagar(usuario, n25, TARIFA_BULTO25, tiempo); }
+        if (c50 > 0) { await invAdd('Cajas de 50', c50, 'Producto Terminado'); await pagar(usuario, c50, TARIFA_CAJA50, tiempo); }
+        if (c25 > 0) { await invAdd('Cajas de 25', c25, 'Producto Terminado'); await pagar(usuario, c25, TARIFA_CAJA25, tiempo); }
+    }
+
+    await supabase.from('pedidos').update({ estado: 'completado' }).eq('id', idPedido);
+    res.redirect('/recepcion_empaque');
+});
+
+// --- MÓDULO 6: DASHBOARD ANALÍTICO ---
+app.get('/analitica', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+
+    // 1. Producción (Entradas de Bodega)
+    const { data: movEntradas } = await supabase.from('movimientos').select('material, cantidad').eq('tipo_movimiento', 'ENTRADA');
+    
+    let prodNormales = 0, prodAnillados = 0, prodEnvoltura = 0;
+    if (movEntradas) {
+        movEntradas.forEach(m => {
+            if (m.material === 'Tabacos Normales') prodNormales += m.cantidad;
+            if (m.material === 'Tabacos Anillados') prodAnillados += m.cantidad;
+            if (m.material === 'Envoltura' || (m.material && m.material.toLowerCase() === 'envoltura')) prodEnvoltura += m.cantidad;
+        });
+    }
+
+    // 2. Ingresos (Ventas registradas)
+    const { data: movSalidas } = await supabase.from('movimientos').select('descripcion').eq('tipo_movimiento', 'SALIDA').ilike('descripcion', '%[VENTA]%');
+    
+    let totalIngresos = 0;
+    if (movSalidas) {
+        movSalidas.forEach(m => {
+            let match = m.descripcion.match(/\$([\d.]+)/);
+            if (match) {
+                totalIngresos += parseInt(match[1].replace(/\./g, ''));
+            }
+        });
+    }
+
+    // 3. Egresos (Nómina Pagada y Pendiente)
+    const { data: nomina } = await supabase.from('produccion_fabriquines').select('total_ganado');
+    let totalNomina = 0;
+    if (nomina) {
+        nomina.forEach(n => totalNomina += parseFloat(n.total_ganado) || 0);
+    }
+
+    // 4. Egresos (Mantenimiento)
+    const { data: mtto } = await supabase.from('mantenimiento').select('costo_mo, costo_mat').eq('estado', 'REALIZADO');
+    let totalMtto = 0;
+    if (mtto) {
+        mtto.forEach(m => totalMtto += (parseFloat(m.costo_mo) || 0) + (parseFloat(m.costo_mat) || 0));
+    }
+
+    res.render('analitica', {
+        session: req.session,
+        produccion: { normales: prodNormales, anillados: prodAnillados, envoltura: prodEnvoltura },
+        finanzas: { ingresos: totalIngresos, nomina: totalNomina, mantenimiento: totalMtto }
+    });
 });
 
 module.exports = app;

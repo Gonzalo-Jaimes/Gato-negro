@@ -1,0 +1,138 @@
+<%- include('partials/header') %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0;">📊 Dashboard Analítico y Financiero</h1>
+        <p style="color: gray; margin-top: 5px;">Métricas de producción empresarial y balance de comprobación automatizado.</p>
+    </div>
+</div>
+<hr style="margin-bottom: 30px;">
+
+<!-- CONTENEDOR DE GRÁFICAS -->
+<div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center;">
+    
+    <!-- Gráfica 1: Producción -->
+    <div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid #10b981; flex: 1; min-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="text-align: center; color: #333; margin-top: 0;">🏭 Volumen Histórico de Producción</h3>
+        <p style="text-align: center; color: gray; font-size: 13px;">Suma de entradas de tabacos a bodega</p>
+        <canvas id="chartProduccion"></canvas>
+    </div>
+
+    <!-- Gráfica 2: Finanzas -->
+    <div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid #3b82f6; flex: 1; min-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+        <h3 style="text-align: center; color: #333; margin-top: 0;">💵 Rentabilidad y Egresos Empresariales</h3>
+        <p style="text-align: center; color: gray; font-size: 13px;">Comparativa en Pesos Colombianos (COP)</p>
+        <canvas id="chartFinanzas"></canvas>
+        
+        <!-- Resumen Rápido -->
+        <div style="margin-top: 20px; display: flex; justify-content: space-between; font-size: 14px; background: #f8fafc; padding: 10px; border-radius: 5px;">
+            <div><strong style="color: #10b981;">Ingresos:</strong> $<%= finanzas.ingresos.toLocaleString('es-CO') %></div>
+            <div style="color: gray;"><strong>-</strong></div>
+            <div><strong style="color: #ef4444;">Nómina:</strong> $<%= finanzas.nomina.toLocaleString('es-CO') %></div>
+            <div style="color: gray;"><strong>-</strong></div>
+            <div><strong style="color: #f59e0b;">Mtto:</strong> $<%= finanzas.mantenimiento.toLocaleString('es-CO') %></div>
+            <div style="color: gray;"><strong>=</strong></div>
+            <% let balance = finanzas.ingresos - finanzas.nomina - finanzas.mantenimiento; %>
+            <% if(balance >= 0) { %>
+                <div><strong style="color: #10b981;">Balance Neto:</strong> $<%= balance.toLocaleString('es-CO') %></div>
+            <% } else { %>
+                <div><strong style="color: #dc2626;">Balance Neto:</strong> $<%= balance.toLocaleString('es-CO') %></div>
+            <% } %>
+        </div>
+    </div>
+
+</div>
+
+<!-- CDN de Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+    // INYECCIÓN DE DATOS DESDE EL HTML MEDIANTE DATA-ATTRIBUTES (Evitar Lints de JS)
+    const chartContainer = document.getElementById('chartProduccion').parentElement;
+    chartContainer.setAttribute('data-prod-normales', '<%= produccion.normales %>');
+    chartContainer.setAttribute('data-prod-anillados', '<%= produccion.anillados %>');
+    chartContainer.setAttribute('data-prod-envoltura', '<%= produccion.envoltura %>');
+    chartContainer.setAttribute('data-fin-ingresos', '<%= finanzas.ingresos %>');
+    chartContainer.setAttribute('data-fin-nomina', '<%= finanzas.nomina %>');
+    chartContainer.setAttribute('data-fin-mantenimiento', '<%= finanzas.mantenimiento %>');
+
+    const prodData = {
+        normales: parseInt(chartContainer.getAttribute('data-prod-normales')) || 0,
+        anillados: parseInt(chartContainer.getAttribute('data-prod-anillados')) || 0,
+        envoltura: parseInt(chartContainer.getAttribute('data-prod-envoltura')) || 0
+    };
+
+    const finData = {
+        ingresos: parseFloat(chartContainer.getAttribute('data-fin-ingresos')) || 0,
+        nomina: parseFloat(chartContainer.getAttribute('data-fin-nomina')) || 0,
+        mantenimiento: parseFloat(chartContainer.getAttribute('data-fin-mantenimiento')) || 0
+    };
+
+    // 1. DIBUJAR GRÁFICA DE PRODUCCIÓN (BARRAS)
+    const ctxProd = document.getElementById('chartProduccion').getContext('2d');
+    new Chart(ctxProd, {
+        type: 'bar',
+        data: {
+            labels: ['Tabacos Normales', 'Tabacos Anillados', 'Envolturas'],
+            datasets: [{
+                label: 'Unidades Producidas',
+                data: [prodData.normales, prodData.anillados, prodData.envoltura],
+                backgroundColor: [
+                    'rgba(16, 185, 129, 0.7)', // Verde
+                    'rgba(59, 130, 246, 0.7)', // Azul
+                    'rgba(139, 92, 246, 0.7)'  // Morado
+                ],
+                borderColor: [
+                    'rgb(16, 185, 129)',
+                    'rgb(59, 130, 246)',
+                    'rgb(139, 92, 246)'
+                ],
+                borderWidth: 1,
+                borderRadius: 5
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+
+    // 2. DIBUJAR GRÁFICA DE FINANZAS (PISTAS APILADAS O TORTA)
+    const ctxFinanzas = document.getElementById('chartFinanzas').getContext('2d');
+    new Chart(ctxFinanzas, {
+        type: 'doughnut',
+        data: {
+            labels: ['Ingresos (Ventas)', 'Gastos de Nómina', 'Gastos Mantenimiento'],
+            datasets: [{
+                data: [finData.ingresos, finData.nomina, finData.mantenimiento],
+                backgroundColor: [
+                    '#10b981', // Verde = Ingresos
+                    '#ef4444', // Rojo = Nómina
+                    '#f59e0b'  // Amarillo = Mtto
+                ],
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: {
+                legend: { position: 'bottom' },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            let value = context.raw || 0;
+                            return ' $' + value.toLocaleString('es-CO') + ' COP';
+                        }
+                    }
+                }
+            }
+        }
+    });
+</script>
+
+<%- include('partials/footer') %>

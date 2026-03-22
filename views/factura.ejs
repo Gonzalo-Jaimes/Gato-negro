@@ -149,12 +149,26 @@
         <h3 style="margin-top: 0; color: #3730a3;">Pasos para el Cierre de Caja (Sistema)</h3>
         <p style="font-size: 14px; margin-bottom: 20px;">1. Imprime esta factura para los registros físicos. <br> 2. Haz que el afiliado firme el recibo.<br> 3. Al entregar el dinero ($<%= total_neto.toLocaleString('es-CO') %>) pulsa el botón verde para asentar como <strong>PAGADO</strong> la semana.</p>
         
-        <div style="display: flex; justify-content: center;">
+        <div style="display: flex; justify-content: center; gap: 10px; align-items: center;">
             <button class="btn btn-imprimir" onclick="window.print()">🖨️ Paso 1: Imprimir Recibo</button>
+            
+            <button type="button" style="background: #25D366; color: white; border: none; padding: 10px 20px; font-weight: bold; border-radius: 5px; cursor: pointer; text-decoration: none;" onclick="enviarWhatsApp()">💬 Opcional: Enviar por WhatsApp</button>
+            
             <form action="/pagar_nomina/<%= usuario %>" method="POST" onsubmit="return confirm('¿Confirmas que ya entregaste el efectivo y el empleado firmó? Esto cerrará y reiniciará su semana.');">
-                <button type="submit" class="btn btn-pagar">✅ Paso 2: Marcar como PAGADO en el Servidor</button>
+                <button type="submit" class="btn btn-pagar" style="margin: 0;">✅ Paso 2: Marcar PAGADO en Servidor</button>
             </form>
         </div>
+        
+        <script>
+            function enviarWhatsApp() {
+                const numero = prompt("Por favor, ingresa el número de WhatsApp del trabajador (Ej: 3001234567). Si el trabajador es de otro país, usa el prefijo (Ej: +58414...).");
+                if (numero) {
+                    const mensaje = `*GATO NEGRO - Recibo de Pago*\n\nHola <%= usuario.toUpperCase() %>,\nSu pago de nómina ha sido procesado.\n\n*Total a Cobrar:* $ <%= parseFloat(total_neto).toLocaleString('es-CO') %> COP\n\n_Detalles registrados en su portal web._`;
+                    const url = `https://wa.me/${numero.replace(/[^0-9+]/g, '')}?text=${encodeURIComponent(mensaje)}`;
+                    window.open(url, '_blank');
+                }
+            }
+        </script>
         
         <div style="margin-top: 15px;">
             <a href="/nomina" style="color: #6366f1; font-weight: bold; text-decoration: none;">🔙 Cancelar y Volver a la Lista</a>

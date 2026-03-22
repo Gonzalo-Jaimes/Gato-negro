@@ -1,0 +1,386 @@
+{
+  "FORMATO ACTUALIZADO FABRIQUIN 2025.xlsx": [
+    [
+      null,
+      " ",
+      "FABRICA DE TABACOS\r\nGATO NEGRO\r\n    “Gonzalo Jaimes Bastos”\r\nRIF. V-06676738-4    \r\n"
+    ],
+    [
+      "FECHA:",
+      null,
+      "13 DE MARZO  DEL 2026",
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F01",
+      "ALCIDES CORREA ",
+      "CC-88.193.514   "
+    ],
+    [
+      "NOMBRE FABRIQUIN:",
+      null,
+      "ALCIDES CORREA ",
+      null,
+      null,
+      "cedula",
+      "CC-88.193.514   ",
+      "F01",
+      null,
+      "F03",
+      "BLANCA ALVARADO   ",
+      "CC-60.402.510  "
+    ],
+    [
+      "DESCRIPCION ",
+      "UNIDAD  MEDIDA",
+      "SALDO  ANTERIOR",
+      "CANTIDAD ENTREGADA",
+      "RECIBIDA ",
+      "SALDO ",
+      "ENTREGADO POR",
+      "RECIBIDO  POR",
+      null,
+      "F06",
+      "ELVIRA LOPEZ",
+      "V-29.664.726"
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F07",
+      "ERNESTO REYES  ",
+      "CC-5.535.335"
+    ],
+    [
+      "CAPA",
+      "KG",
+      0,
+      15,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F08",
+      "GUILLERMO ZAMBRANO",
+      "V-5.642.663"
+    ],
+    [
+      "CAPOTE ",
+      "KG",
+      0,
+      27,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F09",
+      "HUGO ALMEIDA           ",
+      "V-8.998.550"
+    ],
+    [
+      "PICADURA ",
+      "KG",
+      0,
+      105,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F10",
+      "ILDA SERRANO      ",
+      "CC-60.413.802"
+    ],
+    [
+      "CESTAS",
+      null,
+      0,
+      12,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F11",
+      "JOSE EBLAN GIRON     ",
+      "V-9.130.173"
+    ],
+    [
+      "SACAS",
+      null,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F12",
+      "JOSE JURADO   ",
+      "V-8986394"
+    ],
+    [
+      "GOMA ",
+      null,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F13",
+      "LUZ MERY ABAUNZA     ",
+      "CC-60.407.054"
+    ],
+    [
+      "PERIODICO",
+      "KG",
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F15",
+      "LUIS ROJAS           ",
+      "CC-79.336.610"
+    ],
+    [
+      "TRAPOS",
+      null,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F16",
+      "LUIS VALDERRAMA    ",
+      "V-23.095.033"
+    ],
+    [
+      "RESORTES",
+      null,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F17",
+      "LILIANA VEGA    ",
+      "V-11.021.605"
+    ],
+    [
+      "MAQ. ROLLERAS",
+      null,
+      0,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      "F22",
+      "SULAY ALMEIDA               ",
+      "V-11.021.593"
+    ]
+  ],
+  "FORMATO NUEVO NOMINA  FABRIQUIN 2026.xlsx": [
+    [
+      null,
+      null,
+      "FABRICA DE TABACOS\r\nGATO NEGRO\r\n    “Gonzalo Jaimes Bastos”\r\nRIF. V-06676738-4    \r\n"
+    ],
+    [],
+    [],
+    [],
+    [],
+    [],
+    [
+      "ORDEN DE PRODUCCION:"
+    ],
+    [
+      "NUMERO ",
+      1,
+      null,
+      null,
+      "FECHA :",
+      null,
+      46025
+    ],
+    [
+      null,
+      null,
+      null,
+      null,
+      "ALCIDES CORREA"
+    ],
+    [
+      "CEDULA DEL TRABAJADOR ",
+      null,
+      "CC. 88.193.514",
+      null,
+      "CODIGO -F01"
+    ],
+    [
+      "DIRECCION DEL TALLER ",
+      null,
+      null,
+      null,
+      "DESCONTE LA CAPA DE 1,6 POR MILLAR "
+    ],
+    [
+      "                                                                                          MATERIA PRIMA ENTREGADA "
+    ],
+    [
+      "DESCRIPCION ",
+      "UNIDAD  MEDIDA",
+      "SALDO  ANTERIOR",
+      "CANTIDAD ENTREGADA",
+      "CANTIDAD RECIBIDA",
+      "NUEVO  SALDO",
+      "ENTREGADO POR",
+      "RECIBIDO  POR"
+    ],
+    [],
+    [
+      "CAPA",
+      "KG",
+      0,
+      null,
+      null,
+      0
+    ]
+  ],
+  "Mantenimiento gato negro.xlsm": [
+    [
+      null,
+      null,
+      "# MANTENIMIENTOS REALIZADOS ",
+      null,
+      null,
+      "# MANTENIMIENTOS NO REALIZADOS "
+    ],
+    [],
+    [],
+    [],
+    [],
+    [
+      null,
+      null,
+      14,
+      null,
+      null,
+      7
+    ],
+    [],
+    [],
+    [],
+    []
+  ],
+  "MOVIMIENTO FABRIQUINES MARZO   2026.xlsx": [
+    [
+      " ",
+      "CONTROL DE REZAGOS ",
+      null,
+      null,
+      "DEL ",
+      null,
+      null,
+      "al",
+      null,
+      null,
+      "OBSERVACIONES "
+    ],
+    [],
+    [
+      "CODIGO",
+      "NOMBRE Y APELLIDO",
+      "CODIGO ",
+      "LUNES",
+      "MARTES",
+      "MIERCOLES",
+      "JUEVES",
+      "VIERNES",
+      "SABADO ",
+      "TOTAL "
+    ],
+    [
+      1,
+      "ALCIDES CORREA ",
+      "AC"
+    ],
+    [
+      2,
+      "BLANCA ALVARADO ",
+      "BNA"
+    ],
+    [
+      3,
+      "ESPERANZA REY",
+      "E.R"
+    ],
+    [
+      4,
+      "ELIZABETH REYES SERRANO ",
+      "E.R.S"
+    ],
+    [
+      5,
+      "ELVIRA LOPEZ",
+      "E.L"
+    ],
+    [
+      6,
+      "ERNESTO REYES",
+      "E.REYES"
+    ],
+    [
+      7,
+      "GUILLERMO ZAMBRANO ",
+      "G.Z"
+    ],
+    [
+      8,
+      null,
+      "G.R"
+    ],
+    [
+      9,
+      "HUGO ALMEIDA",
+      "H.A"
+    ],
+    [
+      10,
+      "HILDA SERRANO",
+      "H.S"
+    ],
+    [
+      11,
+      "HUMBERTO LUNA ",
+      "H.L"
+    ],
+    [
+      12,
+      "JOSE EBLAN GIRON",
+      "J.E.G"
+    ]
+  ]
+}

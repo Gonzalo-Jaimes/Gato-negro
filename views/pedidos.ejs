@@ -6,8 +6,9 @@
 <% if (session.rol === 'fabriquin' || session.rol === 'fabricacion') { %>
     <h2>Generar Nueva Orden de Fabricación</h2>
     <form action="/agregar_pedido" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+        <input type="hidden" name="tipo_tabaco" value="Tabacos Normales">
         <label><strong>¿Cuántos tabacos vas a fabricar?</strong></label><br><br>
-        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px;">
+        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px; padding: 6px; margin-bottom: 15px;"><br>
         <button type="submit" style="background: #22c55e;">Generar Orden</button>
     </form>
     <hr>
@@ -58,12 +59,12 @@
         <td><%= p.id %></td>
         <td class="col-usuario" style="text-transform: capitalize;"><strong><%= p.usuario %></strong></td>
         <td class="col-tipo">
-            <% if (p.material === 'Tabacos') { %> 🏭 Fabricación <% } else { %> 🎁 Envoltura <% } %>
+            <% if (p.material && p.material.includes('Tabacos')) { %> 🏭 <%= p.material %> <% } else { %> 🎁 Envoltura <% } %>
         </td>
         <td style="font-size: 16px;"><strong><%= p.cantidad %></strong> tabacos</td>
         
         <td style="text-align: left; font-size: 13px;">
-            <% if (p.material === 'Tabacos') { %>
+            <% if (p.material && p.material.includes('Tabacos')) { %>
                 🍂 <b>Tripa:</b> <%= p.tripa_necesaria %> kg <br>
                 📦 <b>Capa:</b> <%= p.capa_necesaria %> kg <br>
                 🍁 <b>Capote:</b> <%= p.capote_necesario %> kg <br>
@@ -90,7 +91,7 @@
             <td style="text-align: center;">
                 <% if (p.estado === 'pendiente') { %>
                     <form action="/aprobar_pedido/<%= p.id %>" method="POST" style="margin:0;">
-                        <% if (p.material === 'Tabacos') { %>
+                        <% if (p.material && p.material.includes('Tabacos')) { %>
                             <select name="cesta_seleccionada" required style="width:100%; margin-bottom: 5px; font-size: 12px; padding: 4px;">
                                 <option value="">Elige cesta...</option>
                                 <% cestas_inventario.forEach(function(cesta) { %>

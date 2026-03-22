@@ -40,6 +40,27 @@
             <button type="submit" style="background: #ef4444; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Registrar Salida</button>
         </form>
     </div>
+
+    <!-- TERCERA CAJA: VENTAS (Para generar Gráficas Financieras) -->
+    <div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid #3b82f6; flex: 1; box-shadow: 0 4px 6px rgba(0,0,0,0.05); min-width: 300px;">
+        <h3 style="margin-top: 0; color: #3b82f6;">💰 Registrar Venta</h3>
+        <form action="/registrar_venta" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
+            <select name="material_id" required id="select_venta" onchange="document.getElementById('nombre_mat_vta').value = this.options[this.selectedIndex].text.split(' (')[0];" style="padding: 10px; border: 1px solid #ccc; border-radius: 5px;">
+                <option value="">Selecciona el producto a vender...</option>
+                <% if(locals.inventario) { locals.inventario.forEach(function(i) { %>
+                    <option value="<%= i.id %>"><%= i.material %> (Disp: <%= i.cantidad %>)</option>
+                <% }); } %>
+            </select>
+            <input type="hidden" name="nombre_material" id="nombre_mat_vta">
+            
+            <div style="display: flex; gap: 10px;">
+                <input type="number" step="0.01" name="cantidad_vendida" placeholder="Cant." required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1;">
+                <input type="number" step="1" name="valor_venta" placeholder="Ingreso $COP" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 2;">
+            </div>
+            
+            <button type="submit" style="background: #3b82f6; color: white; padding: 10px; border: none; border-radius: 5px; font-weight: bold; font-size: 16px;">Confirmar Venta</button>
+        </form>
+    </div>
 </div>
 
 <h2 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px;">📅 Kardex (Historial de Movimientos)</h2>

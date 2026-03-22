@@ -34,8 +34,46 @@
     </p>
 </div>
 
+<!-- HISTORIAL DE TAREAS RECIBIDAS (NOVEDAD) -->
+<h3 style="color: #374151; margin-top: 30px;">📦 Material Recibido (Tareas Asignadas)</h3>
+<p style="color: gray; font-size: 14px; margin-top: 0;">Aquí puedes ver la materia prima que el Almacén te ha despachado.</p>
+<div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; margin-bottom: 30px;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background: #f8f9fa;">
+            <tr>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Fecha</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">ID Tarea</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Material / Tarea</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Cantidad</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (!locals.tareas_asignadas || tareas_asignadas.length === 0) { %>
+                <tr><td colspan="5" style="padding: 20px; text-align: center; color: #9ca3af;">No te han asignado ningún material aún.</td></tr>
+            <% } else { %>
+                <% tareas_asignadas.forEach(t => { %>
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 12px 15px;"><strong><%= t.fecha %></strong></td>
+                        <td style="padding: 12px 15px; color: gray;">#<%= t.id %></td>
+                        <td style="padding: 12px 15px; color: #2563eb; font-weight: bold;"><%= t.material %></td>
+                        <td style="padding: 12px 15px; font-weight: bold;"><%= t.cantidad %></td>
+                        <td style="padding: 12px 15px;">
+                            <% if(t.estado === 'completado') { %>
+                                <span style="background: #dcfce7; color: #16a34a; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">Liquidado</span>
+                            <% } else { %>
+                                <span style="background: #fef08a; color: #ca8a04; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;">En Proceso</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
 <!-- HISTORIAL DE LA SEMANA -->
-<h3 style="color: #374151;">📋 Mis Reportes Pendientes de Cobro</h3>
+<h3 style="color: #374151;">📋 Mis Ganancias (Por cobrar en Nómina)</h3>
 <div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
     <table style="width: 100%; border-collapse: collapse; text-align: left;">
         <thead style="background: #f8f9fa;">

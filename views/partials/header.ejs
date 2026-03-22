@@ -62,11 +62,26 @@
     </div>
 </div>
         <a href="/pedidos" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📋 Pedidos</a>
-        <a href="/recepcion" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📥 Recepción Tareas</a>
+        <a href="/recepcion" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📥 Recepción Fabriquines</a>
         
+        <div style="margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-emp').style.display = document.getElementById('submenu-emp').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+                📦 Área Empacado ▾
+            </a>
+            <div id="submenu-emp" style="display: none; background-color: #2a2a2a; border-left: 3px solid #3b82f6; margin-left: 10px;">
+                <a href="/despachos_empaque" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📤 Despachar a Empaque</a>
+                <a href="/recepcion_empaque" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📥 Recibir Múltiple</a>
+            </div>
+        </div>
         <div style="margin-top: 10px; margin-bottom: 5px;">
             <a href="/nomina" style="display: block; padding: 10px; background: #065f46; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; border-left: 4px solid #10b981;">
                 💰 Nómina y Pagos
+            </a>
+        </div>
+
+        <div style="margin-top: 10px; margin-bottom: 5px;">
+            <a href="/analitica" style="display: block; padding: 10px; background: #1e1b4b; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; border-left: 4px solid #8b5cf6;">
+                📈 Dashboard Analítico
             </a>
         </div>
 
