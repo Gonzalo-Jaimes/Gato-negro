@@ -38,19 +38,37 @@
         html.dark-mode tr:nth-child(even) { background-color: #0a0a0a; }
         html.dark-mode tr:hover { background-color: #1a1a1a; }
         html.dark-mode h1, html.dark-mode h2, html.dark-mode h3 { color: #f3f4f6; }
-        html.dark-mode input, html.dark-mode select { background: #222; color: white; border-color: #444; }
         
-        /* OVERRIDES NUCLEARES MODO OSCURO (V1.7.4.1) */
-        /* Seleccionamos cualquier div, form o tr que tenga código incrustado de fondos blancos o grises claros */
+        /* OVERRIDES NUCLEARES MODO OSCURO (V1.7.4.2) */
+        html.dark-mode input, html.dark-mode select, html.dark-mode textarea { 
+            background: #222 !important; 
+            color: #fff !important; 
+            border-color: #444 !important; 
+        }
+
         html.dark-mode [style*="background: white"],
         html.dark-mode [style*="background-color: white"],
         html.dark-mode [style*="background-color: #f0fdf4"],
         html.dark-mode [style*="background: #fff"],
+        html.dark-mode [style*="background: #f8fafc"],
+        html.dark-mode [style*="background: #fef9c3"],
+        html.dark-mode [style*="background: #f3f4f6"],
+        html.dark-mode [style*="background: #ffedd5"],
+        html.dark-mode [style*="background: #ecfccb"],
+        html.dark-mode [style*="background: #f5f3ff"],
+        html.dark-mode [style*="background: #f9fafb"],
         html.dark-mode [class*="card"] {
             background-color: #111111 !important;
             background: #111111 !important;
             color: #e5e7eb !important;
             border-color: #333 !important;
+        }
+
+        /* Forzar tipografía clara si está codificada como negra/oscura */
+        html.dark-mode [style*="color: #444"],
+        html.dark-mode [style*="color: #333"],
+        html.dark-mode [style*="color: gray"] {
+            color: #d1d5db !important;
         }
 
         html.dark-mode [style*="border: 1px solid #e5e7eb"],
@@ -62,8 +80,8 @@
         html.dark-mode td[style*="color: #059669"], html.dark-mode span[style*="color: #059669"] { color: #34d399 !important; }
         html.dark-mode td[style*="color: #ef4444"], html.dark-mode span[style*="color: #ef4444"] { color: #f87171 !important; }
         html.dark-mode td[style*="color: #1d4ed8"], html.dark-mode span[style*="color: #1d4ed8"] { color: #60a5fa !important; }
-        html.dark-mode div[style*="color: #059669"] { color: #34d399 !important; }
-        html.dark-mode div[style*="color: #ef4444"] { color: #f87171 !important; }
+        html.dark-mode div[style*="color: #059669"], html.dark-mode strong[style*="color: #10b981"] { color: #34d399 !important; }
+        html.dark-mode div[style*="color: #ef4444"], html.dark-mode strong[style*="color: #ef4444"] { color: #f87171 !important; }
         html.dark-mode td[style*="color: black"], html.dark-mode span[style*="color: black"] { color: #fff !important; }
 
         form { margin-bottom:20px; }
