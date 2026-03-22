@@ -58,6 +58,11 @@
         /* Ocultar el botón dentro de la tarjeta al imprimir */
         .qr-card .btn-ficha { display: none !important; }
     }
+
+    @media screen {
+        html.dark-mode body { background-color: #000 !important; color: #e5e7eb; }
+        html.dark-mode .qr-card { background: #111 !important; border-color: #444 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+    }
 </style>
 
 <%- include('partials/footer') %>

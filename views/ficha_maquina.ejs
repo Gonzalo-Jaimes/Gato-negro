@@ -51,10 +51,27 @@
             body { background: white; padding: 0; }
             .ficha-container { box-shadow: none; border-top: 4px solid #000; padding: 0; max-width: 100%; }
             .btn-imprimir { display: none; }
+            .firma-linea { width: 45%; border-top: 1px solid #000; margin-top: 40px; padding-top: 10px; font-size: 14px; font-weight: bold; }
             .mtto-card { page-break-inside: avoid; border: 1px solid #ccc; }
             .panel-financiero, .datos-grid, .header-excel, img { page-break-inside: avoid; break-inside: avoid; }
         }
+
+        /* MODO OSCURO PANTALLA */
+        @media screen {
+            html.dark-mode body { background-color: #000; color: #e5e7eb; }
+            html.dark-mode .ficha-container, html.dark-mode .mtto-card { background: #111 !important; border-top-color: #3b82f6; box-shadow: 0 4px 15px rgba(0,0,0,0.8); border-color: #444; }
+            html.dark-mode .header-excel, html.dark-mode .datos-grilla div, html.dark-mode .header-excel .logo-box { background: #1a1a1a !important; border-color: #444 !important; }
+            html.dark-mode div[style*="background: #fdfdfd"] { background: #1a1a1a !important; }
+            html.dark-mode strong { color: #fff !important; }
+            html.dark-mode hr { border-color: #444 !important; }
+            html.dark-mode .firma-linea { border-top-color: #555 !important; color: #ccc !important; }
+        }
     </style>
+    <script>
+        if (localStorage.getItem('gato-dark-mode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
 </head>
 <body>
 

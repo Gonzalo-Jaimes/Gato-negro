@@ -20,6 +20,19 @@
         .tabla-factura th, .tabla-factura td { border: 1px solid #000; padding: 10px; text-align: center; font-size: 14px; }
         .tabla-factura th { background: #e5e7eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
+        /* MODO OSCURO (Solo en Pantalla, no al Imprimir) */
+        @media screen {
+            html.dark-mode body { background-color: #000; color: #e5e7eb; }
+            html.dark-mode .factura-container { background: #111 !important; border-top-color: #333; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+            html.dark-mode .header-excel, html.dark-mode .datos-trabajador, html.dark-mode .header-excel .logo-box { background: #1a1a1a !important; border-color: #444 !important; }
+            html.dark-mode table, html.dark-mode th, html.dark-mode td { border-color: #444 !important; }
+            html.dark-mode th { background: #222 !important; color: white !important; }
+            html.dark-mode div[style*="background: white"] { background: #111 !important; color: #fff !important; }
+            html.dark-mode hr { border-color: #444 !important; }
+        }
+        
+        .tabla-factura th { background: #e5e7eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        
         .total-box { display: flex; justify-content: flex-end; margin-top: 10px; }
         .total-box div { border: 2px solid #000; padding: 10px 20px; font-size: 18px; font-weight: bold; background: #d1d5db; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
         
@@ -39,6 +52,11 @@
             .header-excel, .tabla-factura, .datos-trabajador, .firmas { page-break-inside: avoid; }
         }
     </style>
+    <script>
+        if (localStorage.getItem('gato-dark-mode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
 </head>
 <body>
 
