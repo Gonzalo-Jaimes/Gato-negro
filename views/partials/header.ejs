@@ -13,19 +13,31 @@
         .sidebar { width:230px; background:#222; color:white; padding:20px; flex-shrink: 0; transition: margin-left 0.3s ease, padding 0.3s ease, width 0.3s ease; overflow: hidden; }
         .sidebar.collapsed { margin-left: -270px; padding-left: 0; padding-right: 0; width: 0; border: none; }
         .sidebar h2 { margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .sidebar a { display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px; transition: 0.2s; }
-        .sidebar a:hover { background:#444; padding-left: 15px; } /* Efecto hover elegante */
+        .sidebar a { display:block; color:#aaa; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px; transition: 0.2s; font-weight: bold; }
+        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); color: #f59e0b; padding-left: 15px; box-shadow: inset 3px 0 0 #f59e0b; } /* Efecto hover encendido */
         
         .content { flex:1; padding:30px; overflow-y: auto; }
         .cards { display:flex; gap:20px; margin-bottom:30px; flex-wrap: wrap; }
         .card { background:white; padding:20px; flex:1; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
         
         /* TABLAS Y FORMULARIOS */
-        table { width:100%; border-collapse:collapse; background:white; }
+        table { width:100%; border-collapse:collapse; background:white; color: black; transition: background 0.3s; }
         th, td { padding:10px; border:1px solid #ddd; text-align:center; }
         th { background:#333; color:white; }
         tr:nth-child(even) { background-color: #f9fafb; }
         tr:hover { background-color: #e0f2fe; transition: background-color 0.2s; }
+        
+        /* MODO OSCURO (DARK MODE) GLOBAL */
+        body.dark-mode { background: #121212; color: #e5e7eb; }
+        body.dark-mode .topbar { background: #000; border-bottom: 1px solid #333; }
+        body.dark-mode .sidebar { background: #1a1a1a; border-right: 1px solid #333; }
+        body.dark-mode .card { background: #1e1e1e; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        body.dark-mode table { background: #1e1e1e; border-color: #444; color: #e5e7eb; }
+        body.dark-mode th, body.dark-mode td { border-color: #444; }
+        body.dark-mode tr:nth-child(even) { background-color: #2a2a2a; }
+        body.dark-mode tr:hover { background-color: #374151; }
+        body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color: #f3f4f6; }
+        body.dark-mode input, body.dark-mode select { background: #333; color: white; border-color: #555; }
         
         form { margin-bottom:20px; }
         input, select { padding:8px; margin-right:10px; border: 1px solid #ccc; border-radius: 4px;}
@@ -57,8 +69,11 @@
 <body>
 
 <div class="topbar" style="display: flex; justify-content: space-between; align-items: center;">
-    <span>🐾 Gato Negro - Sistema</span>
-    <button onclick="toggleNav()" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
+    <span>🐈‍⬛ Gato Negro - Sistema</span>
+    <div>
+        <button onclick="document.body.classList.toggle('dark-mode')" style="background: transparent; color: white; font-size: 20px; border: none; cursor: pointer; padding: 0 10px;" title="Modo Oscuro">🌙</button>
+        <button onclick="toggleNav()" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
+    </div>
 </div>
 <div class="container">
 
@@ -67,68 +82,62 @@
     
     <% if (session.rol === "admin") { %>
         <div style="margin-bottom: 5px;">
-    <a href="#" onclick="document.getElementById('submenu-inv').style.display = document.getElementById('submenu-inv').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+    <a href="#" onclick="document.getElementById('submenu-inv').style.display = document.getElementById('submenu-inv').style.display === 'none' ? 'block' : 'none';">
         📦 Inventario ▾
     </a>
     <div id="submenu-inv" style="display: none; background-color: #2a2a2a; border-left: 3px solid #f59e0b; margin-left: 10px;">
-        <a href="/inventario" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📊 Stock (Tarjetas)</a>
-        <a href="/movimientos" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔄 Entradas y Salidas</a>
+        <a href="/inventario">📊 Stock (Tarjetas)</a>
+        <a href="/movimientos">🔄 Entradas y Salidas</a>
     </div>
 </div>
-        <a href="/pedidos" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📋 Pedidos</a>
-        <a href="/recepcion" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📥 Recepción Fabriquines</a>
+        <a href="/pedidos">📋 Pedidos</a>
+        <a href="/recepcion">📥 Recepción Fabriquines</a>
         
         <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-emp').style.display = document.getElementById('submenu-emp').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+            <a href="#" onclick="document.getElementById('submenu-emp').style.display = document.getElementById('submenu-emp').style.display === 'none' ? 'block' : 'none';">
                 📦 Área Empacado ▾
             </a>
             <div id="submenu-emp" style="display: none; background-color: #2a2a2a; border-left: 3px solid #3b82f6; margin-left: 10px;">
-                <a href="/despachos_empaque" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📤 Despachar a Empaque</a>
-                <a href="/recepcion_empaque" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">📥 Recibir Múltiple</a>
+                <a href="/despachos_empaque">📤 Despachar a Empaque</a>
+                <a href="/recepcion_empaque">📥 Recibir Múltiple</a>
             </div>
         </div>
         <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="/nomina" style="display: block; padding: 10px; background: #065f46; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; border-left: 4px solid #10b981;">
-                💰 Nómina y Pagos
-            </a>
+            <a href="/nomina">💰 Nómina y Pagos</a>
         </div>
 
         <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="/analitica" style="display: block; padding: 10px; background: #1e1b4b; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; border-left: 4px solid #8b5cf6;">
-                📈 Dashboard Analítico
-            </a>
+            <a href="/analitica">📈 Dashboard Analítico</a>
         </div>
 
         <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-maq').style.display = document.getElementById('submenu-maq').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+            <a href="#" onclick="document.getElementById('submenu-maq').style.display = document.getElementById('submenu-maq').style.display === 'none' ? 'block' : 'none';">
                 ⚙️ Equipos y Mtto ▾
             </a>
             <div id="submenu-maq" style="display: none; background-color: #2a2a2a; border-left: 3px solid #2563eb; margin-left: 10px;">
-                <a href="/maquinas" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">⚙️ Inventario Máquinas</a>
-                <a href="/mantenimiento" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔧 Órdenes de Trabajo</a>
-                <a href="/maquinas/qrs" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🖨️ Códigos QR y Fichas</a>
+                <a href="/maquinas">⚙️ Inventario Máquinas</a>
+                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
+                <a href="/maquinas/qrs">🖨️ Códigos QR y Fichas</a>
             </div>
         </div>
         <a href="/usuarios">👥 Usuarios</a>
         
     <% } else if (session.rol === "fabricacion" || session.rol === "fabriquin" || session.rol === "envolvedor") { %>
-        <a href="/pedidos" style="display:block; color:white; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px;">📋 Pedidos</a>
+        <a href="/pedidos">📋 Pedidos</a>
         
         <div style="margin-top: 15px; margin-bottom: 5px;">
-            <a href="/cierre_diario" style="display: block; padding: 12px; background: #1e3a8a; color: white; text-decoration: none; font-weight: bold; border-radius: 5px; border-left: 4px solid #3b82f6; text-transform: uppercase;">
-                💵 Mi Producción
-            </a>
+            <a href="/cierre_diario">💵 Mi Producción</a>
         </div>
         
     <% } else if (session.rol === "mantenimiento") { %>
         <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-maq-mtto').style.display = document.getElementById('submenu-maq-mtto').style.display === 'none' ? 'block' : 'none';" style="display: block; padding: 10px; color: white; text-decoration: none; font-weight: bold;">
+            <a href="#" onclick="document.getElementById('submenu-maq-mtto').style.display = document.getElementById('submenu-maq-mtto').style.display === 'none' ? 'block' : 'none';">
                 ⚙️ Equipos y Mtto ▾
             </a>
             <div id="submenu-maq-mtto" style="display: block; background-color: #2a2a2a; border-left: 3px solid #ef4444; margin-left: 10px;">
-                <a href="/maquinas" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">⚙️ Inventario Máquinas</a>
-                <a href="/mantenimiento" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🔧 Órdenes de Trabajo</a>
-                <a href="/maquinas/qrs" style="display: block; padding: 10px 15px; color: #ddd; text-decoration: none; font-size: 14px;">🖨️ Códigos QR y Fichas</a>
+                <a href="/maquinas">⚙️ Inventario Máquinas</a>
+                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
+                <a href="/maquinas/qrs">🖨️ Códigos QR y Fichas</a>
             </div>
         </div>
     <% } %>
