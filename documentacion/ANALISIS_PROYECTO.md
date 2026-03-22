@@ -685,60 +685,46 @@ app.use(session({
 
 ---
 
-### Estado Actual: **En Producción Activa / Versión 1.6**
+### Estado Actual: **En Producción Activa / Versión 1.7.2**
 
-**Características Completadas** ✅:
-- Sistema de login y autenticación básica
-- Gestión de inventario y kardex
-- Creación y aprobación de pedidos
-- Módulo de recepción automatizado (Nómina y Cestas Plásticas)
-- Gestión de máquinas y Fichas Técnicas (Mantenimiento, Códigos QRs y Visualización móvil)
-- Módulo de mantenimiento (Alertas predictivas e inversión acumulada)
-- Dashboard de Nómina y Facturación (Pesos Colombianos $ COP y Vales)
-- Gestión de usuarios (Con integración de Documentos de Identidad)
-- Despliegue en Vercel
+Durante las últimas iteraciones ágiles, Gato Negro ha escalado de un simple gestor de inventario a un ERP completo capaz de manejar nóminas, máquinas y despachos tercerizados.
 
-**Problemas Conocidos** ⚠️:
-- Código de Python y SQLite legacy sin usar
-- Exposición de credenciales de BD
-- Contraseñas sin encriptación
-- Falta de validación CSRF
-- Gestión de errores temporal (Uso de try-catch nativo)
+**Nuevos Módulos Implementados (V1.6 a V1.7.2)** 🚀:
 
-### Nuevas Funcionalidades Pendientes (El Plan de Acción)
+#### 1. Módulo de Mantenimiento y Fichas Clínicas (Fase 3)
+- **Digitalización del Excel**: Se abandonó el conteo en Excel para centralizar en una BD relacional.
+- **Lógica Matemática**: El backend calcula si una orden es "Correctiva" o "Preventiva" y alerta cuando una máquina excede su tiempo máximo (ej. cada 2 semanas).
+- **Inversión Financiera**: Sumatoria automática en Pesos Colombianos (COP) sobre el gasto histórico que representa mantener operativa cada máquina.
 
-1. **Sistema de Usuarios Avanzado (Seguridad y Acceso)**
-   - *Recuperación*: Configurar envío de correo ("Olvidé mi contraseña").
-   - *Registro Nuevos Empleados*: Formulario para fabriquines (aprobación manual del Admin requerida).
-   - *Botón de Contacto*: Opción de contacto directo por WhatsApp para nuevos registros.
+#### 2. Adaptabilidad Móvil y UI Premium (Fase 4)
+- **Responsive Design**: Se implementaron Media Queries y metadatos Viewport. Las tablas de despacho ahora son arrastrables lateralmente en teléfonos.
+- **Sidebar Dinámico**: Inyección de un botón tipo 'Hamburguesa' inteligente (nace cerrado en celular para ahorrar espacio visual, nace abierto en PC para navegación rápida).
 
-### Mejoras Técnicas Recomendadas (Prioridad)
+#### 3. Nómina de Fabriquines e Inventario Automático (Fase 5)
+- **Supresión de Entradas Manuales**: La recepción de tabacos armados inyecta automáticamente el inventario positivo general de Gato Negro.
+- **Algoritmo de Cierre (Liquidación)**: Se liquidan automáticamente las ganancias del empleado a razón de $150.000 COP el millar. 
+- **Gestión de Rezagos**: El sistema controla integralmente cuántas Cestas Plásticas y Tabacos a medio terminar tiene cada empleado en su casa antes de autorizarle más entregas.
+- **Impresión de Facturas Formal**: Interfaz que emite tickets con RIF e identificación oficial para la firma del empleado antes del desembolso de efectivo.
+- **Exportación vía WhatsApp**: Integración con API nativa de WhatsApp Web para enviar comprobantes digitales al teléfono del trabajador con un clic.
 
-#### 🔴 Críticas
-1. Implementar hashing de contraseñas con `bcryptjs`
-2. Mover credenciales a `.env`
-3. Agregar protección CSRF
-4. Implementar validación de entrada en todas las rutas
+#### 4. Analítica y Toma de Decisiones (Fase 6)
+- **Subcategorización**: División real del inventario (Tabacos Normales, Anillados, Envoltura).
+- **Dashboard Gerencial (Chart.js)**: Gráficas de volumen semanales que cruzan las ventas brutas vs el pago de nóminas, permitiendo evaluar la rentabilidad general de la fábrica.
 
-#### 🟠 Altas
-5. Crear middleware centralizado de autenticación
-6. Agregar rate limiting
-7. Validación de tipos con TypeScript (opcional)
-8. Tests automatizados
+#### 5. Despachos y Sistema de Empaque Tercerizado (Fase 7)
+- **Roles y Flujo Inverso**: Incorporación de roles `anillador` y `empacador`. A diferencia del fabriquin que *solicita*, al empacador el Admin le *asigna* y despacha.
+- **Multiplicador Matemático de Inventario**: Interfaz dual donde si el Admin despacha "X Cestas de Tabacos", el servidor automáticamente descuenta "(X * 1500) unidades" de tabacos del inventario global.
+- **Liquidación Múltiple**: El panel de Recepción calcula montos variables en un solo formulario ($12.000 x anillar cesta, $10.000 x armar bulto de 50, etc.).
 
-#### 🟡 Medianas
-9. Documentación de API
-10. Logs estructurados
-11. Dashboard de reportes
-12. Exportación de datos (CSV/PDF)
-13. Mejora de interfaz mobile
-14. Modo oscuro
+**Problemas Conocidos & Deuda Técnica** ⚠️:
+- Contraseñas sin encriptación.
+- Restos de código legacy de Python en la carpeta raíz.
 
-#### 🟢 Bajas
-15. Eliminar código legacy Python/SQLite
-16. Agregar animaciones
-17. Optimización de queries BD
-18. Caché con Redis
+### Nuevas Funcionalidades Pendientes (Fase 8)
+1. **Sistema de Seguridad Avanzado**:
+   - Recuperación nativa por SMS/WhatsApp.
+   - Creación y edición autónoma de contraseñas por los empleados.
+2. **Rol "Avanzado" (El Inspector)**: Un usuario con permisos de observar todo el ecosistema y la trazabilidad (logs de quién borró o agregó qué), pero sin poder generar facturación ni mover dinero real.
 
 ---
 
