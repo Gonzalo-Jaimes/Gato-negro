@@ -1012,9 +1012,19 @@ app.get('/analitica', async (req, res) => {
     let prodNormales = 0, prodAnillados = 0, prodEnvoltura = 0;
     if (movEntradas) {
         movEntradas.forEach(m => {
-            if (m.material === 'Tabacos Normales') prodNormales += m.cantidad;
-            if (m.material === 'Tabacos Anillados') prodAnillados += m.cantidad;
-            if (m.material === 'Envoltura' || (m.material && m.material.toLowerCase() === 'envoltura')) prodEnvoltura += m.cantidad;
+            let mat = m.material ? m.material.toLowerCase() : '';
+            // Si tiene la palabra "anillado", va a la segunda barra
+            if (mat.includes('anillado')) {
+                prodAnillados += m.cantidad;
+            } 
+            // Si tiene "envoltura", va a la tercera barra
+            else if (mat.includes('envoltura')) {
+                prodEnvoltura += m.cantidad;
+            }
+            // Si es un tabaco genérico o "normal", va a la primera
+            else if (mat.includes('normal') || mat === 'tabacos' || mat === 'tabaco') {
+                prodNormales += m.cantidad;
+            }
         });
     }
 
