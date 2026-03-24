@@ -1,0 +1,39 @@
+<%- include('partials/header') %>
+
+<h1>👨‍🏭 Gestión de Empleados Fabriquines</h1>
+<p style="color: gray;">Agrega o elimina manual y administrativamente a los trabajadores (Código F01, etc).</p>
+<hr>
+
+<h2>Registrar Nuevo Empleado</h2>
+<form action="/agregar_empleado" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+    <input type="text" name="codigo" placeholder="Ej: F01" required style="width: 100px;">
+    <input type="text" name="nombre" placeholder="Nombre completo del Fabriquín" required style="width: 300px;">
+    <input type="text" name="cedula" placeholder="Cédula (V- / CC-)" required style="width: 150px;">
+    <button type="submit" style="background: #22c55e;">✚ Habilitar Trabajador</button>
+</form>
+
+<hr>
+
+<h2>Lista Histórica de Trabajadores</h2>
+<table>
+    <tr>
+        <th>Código</th>
+        <th>Nombre del Empleado (Fabriquín)</th>
+        <th>Documento (Cédula)</th>
+        <th>Herramienta</th>
+    </tr>
+    <% empleados.forEach(function(e) { %>
+    <tr>
+        <td><strong><%= e.codigo %></strong></td>
+        <td><%= e.nombre %></td>
+        <td><%= e.cedula %></td>
+        <td>
+            <form action="/eliminar_empleado/<%= e.id %>" method="POST" onsubmit="return confirm('¿⚠️ ESTÁ SEGURO DE ELIMINAR A <%= e.nombre %>? Toda su información de deuda desaparecerá.');" style="margin: 0; padding: 0;">
+                <button type="submit" style="background: #ef4444; padding: 4px 10px;">🗑 Despedir/Eliminar</button>
+            </form>
+        </td>
+    </tr>
+    <% }); %>
+</table>
+
+<%- include('partials/footer') %>

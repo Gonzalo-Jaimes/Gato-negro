@@ -90,6 +90,30 @@ app.get('/logout', (req, res) => {
     res.redirect('/'); 
 });
 
+// ---------------- PANEL CRUD DE EMPLEADOS FABRIQUINES V1.8 ----------------
+app.get('/empleados', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo', { ascending: true });
+    res.render('empleados', { empleados: empleados || [] });
+});
+
+app.post('/agregar_empleado', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    await supabase.from('empleados_fabriquines').insert([{
+        codigo: req.body.codigo.toUpperCase(),
+        nombre: req.body.nombre,
+        cedula: req.body.cedula,
+        deuda_tabacos: 0
+    }]);
+    res.redirect('/empleados');
+});
+
+app.post('/eliminar_empleado/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    await supabase.from('empleados_fabriquines').delete().eq('id', req.params.id);
+    res.redirect('/empleados');
+});
+
 // ---------------- INVENTARIO Y KARDEX (DIVIDIDO) ----------------
 
 app.get('/inventario', async (req, res) => {
@@ -278,7 +302,10 @@ app.get('/recepcion_diaria', async (req, res) => {
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
     const { data: registros } = await supabase.from('recepcion_diaria').select('*').eq('estado', 'pendiente');
     
-    res.render('recepcion_diaria', { empleados: empleados || [], registros: registros || [] });
+    // Filtrar para que solo salgan los que tienen deuda > 0 (tarea viva) o tienen un registro pendiente
+    const empleadosActivos = (empleados || []).filter(emp => emp.deuda_tabacos > 0 || (registros || []).some(r => r.empleado_id === emp.id));
+    
+    res.render('recepcion_diaria', { empleados: empleadosActivos, registros: registros || [] });
 });
 
 app.post('/recepcion_diaria_guardar', async (req, res) => {

@@ -38,9 +38,16 @@
                 else catFinal = '📁 ' + catOriginal;
             }
 
-            // Agrupamos en la lista
+            // Agrupamos y Sumamos en la vista
             if (!categorias[catFinal]) categorias[catFinal] = [];
-            categorias[catFinal].push(item);
+            
+            let existe = categorias[catFinal].find(i => i.material.toLowerCase().trim() === nombreM.trim());
+            if (existe) {
+                existe.cantidad += item.cantidad;
+            } else {
+                // Clonar para no mutar el original
+                categorias[catFinal].push({ material: item.material.trim(), cantidad: item.cantidad });
+            }
         });
     }
 %>

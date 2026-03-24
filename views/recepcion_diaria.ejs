@@ -109,8 +109,8 @@
             document.body.appendChild(form);
             form.submit();
             
-            // Recargar la pagina padre en 2 segundos para ver q la fila se limpia
-            setTimeout(() => window.location.reload(), 2000);
+            // Recargar e ir al apartado de nómina en 2.5 segundos
+            setTimeout(() => window.location.href = '/nomina', 2500);
         }
     }
 </script>
