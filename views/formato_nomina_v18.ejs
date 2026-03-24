@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nómina Semanal - <%= empleado.codigo %></title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #fff; margin: 0; padding: 20px; color: #111; }
+        .hoja-impresion { max-width: 900px; margin: auto; border: 1px solid #000; padding: 20px; }
+        
+        .header-box { text-align: center; font-weight: bold; line-height: 1.5; margin-bottom: 20px; }
+        .header-box h2 { margin: 5px 0; font-size: 24px; text-transform: uppercase; }
+        
+        .datos-empleado { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .datos-empleado td { padding: 5px; font-size: 14px; font-weight: bold; }
+        
+        .tabla-items { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .tabla-items th, .tabla-items td { border: 1px solid #000; padding: 5px; text-align: center; font-size: 13px; }
+        .tabla-items th { background: #e5e7eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 11px; }
+        .left-align { text-align: left !important; font-weight: bold; }
+        
+        .resumen-pago { font-size: 16px; margin-top: 20px; border: 2px solid #111; padding: 15px; background-color: #f8fafc; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+        .total-final { font-size: 22px; color: #047857; text-align: center; margin-top: 15px; border-top: 1px dashed #ccc; padding-top: 10px; }
+        
+        .firmas-container { display: flex; justify-content: space-around; margin-top: 40px; }
+        .firma-caja { text-align: center; width: 35%; }
+        .firma-linea { border-top: 1px solid #000; padding-top: 10px; font-weight: bold; font-size: 14px; }
+        
+        .no-imprimir { text-align: center; margin-bottom: 20px; }
+        .btn-imprimir { background: #111; color: white; padding: 10px 20px; border: none; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        
+        @media print {
+            .no-imprimir { display: none; }
+            .hoja-impresion { border: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-imprimir">
+        <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Formato de Nómina</button>
+        <button class="btn-imprimir" onclick="window.close()" style="background: #ef4444; margin-left: 10px;">❌ Cerrar</button>
+    </div>
+
+    <div class="hoja-impresion">
+        <div class="header-box">
+            <h2>FABRICA DE TABACOS GATO NEGRO</h2>
+            "Gonzalo Jaimes Bastos"<br>
+            RIF. V-06676738-4<br><br>
+            <span style="font-size: 18px; border: 1px solid #000; padding: 5px;">COMPROBANTE DE LIQUIDACIÓN SEMANAL V1.8</span>
+        </div>
+        
+        <table class="datos-empleado">
+            <tr>
+                <td style="width: 20%;">FECHA LIQ:</td>
+                <td style="width: 40%; font-weight: normal;"><%= tiempo.fecha %> <%= tiempo.hora %></td>
+                <td style="width: 15%; text-align: right;">CODIGO:</td>
+                <td style="width: 25%; font-size: 18px; color: #b91c1c;"><%= empleado.codigo %></td>
+            </tr>
+            <tr>
+                <td>FABRIQUIN:</td>
+                <td style="font-weight: normal;"><%= empleado.nombre %></td>
+                <td style="text-align: right;">CEDULA:</td>
+                <td><%= empleado.cedula %></td>
+            </tr>
+        </table>
+        
+        <h4 style="margin-bottom: 5px; border-bottom: 1px solid #000;">1. RECEPCIÓN FISICA (Semana del <%= reg.semana_inicio %>)</h4>
+        <table class="tabla-items">
+            <thead>
+                <tr>
+                    <th>DÍA</th>
+                    <th>LUNES</th><th>MARTES</th><th>MIÉRCOLES</th><th>JUEVES</th><th>VIERNES</th><th>SÁBADO</th>
+                    <th style="background: #d1d5db; font-size: 13px;">TOTAL SEMANA</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="left-align">TABACOS</td>
+                    <td><%= reg.lun_tabacos %></td><td><%= reg.mar_tabacos %></td><td><%= reg.mie_tabacos %></td>
+                    <td><%= reg.jue_tabacos %></td><td><%= reg.vie_tabacos %></td><td><%= reg.sab_tabacos %></td>
+                    <td style="font-weight: bold; font-size: 15px;"><%= totales.tabacos.toLocaleString('es-CO') %></td>
+                </tr>
+                <tr>
+                    <td class="left-align">CESTAS</td>
+                    <td><%= reg.lun_cestas %></td><td><%= reg.mar_cestas %></td><td><%= reg.mie_cestas %></td>
+                    <td><%= reg.jue_cestas %></td><td><%= reg.vie_cestas %></td><td><%= reg.sab_cestas %></td>
+                    <td style="font-weight: bold;"><%= totales.cestas %> Unds</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h4 style="margin-bottom: 5px; border-bottom: 1px solid #000;">2. SUBPRODUCTOS Y EXTRAS RECIBIDOS</h4>
+        <table class="tabla-items">
+            <thead>
+                <tr>
+                    <th>PESO VENA</th>
+                    <th>PESO RECORTE</th>
+                    <th>TABACOS EXTRA (COMPRA)</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td style="font-size: 15px;"><%= reg.vena_kg %> Kg</td>
+                    <td style="font-size: 15px;"><%= reg.recorte_kg %> Kg</td>
+                    <td style="font-size: 15px;"><%= reg.extra_tabacos %> Unds</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="resumen-pago">
+            <h3 style="margin-top: 0; text-align: center; border-bottom: 1px solid #ccc; padding-bottom: 10px;">RESUMEN DE LIQUIDACIÓN ECONÓMICA</h3>
+            
+            <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                    <td style="padding: 5px;">Producción Tarea (<%= totales.tabacos.toLocaleString('es-CO') %> unds x $<%= pagos.valor_tabaco %>)</td>
+                    <td style="text-align: right; font-weight: bold;">$<%= pagos.pago_tabacos.toLocaleString('es-CO') %></td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;">Venta de Vena (<%= reg.vena_kg %> kg x $<%= pagos.valor_vena.toLocaleString('es-CO') %>)</td>
+                    <td style="text-align: right; font-weight: bold; color: #4338ca;">$<%= pagos.pago_vena.toLocaleString('es-CO') %></td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;">Venta de Recorte (<%= reg.recorte_kg %> kg x $<%= pagos.valor_recorte.toLocaleString('es-CO') %>)</td>
+                    <td style="text-align: right; font-weight: bold; color: #b45309;">$<%= pagos.pago_recorte.toLocaleString('es-CO') %></td>
+                </tr>
+                <tr>
+                    <td style="padding: 5px;">Compra Tabacos Extra (<%= reg.extra_tabacos %> unds x $<%= pagos.valor_extra %>)</td>
+                    <td style="text-align: right; font-weight: bold; color: #15803d;">$<%= pagos.pago_extras.toLocaleString('es-CO') %></td>
+                </tr>
+            </table>
+
+            <div class="total-final">
+                TOTAL NETO A PAGAR: <strong>$<%= pagos.total_ganado.toLocaleString('es-CO') %> COP</strong>
+            </div>
+            
+            <div style="text-align: center; font-size: 12px; color: #777; margin-top: 5px;">
+                *El saldo de material adeudado para la próxima semana quedó en: <b><%= empleado.deuda_tabacos.toLocaleString('es-CO') %> Tabacos</b>*
+            </div>
+        </div>
+        
+        <div class="firmas-container">
+            <div class="firma-caja">
+                <div class="firma-linea">ENTREGADO CONFORME<br><span style="font-weight: normal; font-size: 12px;">Departamento de Pagos</span></div>
+            </div>
+            <div class="firma-caja">
+                <div class="firma-linea">RECIBIDO CONFORME<br><span style="font-weight: normal; font-size: 12px;"><%= empleado.nombre %></span></div>
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

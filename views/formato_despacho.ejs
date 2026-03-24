@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Formato de Despacho - <%= empleado.codigo %></title>
+    <style>
+        body { font-family: 'Arial', sans-serif; background-color: #fff; margin: 0; padding: 20px; color: #111; }
+        .hoja-impresion { max-width: 900px; margin: auto; border: 1px solid #000; padding: 20px; }
+        
+        .header-box { text-align: center; font-weight: bold; line-height: 1.5; margin-bottom: 20px; }
+        .header-box h2 { margin: 5px 0; font-size: 24px; text-transform: uppercase; }
+        
+        .datos-empleado { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+        .datos-empleado td { padding: 5px; font-size: 14px; font-weight: bold; }
+        
+        .tabla-items { width: 100%; border-collapse: collapse; margin-bottom: 30px; }
+        .tabla-items th, .tabla-items td { border: 1px solid #000; padding: 8px; text-align: center; font-size: 13px; }
+        .tabla-items th { background: #e5e7eb; -webkit-print-color-adjust: exact; print-color-adjust: exact; font-size: 11px; }
+        .tabla-items td.left-align { text-align: left; font-weight: bold; }
+        
+        .firmas-container { display: flex; justify-content: space-around; margin-top: 50px; }
+        .firma-caja { text-align: center; width: 35%; }
+        .firma-linea { border-top: 1px solid #000; padding-top: 10px; font-weight: bold; font-size: 14px; }
+        
+        /* Botonera Flotante */
+        .no-imprimir { text-align: center; margin-bottom: 20px; }
+        .btn-imprimir { background: #111; color: white; padding: 10px 20px; border: none; font-size: 16px; cursor: pointer; border-radius: 5px; }
+        
+        @media print {
+            .no-imprimir { display: none; }
+            .hoja-impresion { border: none; }
+            body { padding: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="no-imprimir">
+        <button class="btn-imprimir" onclick="window.print()">🖨️ Imprimir Formato</button>
+        <button class="btn-imprimir" onclick="window.close()" style="background: #ef4444; margin-left: 10px;">❌ Cerrar</button>
+    </div>
+
+    <div class="hoja-impresion">
+        <div class="header-box">
+            <h2>FABRICA DE TABACOS GATO NEGRO</h2>
+            "Gonzalo Jaimes Bastos"<br>
+            RIF. V-06676738-4
+        </div>
+        
+        <table class="datos-empleado">
+            <tr>
+                <td style="width: 20%;">FECHA:</td>
+                <td style="width: 40%; font-weight: normal;"><%= fecha_actual %></td>
+                <td style="width: 15%; text-align: right;">CODIGO:</td>
+                <td style="width: 25%; font-size: 18px; color: #b91c1c;"><%= empleado.codigo %></td>
+            </tr>
+            <tr>
+                <td>NOMBRE FABRIQUIN:</td>
+                <td style="font-weight: normal;"><%= empleado.nombre %></td>
+                <td style="text-align: right;">CEDULA:</td>
+                <td><%= empleado.cedula %></td>
+            </tr>
+            <tr>
+                <td>META (TAREA):</td>
+                <td style="color: #4338ca;"><%= meta.toLocaleString('es-CO') %> Tabacos</td>
+                <td style="text-align: right;">SALDO ANT:</td>
+                <td style="color: #ea580c;"><%= saldo_casa.toLocaleString('es-CO') %> Tabacos</td>
+            </tr>
+        </table>
+        
+        <table class="tabla-items">
+            <thead>
+                <tr>
+                    <th style="width: 20%;">DESCRIPCION</th>
+                    <th style="width: 10%;">UNIDAD MEDIDA</th>
+                    <th style="width: 15%;">SALDO ANTERIOR (EN CASA)</th>
+                    <th style="width: 15%;">CANTIDAD ENTREGADA HOY</th>
+                    <th style="width: 15%;">RECIBIDA</th>
+                    <th style="width: 10%;">SALDO</th>
+                    <th style="width: 15%;">ENTREGADO POR</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- CAPA -->
+                <tr>
+                    <td class="left-align">CAPA</td>
+                    <td>KG</td>
+                    <td><%= params.saldo_capa %></td>
+                    <td style="font-weight: bold; font-size: 16px;"><%= params.capa %></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <!-- CAPOTE -->
+                <tr>
+                    <td class="left-align">CAPOTE</td>
+                    <td>KG</td>
+                    <td><%= params.saldo_capote %></td>
+                    <td style="font-weight: bold; font-size: 16px;"><%= params.capote %></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                <!-- PICADURA -->
+                <tr>
+                    <td class="left-align">PICADURA</td>
+                    <td>KG</td>
+                    <td><%= params.saldo_picadura %></td>
+                    <td style="font-weight: bold; font-size: 16px;"><%= params.picadura %></td>
+                    <td></td><td></td><td></td>
+                </tr>
+                
+                <!-- ITEMS EXTRAS MANUALES -->
+                <tr><td class="left-align">CESTAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">SACAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">GOMA</td><td>LITROS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">PERIODICO</td><td>KG</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">TRAPOS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">RESORTES</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">MAQ. ROLLERAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+            </tbody>
+        </table>
+        
+        <div class="firmas-container">
+            <div class="firma-caja">
+                <div class="firma-linea">ENTREGADO POR<br><span style="font-weight: normal; font-size: 12px;">Departamento de Almacén</span></div>
+            </div>
+            <div class="firma-caja">
+                <div class="firma-linea">RECIBIDO POR<br><span style="font-weight: normal; font-size: 12px;"><%= empleado.nombre %></span></div>
+            </div>
+        </div>
+        
+    </div>
+
+</body>
+</html>

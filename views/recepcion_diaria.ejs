@@ -1,0 +1,118 @@
+<%- include('partials/header') %>
+
+<style>
+    .tabla-grid { width: 100%; border-collapse: collapse; min-width: 1400px; }
+    .tabla-grid th, .tabla-grid td { border: 1px solid #d1d5db; padding: 4px; text-align: center; font-size: 13px; }
+    .tabla-grid th { background-color: #f3f4f6; color: #111; position: sticky; top: 0; z-index: 10; }
+    .tabla-grid td input { width: 45px; text-align: center; border: 1px solid #ccc; padding: 4px; font-size: 14px; border-radius: 4px; }
+    .tabla-grid td input:focus { outline: 2px solid #3b82f6; }
+    .btn-guardar { background-color: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+    .btn-liquidar { background-color: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; margin-top: 4px; }
+    .tabla-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    
+    /* Dark Mode Hacks */
+    html.dark-mode .tabla-grid th { background-color: #374151 !important; color: #e5e7eb !important; border-color: #4b5563 !important; }
+    html.dark-mode .tabla-grid td { border-color: #4b5563 !important; color: #e5e7eb !important; }
+    html.dark-mode .tabla-grid td input { background: #1f2937; color: white; border-color: #4b5563; }
+    html.dark-mode .tabla-container { background: #1f2937 !important; }
+</style>
+
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0; color: #333;">📅 Recepción Diaria de Fabriquines</h1>
+    <p style="color: gray; margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Al liquidar se generará la nómina de la semana y el pago por vena/recorte.</p>
+</div>
+
+<div class="tabla-container">
+    <table class="tabla-grid">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 15%;">FABRIQUÍN</th>
+                <th colspan="2">LUNES</th>
+                <th colspan="2">MARTES</th>
+                <th colspan="2">MIÉRCOLES</th>
+                <th colspan="2">JUEVES</th>
+                <th colspan="2">VIERNES</th>
+                <th colspan="2">SÁBADO</th>
+                <th colspan="3">SUBPRODUCTOS (SÁB)</th>
+                <th rowspan="2" style="width: 10%;">ACCIONES</th>
+            </tr>
+            <tr>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th style="background:#fef3c7; color:#b45309;">Rec (kg)</th>
+                <th style="background:#e0e7ff; color:#4338ca;">Vena (kg)</th>
+                <th style="background:#dcfce3; color:#15803d;">Extras</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% empleados.forEach(emp => { 
+                let reg = registros.find(r => r.empleado_id === emp.id) || {};
+            %>
+            <form action="/recepcion_diaria_guardar" method="POST">
+                <input type="hidden" name="empleado_id" value="<%= emp.id %>">
+                <input type="hidden" name="registro_id" value="<%= reg.id || '' %>">
+                <tr>
+                    <td style="text-align: left; padding-left: 10px; font-weight: bold; font-size:12px;">
+                        <%= emp.codigo %> - <%= emp.nombre %>
+                        <br><span style="font-weight:normal; color:gray; font-size:11px;">Deuda(Meta): <%= emp.deuda_tabacos.toLocaleString('es-CO') %></span>
+                    </td>
+                    <!-- Lunes -->
+                    <td><input type="number" name="lun_cestas" value="<%= reg.lun_cestas || '' %>"></td>
+                    <td><input type="number" name="lun_tabacos" value="<%= reg.lun_tabacos || '' %>"></td>
+                    <!-- Martes -->
+                    <td><input type="number" name="mar_cestas" value="<%= reg.mar_cestas || '' %>"></td>
+                    <td><input type="number" name="mar_tabacos" value="<%= reg.mar_tabacos || '' %>"></td>
+                    <!-- Miércoles -->
+                    <td><input type="number" name="mie_cestas" value="<%= reg.mie_cestas || '' %>"></td>
+                    <td><input type="number" name="mie_tabacos" value="<%= reg.mie_tabacos || '' %>"></td>
+                    <!-- Jueves -->
+                    <td><input type="number" name="jue_cestas" value="<%= reg.jue_cestas || '' %>"></td>
+                    <td><input type="number" name="jue_tabacos" value="<%= reg.jue_tabacos || '' %>"></td>
+                    <!-- Viernes -->
+                    <td><input type="number" name="vie_cestas" value="<%= reg.vie_cestas || '' %>"></td>
+                    <td><input type="number" name="vie_tabacos" value="<%= reg.vie_tabacos || '' %>"></td>
+                    <!-- Sábado -->
+                    <td><input type="number" name="sab_cestas" value="<%= reg.sab_cestas || '' %>"></td>
+                    <td><input type="number" name="sab_tabacos" value="<%= reg.sab_tabacos || '' %>"></td>
+                    
+                    <!-- Sobrantes -->
+                    <td style="background:#fef3c7;"><input type="number" step="0.01" name="recorte_kg" value="<%= reg.recorte_kg || '' %>"></td>
+                    <td style="background:#e0e7ff;"><input type="number" step="0.01" name="vena_kg" value="<%= reg.vena_kg || '' %>"></td>
+                    <td style="background:#dcfce3;"><input type="number" name="extra_tabacos" value="<%= reg.extra_tabacos || '' %>"></td>
+                    
+                    <!-- Botonera -->
+                    <td>
+                        <button type="submit" class="btn-guardar" title="Guardar cambios de la semana para este empleado">💾 Guardar</button>
+                        <% if(reg.id) { %>
+                            <button type="button" class="btn-liquidar" onclick="liquidarSemana('<%= reg.id %>')" title="Generar Nómina Formato 2026">💰 Liquidar</button>
+                        <% } %>
+                    </td>
+                </tr>
+            </form>
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    function liquidarSemana(registroId) {
+        if(confirm("¿Estás seguro de Liquidar la semana de este Fabriquín? Esto cerrará la hoja, actualizará la deuda y generará la Factura V1.8!")) {
+            // Guardamos el form e invocamos otra ruta para liquidar
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/liquidar_semana/" + registroId;
+            form.target = "_blank"; // Para abrir factura en pestaña nueva
+            document.body.appendChild(form);
+            form.submit();
+            
+            // Recargar la pagina padre en 2 segundos para ver q la fila se limpia
+            setTimeout(() => window.location.reload(), 2000);
+        }
+    }
+</script>
+
+<%- include('partials/footer') %>

@@ -196,378 +196,207 @@ app.post('/registrar_venta', async (req, res) => {
     res.redirect('/movimientos');
 });
 
-// ---------------- PEDIDOS ----------------
-app.get('/pedidos', async (req, res) => {
-    if (!req.session.rol) return res.redirect('/');
-
-    let query = supabase.from('pedidos').select('*').order('id', { ascending: false });
-    
-    if (req.session.rol === "fabriquin" || req.session.rol === "fabricacion" || req.session.rol === "envolvedor") {
-        query = query.eq('usuario', req.session.usuario);
-    }
-
-    const { data: pedidos } = await query;
-    const { data: cestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%');
-
-    const pedidosCalculados = (pedidos || []).map(p => {
-        let factor = p.cantidad / 1500; 
-        if (p.material && p.material.includes('Tabacos')) {
-            p.tripa_necesaria = +(factor * 35).toFixed(2);
-            p.capa_necesaria = +(factor * 9).toFixed(2);
-            p.capote_necesario = +(factor * 5).toFixed(2);
-            p.cestas_necesarias = Math.ceil(factor * 3);
-        } else {
-            p.papel_necesario = +(factor * 1.5).toFixed(2);
-            p.tabacos_necesarios = p.cantidad; 
-        }
-        return p;
-    });
-
-    res.render('pedidos', { pedidos: pedidosCalculados, cestas_inventario: cestas || [] });
-});
-
-app.post('/agregar_pedido', async (req, res) => {
-    const cantidad_tabacos = req.body.cantidad_tabacos;
-    const tiempo = obtenerHoraColombia();
-    const tipoPedido = req.session.rol === 'envolvedor' ? 'Envoltura' : (req.body.tipo_tabaco || 'Tabacos Normales');
-
-    await supabase.from('pedidos').insert([{ 
-        material: tipoPedido, 
-        cantidad: cantidad_tabacos, 
-        usuario: req.session.usuario, 
-        fecha: tiempo.fecha, 
-        estado: 'pendiente' 
-    }]);
-    res.redirect('/pedidos');
-});
-
-app.post('/rechazar_pedido/:id', async (req, res) => {
-    await supabase.from('pedidos').update({ estado: 'rechazado' }).eq('id', req.params.id);
-    res.redirect('/pedidos');
-});
-
-// ---------------- APROBAR PEDIDO (ESCUDO NUBE Y KARDEX) ----------------
-app.post('/aprobar_pedido/:id', async (req, res) => {
-    const idPedido = req.params.id;
-    const cestaSeleccionada = req.body.cesta_seleccionada || "ninguna"; 
-
-    const { data: pedido } = await supabase.from('pedidos').select('*').eq('id', idPedido).single();
-    if (!pedido) return res.send(mostrarAlerta('Error', 'No se encontró el pedido.', 'error'));
-
-    let factor = pedido.cantidad / 1500;
-    const { data: inv } = await supabase.from('inventario').select('*');
-
-    const registrarMovimiento = async (material_nombre, cant) => {
-        const tiempo = obtenerHoraColombia();
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha,
-            hora: tiempo.hora,
-            tipo_movimiento: 'SALIDA',
-            material: material_nombre,
-            cantidad: cant,
-            usuario: req.session.usuario || 'Admin',
-            descripcion: `Aprobado pedido #${pedido.id} para ${pedido.usuario}`
-        }]);
-    };
-
-    if (pedido.material && pedido.material.includes('Tabacos')) {
-        let tripaReq = +(factor * 35).toFixed(2);
-        let capaReq = +(factor * 9).toFixed(2);
-        let capoteReq = +(factor * 5).toFixed(2);
-        let cestasReq = Math.ceil(factor * 3);
-
-        let dispTripa = 0, dispCapa = 0, dispCapote = 0, dispCesta = 0;
-        
-        inv.forEach(item => {
-            let m = item.material.toLowerCase();
-            if(m.includes('tripa') || m.includes('material')) dispTripa += item.cantidad; 
-            if(m.includes('capa')) dispCapa += item.cantidad;
-            if(m.includes('capote')) dispCapote += item.cantidad;
-            if(m === cestaSeleccionada.toLowerCase()) dispCesta += item.cantidad;
-        });
-
-        let falta = "";
-        if (dispTripa < tripaReq) falta += `Falta Tripa (${dispTripa}/${tripaReq} kg).<br>`;
-        if (dispCapa < capaReq) falta += `Falta Capa (${dispCapa}/${capaReq} kg).<br>`;
-        if (dispCapote < capoteReq) falta += `Falta Capote (${dispCapote}/${capoteReq} kg).<br>`;
-        if (dispCesta < cestasReq) falta += `Falta ${cestaSeleccionada} (${dispCesta}/${cestasReq} unds).<br>`;
-
-        if (falta !== "") return res.send(mostrarAlerta('¡Stock Insuficiente!', falta, 'warning'));
-
-        for (let item of inv) {
-            let m = item.material.toLowerCase();
-            if ((m.includes('tripa') || m.includes('material')) && tripaReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - tripaReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, tripaReq); tripaReq = 0;
-            }
-            if (m.includes('capa') && capaReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - capaReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, capaReq); capaReq = 0;
-            }
-            if (m.includes('capote') && capoteReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - capoteReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, capoteReq); capoteReq = 0;
-            }
-            if (m === cestaSeleccionada.toLowerCase() && cestasReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - cestasReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, cestasReq); cestasReq = 0;
-            }
-        }
-        await supabase.from('pedidos').update({ estado: 'aprobado' }).eq('id', idPedido);
-        res.redirect('/pedidos');
-
-    } else if (pedido.material === 'Envoltura') {
-        let papelReq = +(factor * 1.5).toFixed(2);
-        let tabacosReq = pedido.cantidad; 
-        
-        let dispPapel = 0, dispTabacos = 0;
-        
-        inv.forEach(item => {
-            let m = item.material.toLowerCase().trim();
-            if(m.includes('papel')) dispPapel += item.cantidad; 
-            if(m === 'tabacos' || m === 'tabaco') dispTabacos += item.cantidad; 
-        });
-
-        let faltaEnv = "";
-        if (dispPapel < papelReq) faltaEnv += `Falta Papel (${dispPapel}/${papelReq} kg).<br>`;
-        if (dispTabacos < tabacosReq) faltaEnv += `Faltan Tabacos (${dispTabacos}/${tabacosReq} unds).<br>`;
-
-        if (faltaEnv !== "") {
-            return res.send(mostrarAlerta('¡Falta Material!', faltaEnv, 'warning'));
-        }
-
-        for (let item of inv) {
-            let m = item.material.toLowerCase().trim();
-            if (m.includes('papel') && papelReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - papelReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, papelReq); papelReq = 0;
-            }
-            if ((m === 'tabacos' || m === 'tabaco') && tabacosReq > 0) {
-                await supabase.from('inventario').update({ cantidad: item.cantidad - tabacosReq }).eq('id', item.id);
-                await registrarMovimiento(item.material, tabacosReq); tabacosReq = 0;
-            }
-        }
-        await supabase.from('pedidos').update({ estado: 'aprobado' }).eq('id', idPedido);
-        res.redirect('/pedidos');
-    }
-});
-
-// ---------------- RECEPCIÓN DE TAREAS ----------------
-app.get('/recepcion', async (req, res) => {
+// ============================================================================
+// 🔥 MÓDULO V1.8 P2P: DESPACHO ROTATIVO AL FORMATO FABRIQUIN 2025 🔥
+// ============================================================================
+app.get('/despacho', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    const { data: pedidos } = await supabase.from('pedidos')
-        .select('*')
-        .eq('estado', 'aprobado')
-        .in('material', ['Tabacos Normales', 'Tabacos Anillados'])
-        .order('id', { ascending: true });
-
-    const { data: completados } = await supabase.from('pedidos')
-        .select('usuario, rezago, rezago_cestas')
-        .eq('estado', 'completado');
-
-    let resumenRezagos = {};
-    if (completados) {
-        completados.forEach(p => {
-            if (!resumenRezagos[p.usuario]) resumenRezagos[p.usuario] = { tabacos: 0, cestas: 0 };
-            resumenRezagos[p.usuario].tabacos += (parseInt(p.rezago) || 0); 
-            resumenRezagos[p.usuario].cestas += (parseInt(p.rezago_cestas) || 0); 
-        });
-    }
-
-    let listaRezagos = Object.keys(resumenRezagos).map(usuario => {
-        return { 
-            usuario: usuario, 
-            total: resumenRezagos[usuario].tabacos, 
-            faltan_cestas: resumenRezagos[usuario].cestas 
-        };
-    }).filter(r => r.total !== 0 || r.faltan_cestas > 0); 
-
-    res.render('recepcion', { 
-        pedidos: pedidos || [],
-        listaRezagos: listaRezagos 
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
+    
+    res.render('despacho', { 
+        empleados: empleados || []
     });
 });
 
-app.post('/recibir_tarea/:id', async (req, res) => {
-    const idPedido = req.params.id;
-    const tabacosEntregados = parseInt(req.body.entregado) || 0;
-    const cestasDevueltas = parseInt(req.body.cestas_devueltas) || 0;
-
-    const { data: pedido } = await supabase.from('pedidos').select('*').eq('id', idPedido).single();
+app.post('/despachar_tarea', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    // 🛡️ BLOQUEO ANTI-SPAM CLICKS: Si no existe o ya fue completado, abortar la transacción.
-    if (!pedido || pedido.estado === 'completado') {
-        return res.redirect('/recepcion');
-    }
-
-    const rezagoCalculado = pedido.cantidad - tabacosEntregados;
-    const cestasEsperadas = Math.ceil(pedido.cantidad / 500); // Promedio corporativo
-    const cestasFaltantes = (cestasEsperadas - cestasDevueltas) > 0 ? (cestasEsperadas - cestasDevueltas) : 0;
-
-    await supabase.from('pedidos').update({ 
-        estado: 'completado', 
-        entregado: tabacosEntregados,
-        rezago: rezagoCalculado,
-        rezago_cestas: cestasFaltantes
-    }).eq('id', idPedido);
-
-    const { data: invTabacos } = await supabase.from('inventario').select('*').eq('material', pedido.material).single();
+    const empleadoId = req.body.empleado_id;
+    const metaTabacos = parseInt(req.body.meta_tabacos) || 0;
     
-    if (invTabacos) {
-        await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacosEntregados }).eq('id', invTabacos.id);
-    } else {
-        await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: tabacosEntregados, categoria: 'En Proceso' }]);
-    }
-
+    const { data: empleado } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleadoId).single();
+    if (!empleado) return res.send(mostrarAlerta('Error', 'Empleado no encontrado', 'error'));
+    
+    const saldoEnCasa = parseInt(empleado.deuda_tabacos) || 0;
+    const aEntregar = metaTabacos - saldoEnCasa;
+    
+    if (aEntregar <= 0) return res.send(mostrarAlerta('Error Lógico', 'La meta debe ser mayor al saldo en casa', 'warning'));
+    
+    // Cálculo de kilogramos (x1000 tabacos -> 1kg capa, 1.8kg capote, 7kg picadura)
+    const factor = aEntregar / 1000;
+    const capaKg = (factor * 1.0).toFixed(2);
+    const capoteKg = (factor * 1.8).toFixed(2);
+    const picaduraKg = (factor * 7.0).toFixed(2);
+    
     const tiempo = obtenerHoraColombia();
     
-    // 🪄 AQUÍ ESTÁ EL ARREGLO: Agregamos el nombre del fabriquin al chisme del Kardex
-    let descripcionKardex = `Recepción de tarea de ${pedido.usuario}. Orden #${idPedido}.`;
-    if (rezagoCalculado > 0) {
-        descripcionKardex += ` (${pedido.usuario} quedó debiendo: ${rezagoCalculado} tabacos)`;
-    } else if (rezagoCalculado < 0) {
-        descripcionKardex += ` (${pedido.usuario} trajo ${Math.abs(rezagoCalculado)} tabacos extra)`;
+    // 1. Descontar del inventario maestro (si existe el material)
+    const { data: inv } = await supabase.from('inventario').select('*');
+    if (inv) {
+        let c = parseFloat(capaKg), cp = parseFloat(capoteKg), pi = parseFloat(picaduraKg);
+        for (let item of inv) {
+            let m = item.material.toLowerCase();
+            if (m.includes('capa') && c > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - c }).eq('id', item.id); c = 0; }
+            if (m.includes('capote') && cp > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - cp }).eq('id', item.id); cp = 0; }
+            if ((m.includes('picadura') || m.includes('tripa') || m.includes('material')) && pi > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - pi }).eq('id', item.id); pi = 0; }
+        }
     }
-
+    
+    // 2. Registro histórico (Kardex)
     await supabase.from('movimientos').insert([{
-        fecha: tiempo.fecha,
-        hora: tiempo.hora,
-        tipo_movimiento: 'ENTRADA',
-        material: 'Tabacos',
-        cantidad: tabacosEntregados,
-        usuario: req.session.usuario || 'Admin',
-        descripcion: descripcionKardex
+        fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA',
+        material: 'MATERIA PRIMA', cantidad: 1, usuario: 'Admin',
+        descripcion: `Despacho Tarea [${metaTabacos}] a ${empleado.codigo}. (Físico: Capa ${capaKg}kg, Capote ${capoteKg}kg, Picadura ${picaduraKg}kg.)`
     }]);
 
-    if (cestasDevueltas > 0) {
-        const { data: invCestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
-        
-        let nomCesta = 'Cestas Plásticas';
-        if (invCestas && invCestas.length > 0) {
-            nomCesta = invCestas[0].material;
-            await supabase.from('inventario').update({ cantidad: invCestas[0].cantidad + cestasDevueltas }).eq('id', invCestas[0].id);
-        } else {
-            await supabase.from('inventario').insert([{ material: nomCesta, cantidad: cestasDevueltas, categoria: 'Herramientas' }]);
+    // 3. ACTUALIZAR DEUDA ROTATIVA
+    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: metaTabacos }).eq('id', empleado.id);
+
+    // 4. Imprimir soporte Formato V1.8
+    const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
+    res.render('formato_despacho', {
+        empleado: empleado,
+        meta: metaTabacos,
+        saldo_casa: saldoEnCasa,
+        fecha_actual: fechaText,
+        params: {
+            capa: capaKg, capote: capoteKg, picadura: picaduraKg,
+            saldo_capa: (saldoEnCasa / 1000 * 1.0).toFixed(2),
+            saldo_capote: (saldoEnCasa / 1000 * 1.8).toFixed(2),
+            saldo_picadura: (saldoEnCasa / 1000 * 7.0).toFixed(2)
         }
-        
-        // Mágicamente lo metemos al kardex para que el admin lo vea en Entradas y Salidas
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha,
-            hora: tiempo.hora,
-            tipo_movimiento: 'ENTRADA',
-            material: nomCesta,
-            cantidad: cestasDevueltas,
-            usuario: req.session.usuario || 'Admin',
-            descripcion: `Devolución formal de cestas por ${pedido.usuario}`
-        }]);
-    }
-
-    // ==========================================
-    // 🪄 NUEVO: INTEGRACIÓN AUTOMÁTICA CON NÓMINA Y CESTAS
-    // ==========================================
-    const precio_por_tabaco = 150; // 150 COP la unidad, 150.000 el millar
-    const ganancia = tabacosEntregados * precio_por_tabaco;
-    
-    // Inyectar en la nómina (Producción del Fabriquín) automáticamente
-    if (tabacosEntregados > 0) {
-        await supabase.from('produccion_fabriquines').insert([{
-            fecha: tiempo.fecha,
-            usuario: pedido.usuario,
-            cantidad_producida: tabacosEntregados,
-            precio_por_unidad: precio_por_tabaco,
-            total_ganado: ganancia,
-            estado: 'PENDIENTE'
-        }]);
-    }
-
-    // Registrar en sistema de cobros de nómina física
-    if (cestasFaltantes > 0) {
-        await supabase.from('deudores_fabriquines').insert([{
-            fecha: tiempo.fecha,
-            usuario: pedido.usuario,
-            monto_deuda: 0, 
-            concepto: `Faltan ${cestasFaltantes} Cesta(s) Plástica(s)`,
-            estado: 'ACTIVA'
-        }]);
-    }
-
-    res.redirect('/recepcion');
+    });
 });
 
-// --- ABONAR REZAGOS (TABACOS Y CESTAS) ---
-app.post('/abonar_rezago', async (req, res) => {
-    const { usuario, cantidad_tabacos, cantidad_cestas } = req.body;
-    const tabacos = parseInt(cantidad_tabacos) || 0;
-    const cestas = parseInt(cantidad_cestas) || 0;
+// ============================================================================
+// 🔥 MÓDULO V1.8 P2P: RECEPCIÓN ACUMULATIVA (L-S) Y SUBPRODUCTOS 🔥
+// ============================================================================
+app.get('/recepcion_diaria', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    if (tabacos <= 0 && cestas <= 0) return res.redirect('/recepcion');
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
+    const { data: registros } = await supabase.from('recepcion_diaria').select('*').eq('estado', 'pendiente');
+    
+    res.render('recepcion_diaria', { empleados: empleados || [], registros: registros || [] });
+});
 
+app.post('/recepcion_diaria_guardar', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const empId = req.body.empleado_id;
+    const regId = req.body.registro_id;
     const tiempo = obtenerHoraColombia();
+    
+    const dataObj = {
+        empleado_id: empId, semana_inicio: tiempo.fecha,
+        lun_cestas: parseInt(req.body.lun_cestas) || 0, lun_tabacos: parseInt(req.body.lun_tabacos) || 0,
+        mar_cestas: parseInt(req.body.mar_cestas) || 0, mar_tabacos: parseInt(req.body.mar_tabacos) || 0,
+        mie_cestas: parseInt(req.body.mie_cestas) || 0, mie_tabacos: parseInt(req.body.mie_tabacos) || 0,
+        jue_cestas: parseInt(req.body.jue_cestas) || 0, jue_tabacos: parseInt(req.body.jue_tabacos) || 0,
+        vie_cestas: parseInt(req.body.vie_cestas) || 0, vie_tabacos: parseInt(req.body.vie_tabacos) || 0,
+        sab_cestas: parseInt(req.body.sab_cestas) || 0, sab_tabacos: parseInt(req.body.sab_tabacos) || 0,
+        recorte_kg: parseFloat(req.body.recorte_kg) || 0, vena_kg: parseFloat(req.body.vena_kg) || 0,
+        extra_tabacos: parseInt(req.body.extra_tabacos) || 0, estado: 'pendiente'
+    };
+    
+    if (regId && regId !== '') {
+        delete dataObj.semana_inicio; // no sobrescribir la fecha
+        await supabase.from('recepcion_diaria').update(dataObj).eq('id', regId);
+    } else {
+        await supabase.from('recepcion_diaria').insert([dataObj]);
+    }
+    res.redirect('/recepcion_diaria');
+});
 
-    // 1. Pedido fantasma maestro para saldar
-    await supabase.from('pedidos').insert([{
-        usuario: usuario,
-        material: 'Abono Multi-Rezago',
-        cantidad: 0,
-        entregado: tabacos,
-        rezago: -tabacos, 
-        rezago_cestas: -cestas,
-        estado: 'completado',
-        fecha: tiempo.fecha
+app.post('/liquidar_semana/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const regId = req.params.id;
+    
+    // Traer el registro con los datos del empleado emparentado
+    const { data: reg } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('id', regId).single();
+    if (!reg || reg.estado === 'liquidado') return res.send(mostrarAlerta('Error', 'Hoja no encontrada o ya liquidada.', 'error'));
+    
+    const emp = reg.empleados_fabriquines;
+    
+    // SUMAS GLOBALES DE LA SEMANA
+    const total_cestas = reg.lun_cestas + reg.mar_cestas + reg.mie_cestas + reg.jue_cestas + reg.vie_cestas + reg.sab_cestas;
+    const total_tabacos = reg.lun_tabacos + reg.mar_tabacos + reg.mie_tabacos + reg.jue_tabacos + reg.vie_tabacos + reg.sab_tabacos;
+    
+    // ECONOMÍA
+    const VALOR_TABACO = 85; 
+    const VALOR_RECORTE = 6500;
+    const VALOR_VENA = 3500;
+    const VALOR_EXTRA = 230;
+    
+    const pago_tabacos = total_tabacos * VALOR_TABACO;
+    const pago_recorte = reg.recorte_kg * VALOR_RECORTE;
+    const pago_vena = reg.vena_kg * VALOR_VENA;
+    const pago_extras = reg.extra_tabacos * VALOR_EXTRA;
+    const total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
+    
+    const tiempo = obtenerHoraColombia();
+    
+    // 1. CERRAR HOJA EXCEL
+    await supabase.from('recepcion_diaria').update({ estado: 'liquidado', total_ganado: total_ganado }).eq('id', regId);
+    
+    // 2. DESCONTAR LA DEUDA DE TABACOS ROTATIVA
+    let nueva_deuda = emp.deuda_tabacos - total_tabacos;
+    if (nueva_deuda < 0) nueva_deuda = 0; 
+    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nueva_deuda }).eq('id', emp.id);
+    
+    // 3. ACTUALIZAR INVENTARIOS (KARDEX / BODEGA MAESTRA)
+    if (total_tabacos > 0) {
+        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
+        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + total_tabacos }).eq('id', invT.id);
+        else await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: total_tabacos, categoria: 'En Proceso' }]);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: total_tabacos, usuario: 'Admin',
+            descripcion: `Liquidación Cierre Semanal: Fabriquín ${emp.codigo}`
+        }]);
+    }
+    
+    if (reg.extra_tabacos > 0) {
+        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
+        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + reg.extra_tabacos }).eq('id', invT.id);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: reg.extra_tabacos, usuario: 'Admin',
+            descripcion: `Compra de EXTRA Tabacos a ${emp.codigo}`
+        }]);
+    }
+    
+    // Subproductos
+    if (reg.recorte_kg > 0) {
+        const { data: invR } = await supabase.from('inventario').select('*').eq('material', 'Recorte').single();
+        if (invR) await supabase.from('inventario').update({ cantidad: invR.cantidad + reg.recorte_kg }).eq('id', invR.id);
+        else await supabase.from('inventario').insert([{ material: 'Recorte', cantidad: reg.recorte_kg, categoria: 'Materia Prima' }]);
+    }
+    if (reg.vena_kg > 0) {
+        const { data: invV } = await supabase.from('inventario').select('*').eq('material', 'Vena').single();
+        if (invV) await supabase.from('inventario').update({ cantidad: invV.cantidad + reg.vena_kg }).eq('id', invV.id);
+        else await supabase.from('inventario').insert([{ material: 'Vena', cantidad: reg.vena_kg, categoria: 'Materia Prima' }]);
+    }
+    
+    if (total_cestas > 0) {
+        const { data: invC } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
+        if (invC && invC.length > 0) await supabase.from('inventario').update({ cantidad: invC[0].cantidad + total_cestas }).eq('id', invC[0].id);
+    }
+    
+    // Inyectar a tabla historica fina "produccion_fabriquines" antigua para mantener la consistencia
+    await supabase.from('produccion_fabriquines').insert([{
+        fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: total_tabacos, precio_por_unidad: VALOR_TABACO, total_ganado: total_ganado, estado: 'PAGADO'
     }]);
 
-    // 2. Procesar Tabacos (Inventario, Nómina y Kardex)
-    if (tabacos > 0) {
-        const { data: invTabacos } = await supabase.from('inventario').select('*').eq('material', req.body.tipo_tabaco || 'Tabacos Normales').single();
-        if (invTabacos) {
-            await supabase.from('inventario').update({ cantidad: invTabacos.cantidad + tabacos }).eq('id', invTabacos.id);
-        }
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
-            material: req.body.tipo_tabaco || 'Tabacos Normales', cantidad: tabacos, usuario: req.session.usuario || 'Admin',
-            descripcion: `Abono/Devolución de rezagos de tabacos de ${usuario}.`
-        }]);
-        
-        // ¡Magia! Si devuelve tabacos, ¡Significa que los fabricó y HAY QUE PAGÁRSELOS! 💰
-        const precio = 150;
-        await supabase.from('produccion_fabriquines').insert([{
-            fecha: tiempo.fecha,
-            usuario: usuario,
-            cantidad_producida: tabacos,
-            precio_por_unidad: precio,
-            total_ganado: tabacos * precio,
-            estado: 'PENDIENTE'
-        }]);
-    }
-
-    // 3. Procesar Cestas (Inventario y Kardex)
-    if (cestas > 0) {
-        const { data: invCestas } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
-        let nomCesta = 'Cestas Plásticas';
-        if (invCestas && invCestas.length > 0) {
-            nomCesta = invCestas[0].material;
-            await supabase.from('inventario').update({ cantidad: invCestas[0].cantidad + cestas }).eq('id', invCestas[0].id);
-        } else {
-            await supabase.from('inventario').insert([{ material: nomCesta, cantidad: cestas, categoria: 'Herramientas' }]);
-        }
-        
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
-            material: nomCesta, cantidad: cestas, usuario: req.session.usuario || 'Admin',
-            descripcion: `Abono/Devolución de cestas rezagadas de ${usuario}.`
-        }]);
-        
-        // Limpiar la deuda penal (física) en su perfil
-        const { data: deuda } = await supabase.from('deudores_fabriquines').select('*')
-            .eq('usuario', usuario).eq('estado', 'ACTIVA').ilike('concepto', '%Cesta%').limit(1);
-        if (deuda && deuda.length > 0) {
-            await supabase.from('deudores_fabriquines').update({ estado: 'COBRADA' }).eq('id', deuda[0].id);
-        }
-    }
-
-    res.redirect('/recepcion');
+    // 4. GENERAR NÓMINA IMPRIMIBLE FORMATO EXCEL V1.8
+    res.render('formato_nomina_v18', {
+        empleado: emp, reg: reg, tiempo: tiempo,
+        totales: { tabacos: total_tabacos, cestas: total_cestas },
+        pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_ganado, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }
+    });
 });
+
 // ---------------- MÁQUINAS Y EQUIPOS ----------------
 app.get('/maquinas', async (req, res) => {
     if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');

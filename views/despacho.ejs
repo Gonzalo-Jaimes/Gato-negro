@@ -1,0 +1,108 @@
+<%- include('partials/header') %>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; color: #333;">📝 Despachar Tarea a Fabriquín</h1>
+        <p style="color: gray; margin-top: 5px;">Selecciona el empleado y fija su meta semanal. El sistema calculará el peso de materia prima a entregar descontando su saldo.</p>
+    </div>
+</div>
+
+<hr style="margin-bottom: 30px;">
+
+<div style="display:flex; justify-content:center;">
+<div class="card" style="max-width: 600px; width: 100%; border-top: 4px solid #f59e0b;">
+    <h2 style="margin-top: 0;">Parámetros del Despacho</h2>
+    
+    <form action="/despachar_tarea" method="POST" target="_blank" onsubmit="setTimeout(()=> window.location.reload(), 1500)">
+        
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Fabriquín:</label>
+        <select name="empleado_id" id="empleado_id" style="width: 100%; margin-bottom: 20px; font-size: 16px;" required onchange="actualizarSaldo()">
+            <option value="">Elige a quién entregar material...</option>
+            <% empleados.forEach(emp => { %>
+                <option value="<%= emp.id %>" data-saldo="<%= emp.deuda_tabacos %>">
+                    (V1.8) <%= emp.codigo %> - <%= emp.nombre %> (Debe: <%= emp.deuda_tabacos.toLocaleString('es-CO') %> Tabacos)
+                </option>
+            <% }) %>
+        </select>
+
+        <div id="saldo_alerta" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #d97706;">
+            <strong>⚠️ Tiene Saldo en Casa:</strong> Este fabriquin aún tiene material para <span id="saldo_info" style="font-weight: 900; font-size:18px;">0</span> tabacos. 
+            <br><small>El sistema le entregará físicamente solo el diferencial para alcanzar su nueva meta.</small>
+        </div>
+
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Meta de Tabacos a Asignar (La Tarea Semanal Total):</label>
+        <input type="number" name="meta_tabacos" id="meta_tabacos" placeholder="Ej: 20000" style="width: 100%; font-size: 18px; margin-bottom: 20px;" required>
+
+        <button type="button" onclick="simularCalculo()" style="width: 100%; background: #3b82f6; font-size: 16px; margin-bottom: 20px;">🧮 Simular Pesaje (Vista Previa)</button>
+
+        <!-- CAJA DE RESULTADO -->
+        <div id="resultado_calculo" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top:0; color:#1f2937;">Material a Pesar y Extraer de Bodega:</h3>
+            <p><strong>Meta Total (Tarea):</strong> <span id="res_meta"></span></p>
+            <p style="color: #ef4444;"><strong>- Material Ya en Casa:</strong> <span id="res_casa"></span></p>
+            <hr>
+            <p style="color: #10b981; font-weight:bold; font-size:18px;">🎟️ Producción Física a Entregar: <span id="res_fisico"></span> Tabacos</p>
+            <ul style="font-size: 18px;">
+                <li>Capa (x1.0 kg): <strong id="peso_capa">0</strong> Kg</li>
+                <li>Capote (x1.8 kg): <strong id="peso_capote">0</strong> Kg</li>
+                <li>Picadura (x7.0 kg): <strong id="peso_picadura">0</strong> Kg</li>
+            </ul>
+        </div>
+
+        <hr style="margin-bottom: 20px;">
+
+        <button type="submit" id="btn_submit" style="width: 100%; background: #10b981; font-size: 18px; font-weight: bold;" disabled>
+            🖨️ Registrar Salida e Imprimir Formato Excel
+        </button>
+
+    </form>
+</div>
+</div>
+
+<script>
+    function actualizarSaldo() {
+        const select = document.getElementById('empleado_id');
+        const option = select.options[select.selectedIndex];
+        const saldo = parseFloat(option.getAttribute('data-saldo')) || 0;
+        
+        if (saldo > 0) {
+            document.getElementById('saldo_alerta').style.display = 'block';
+            document.getElementById('saldo_info').innerText = saldo.toLocaleString('es-CO');
+        } else {
+            document.getElementById('saldo_alerta').style.display = 'none';
+        }
+        
+        document.getElementById('resultado_calculo').style.display = 'none';
+        document.getElementById('btn_submit').disabled = true;
+    }
+
+    function simularCalculo() {
+        const select = document.getElementById('empleado_id');
+        if(!select.value) return alert("Selecciona un empleado primero.");
+
+        const meta = parseFloat(document.getElementById('meta_tabacos').value) || 0;
+        const option = select.options[select.selectedIndex];
+        const saldo = parseFloat(option.getAttribute('data-saldo')) || 0;
+
+        if (meta <= saldo) {
+            alert("La meta (tarea) debe ser MAYOR al saldo que actualmente tiene en casa. De lo contrario no hace falta entregarle nada.");
+            return;
+        }
+
+        const a_entregar = meta - saldo; // Cantidad a la que se le dará material fisico hoy
+        const mult = a_entregar / 1000;  // Constantes x cada mil
+
+        document.getElementById('res_meta').innerText = meta.toLocaleString('es-CO');
+        document.getElementById('res_casa').innerText = saldo.toLocaleString('es-CO');
+        document.getElementById('res_fisico').innerText = a_entregar.toLocaleString('es-CO');
+
+        document.getElementById('peso_capa').innerText = (1.0 * mult).toFixed(2);
+        document.getElementById('peso_capote').innerText = (1.8 * mult).toFixed(2);
+        document.getElementById('peso_picadura').innerText = (7.0 * mult).toFixed(2);
+
+        document.getElementById('resultado_calculo').style.display = 'block';
+        document.getElementById('btn_submit').disabled = false;
+    }
+</script>
+
+<%- include('partials/footer') %>
