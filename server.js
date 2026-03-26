@@ -129,8 +129,17 @@ app.get('/inventario', async (req, res) => {
         .select('*')
         .order('categoria', { ascending: true })
         .order('material', { ascending: true });
+        
+    // Lotes Semanales: Extraer la última semana registrada para el tracker
+    const { data: ultRegistros } = await supabase.from('recepcion_diaria').select('semana_inicio').order('id', { ascending: false }).limit(1);
+    const ultima_semana = ultRegistros && ultRegistros.length > 0 ? ultRegistros[0].semana_inicio : '1999-01-01';
     
-    res.render('inventario', { inventario: inventario || [] });
+    const { data: lotes_pendientes } = await supabase.from('recepcion_diaria')
+        .select('*, empleados_fabriquines(*)')
+        .eq('semana_inicio', ultima_semana)
+        .order('id', { ascending: false });
+    
+    res.render('inventario', { inventario: inventario || [], lotes_pendientes: lotes_pendientes || [], ultima_semana });
 });
 
 app.get('/movimientos', async (req, res) => {
@@ -348,7 +357,9 @@ app.post('/recepcion_diaria_guardar', async (req, res) => {
     const regId = req.body.registro_id;
     const tiempo = obtenerHoraColombia();
     
-    // Cálculo Diferencial Matemático para inyectar en Vivo los Tabacos a la Bodega Maestro.
+    const { data: emp } = await supabase.from('empleados_fabriquines').select('*').eq('id', empId).single();
+    
+    // Extracción de Cantidades
     const newLun = parseInt(req.body.lun_tabacos) || 0;
     const newMar = parseInt(req.body.mar_tabacos) || 0;
     const newMie = parseInt(req.body.mie_tabacos) || 0;
@@ -356,35 +367,70 @@ app.post('/recepcion_diaria_guardar', async (req, res) => {
     const newVie = parseInt(req.body.vie_tabacos) || 0;
     const newSab = parseInt(req.body.sab_tabacos) || 0;
     const newTotal = newLun + newMar + newMie + newJue + newVie + newSab;
+    
+    const newLunC = parseInt(req.body.lun_cestas) || 0;
+    const newMarC = parseInt(req.body.mar_cestas) || 0;
+    const newMieC = parseInt(req.body.mie_cestas) || 0;
+    const newJueC = parseInt(req.body.jue_cestas) || 0;
+    const newVieC = parseInt(req.body.vie_cestas) || 0;
+    const newSabC = parseInt(req.body.sab_cestas) || 0;
+    const newTotalC = newLunC + newMarC + newMieC + newJueC + newVieC + newSabC;
 
-    let oldTotal = 0;
+    const newExtra = parseInt(req.body.extra_tabacos) || 0;
+    const newRecorte = parseFloat(req.body.recorte_kg) || 0;
+    const newVena = parseFloat(req.body.vena_kg) || 0;
+
+    let oldTab = 0, oldCest = 0, oldExt = 0, oldRec = 0, oldVen = 0;
     if (regId && regId !== '') {
         const { data: oldReg } = await supabase.from('recepcion_diaria').select('*').eq('id', regId).single();
-        if (oldReg) oldTotal = oldReg.lun_tabacos + oldReg.mar_tabacos + oldReg.mie_tabacos + oldReg.jue_tabacos + oldReg.vie_tabacos + oldReg.sab_tabacos;
+        if (oldReg) {
+            oldTab = oldReg.lun_tabacos + oldReg.mar_tabacos + oldReg.mie_tabacos + oldReg.jue_tabacos + oldReg.vie_tabacos + oldReg.sab_tabacos;
+            oldCest = oldReg.lun_cestas + oldReg.mar_cestas + oldReg.mie_cestas + oldReg.jue_cestas + oldReg.vie_cestas + oldReg.sab_cestas;
+            oldExt = oldReg.extra_tabacos || 0;
+            oldRec = oldReg.recorte_kg || 0;
+            oldVen = oldReg.vena_kg || 0;
+        }
     }
     
-    const diferencia = newTotal - oldTotal;
-    if (diferencia !== 0) {
-        // Actualizar Inventario en Vivo (Soluciona el problema logístico de espera sabatina)
-        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
-        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + diferencia }).eq('id', invT.id);
-        else await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: diferencia, categoria: 'En Proceso' }]);
+    // Función Transaccional "En Vivo" (Inyecta a DB y Crea Kardex)
+    async function difStock(materialNom, categ, dif, tipoDesc) {
+        if (dif === 0) return;
+        const nombreCorto = emp ? emp.nombre.split(' ').slice(0, 2).join(' ') : 'Fabriquín';
+        const cod = emp ? emp.codigo : 'N/A';
+        const tipoMov = dif > 0 ? 'ENTRADA' : 'SALIDA';
+        const absDif = Math.abs(dif);
+        
+        const { data: invT } = await supabase.from('inventario').select('*').eq('material', materialNom).single();
+        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + dif }).eq('id', invT.id);
+        else await supabase.from('inventario').insert([{ material: materialNom, cantidad: dif, categoria: categ }]);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: tipoMov, material: materialNom, cantidad: absDif, usuario: 'Admin',
+            descripcion: `Registro Diario (${tipoDesc}): ${cod} - ${nombreCorto}`
+        }]);
     }
+
+    // Inyectar TODAS las diferencias diariamente!
+    await difStock('Tabacos', 'En Proceso', newTotal - oldTab, 'Lotes Tarea');
+    await difStock('Cestas Generales', 'Herramientas', newTotalC - oldCest, 'Retorno Bulto');
+    await difStock('Tabacos Extras (Ventas)', 'Producto Terminado', newExtra - oldExt, 'Compra Directa');
+    await difStock('Recorte', 'Materia Prima', newRecorte - oldRec, 'Merma');
+    await difStock('Vena', 'Materia Prima', newVena - oldVen, 'Merma');
     
     const dataObj = {
         empleado_id: empId, semana_inicio: tiempo.fecha,
-        lun_cestas: parseInt(req.body.lun_cestas) || 0, lun_tabacos: newLun,
-        mar_cestas: parseInt(req.body.mar_cestas) || 0, mar_tabacos: newMar,
-        mie_cestas: parseInt(req.body.mie_cestas) || 0, mie_tabacos: newMie,
-        jue_cestas: parseInt(req.body.jue_cestas) || 0, jue_tabacos: newJue,
-        vie_cestas: parseInt(req.body.vie_cestas) || 0, vie_tabacos: newVie,
-        sab_cestas: parseInt(req.body.sab_cestas) || 0, sab_tabacos: newSab,
-        recorte_kg: parseFloat(req.body.recorte_kg) || 0, vena_kg: parseFloat(req.body.vena_kg) || 0,
-        extra_tabacos: parseInt(req.body.extra_tabacos) || 0, estado: 'pendiente'
+        lun_cestas: newLunC, lun_tabacos: newLun,
+        mar_cestas: newMarC, mar_tabacos: newMar,
+        mie_cestas: newMieC, mie_tabacos: newMie,
+        jue_cestas: newJueC, jue_tabacos: newJue,
+        vie_cestas: newVieC, vie_tabacos: newVie,
+        sab_cestas: newSabC, sab_tabacos: newSab,
+        recorte_kg: newRecorte, vena_kg: newVena,
+        extra_tabacos: newExtra, estado: 'pendiente'
     };
     
     if (regId && regId !== '') {
-        delete dataObj.semana_inicio; // no sobrescribir la fecha
+        delete dataObj.semana_inicio; 
         await supabase.from('recepcion_diaria').update(dataObj).eq('id', regId);
     } else {
         await supabase.from('recepcion_diaria').insert([dataObj]);
@@ -428,56 +474,7 @@ app.post('/liquidar_semana/:id', async (req, res) => {
     if (nueva_deuda < 0) nueva_deuda = 0; 
     await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nueva_deuda }).eq('id', emp.id);
     
-    // 3. ACTUALIZAR INVENTARIOS (KARDEX / BODEGA MAESTRA)
-    if (total_tabacos > 0) {
-        // Los Tabacos físicos YA ESTÁN en la bodega maestra (se sumaron día a día en /guardar). 
-        // Solo dejamos el rastro histórico formal en Movimientos/Kardex como un "Cierre Consolidado" de la Tarea.
-        // Evitamos sumar al inventarioT.cantidad para no duplicar los tabacos físicos.
-        
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: total_tabacos, usuario: 'Admin',
-            descripcion: `Liquidación Cierre Semanal: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
-        }]);
-    }
-    
-    if (reg.extra_tabacos > 0) {
-        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
-        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + reg.extra_tabacos }).eq('id', invT.id);
-        
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: reg.extra_tabacos, usuario: 'Admin',
-            descripcion: `Compra de EXTRA Tabacos a ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
-        }]);
-    }
-    
-    // Subproductos (Ingresarlos al Inventario Físico Y TABLA HISTÓRICA KARDEX)
-    if (reg.recorte_kg > 0) {
-        const { data: invR } = await supabase.from('inventario').select('*').eq('material', 'Recorte').single();
-        if (invR) await supabase.from('inventario').update({ cantidad: invR.cantidad + reg.recorte_kg }).eq('id', invR.id);
-        else await supabase.from('inventario').insert([{ material: 'Recorte', cantidad: reg.recorte_kg, categoria: 'Materia Prima' }]);
-        
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Recorte', cantidad: reg.recorte_kg, usuario: 'Admin',
-            descripcion: `Ingreso de Merma por Liquidación: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
-        }]);
-    }
-    if (reg.vena_kg > 0) {
-        const { data: invV } = await supabase.from('inventario').select('*').eq('material', 'Vena').single();
-        if (invV) await supabase.from('inventario').update({ cantidad: invV.cantidad + reg.vena_kg }).eq('id', invV.id);
-        else await supabase.from('inventario').insert([{ material: 'Vena', cantidad: reg.vena_kg, categoria: 'Materia Prima' }]);
-        
-        await supabase.from('movimientos').insert([{
-            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Vena', cantidad: reg.vena_kg, usuario: 'Admin',
-            descripcion: `Ingreso de Merma por Liquidación: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
-        }]);
-    }
-    
-    if (total_cestas > 0) {
-        const { data: invC } = await supabase.from('inventario').select('*').ilike('material', '%cesta%').limit(1);
-        if (invC && invC.length > 0) await supabase.from('inventario').update({ cantidad: invC[0].cantidad + total_cestas }).eq('id', invC[0].id);
-    }
-    
-    // Inyectar a tabla historica fina "produccion_fabriquines" antigua para mantener la consistencia
+    // 3. ACTUALIZAR HISTORIAL FINANCIERO (Físico ya fue actualizado en vivo por Recepcion Diaria Diferencial)
     await supabase.from('produccion_fabriquines').insert([{
         fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: total_tabacos, precio_por_unidad: VALOR_TABACO, total_ganado: total_ganado, estado: 'PAGADO'
     }]);

@@ -144,7 +144,11 @@
                     <td style="padding: 12px; color: #6b7280;"><%= lote.semana_inicio %></td>
                     <td style="padding: 12px; font-size: 17px; font-weight: 900; color: #d97706;"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
                     <td style="padding: 12px;">
-                        <span style="background: #fef08a; color: #854d0e; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Mesa de Trabajo / Devoluble</span>
+                        <% if (lote.estado === 'liquidado') { %>
+                            <span style="background: #e5e7eb; color: #374151; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Cerrado / Cuentas</span>
+                        <% } else { %>
+                            <span style="background: #fef08a; color: #854d0e; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Mesa / Activo</span>
+                        <% } %>
                     </td>
                 </tr>
                 <% } }); %>
