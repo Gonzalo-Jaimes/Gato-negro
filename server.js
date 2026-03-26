@@ -276,7 +276,8 @@ app.post('/despachar_tarea', async (req, res) => {
     }
     
     // 2. Registro histórico (Kardex) DESAGREGADO
-    const desc = `Despacho Tarea [${nuevaMeta} META GLOBAL] a ${empleado.codigo}`;
+    const nombreCorto = empleado.nombre.split(' ').slice(0, 2).join(' ');
+    const desc = `Despacho Tarea [${nuevaMeta} META GLOBAL] a ${empleado.codigo} - ${nombreCorto}`;
     await supabase.from('movimientos').insert([
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capa', cantidad: parseFloat(capaKg), usuario: 'Admin', descripcion: desc },
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capote', cantidad: parseFloat(capoteKg), usuario: 'Admin', descripcion: desc },
@@ -391,7 +392,7 @@ app.post('/liquidar_semana/:id', async (req, res) => {
         
         await supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: total_tabacos, usuario: 'Admin',
-            descripcion: `Liquidación Cierre Semanal: Fabriquín ${emp.codigo}`
+            descripcion: `Liquidación Cierre Semanal: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
         }]);
     }
     
@@ -401,7 +402,7 @@ app.post('/liquidar_semana/:id', async (req, res) => {
         
         await supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: reg.extra_tabacos, usuario: 'Admin',
-            descripcion: `Compra de EXTRA Tabacos a ${emp.codigo}`
+            descripcion: `Compra de EXTRA Tabacos a ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
         }]);
     }
     
