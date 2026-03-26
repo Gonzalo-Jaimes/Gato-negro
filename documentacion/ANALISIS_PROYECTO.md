@@ -1,8 +1,8 @@
 # Análisis Arquitectónico y Documentación Técnica: Gato Negro ERP
 ## Sistema Avanzado de Gestión de Producción y Cierres Contables
 
-**Versión Actual**: 1.8.2 (Estable)  
-**Fecha de Actualización**: Marzo 2026  
+**Versión Actual**: 2.2.0 (Estable - Producción)  
+**Fecha de Actualización**: Finales de Marzo 2026  
 **Despliegue**: Frontend en Vercel (Edge Network) + Backend Serverless en Supabase (PostgreSQL)  
 
 ---
@@ -25,7 +25,10 @@
 **Hitos Históricos de Arquitectura:**
 - **V1.6:** Implementación de Supabase y autenticación de roles, eliminando SQLite local.
 - **V1.7.4:** Rediseños UI agresivos, soporte total Responsivo (Móviles) y Dark Mode (OLED Persistente).
-- **V1.8.2 (Actual):** Muerte del sistema de Pedidos Libres. Transición a Despacho Dirigido, Recepción Acumulativa Matricial (L-S) y Cierres de Nómina complejos con Mermas y Subproductos (Vena/Recorte).
+- **V1.8.2:** Muerte del sistema de Pedidos Libres. Transición a Despacho Dirigido, Recepción Acumulativa Matricial (L-S) y Cierres de Nómina complejos.
+- **V2.0.0:** Implementación de Seguridad Criptográfica (BCrypt) para todos los usuarios y blindaje del Login.
+- **V2.1.0:** Desacople Contable. Creación del Módulo de Nómina para centralizar impresión de pagos e integrar Control de Lotes.
+- **V2.2.0 (Actual):** Motor Transaccional y Diferencial "En Vivo". Inteligencia matemática para inyectar al Kardex las Mermas, Cestas y Extras de Venta de forma instantánea. Control estricto transaccional anti-negativos (Sobregiros de stock).
 
 ---
 
@@ -142,6 +145,26 @@ Este repositorio ha superado grandes retos técnicos. Aquí documentamos problem
 - **Síntoma:** Al darle imprimir (`ctrl + P`), el color negro del fondo ocultaba la tinta en el papel, haciendo impresiones ilegibles y fundiendo tóner.
 - **Solución Aplicada:** Inyección de media queries `@media print { * { background: transparent !important; color: black !important; } }`. Desactiva el modo oscuro en la capa del Spooler de la Impresora.
 
-## 🏁 8. Estado y Prácticas a Futuro
-- **Status:** Sistema Totalmente Refactorizado, Operativo bajo Criterios de Gestión Corporativa Administrativa (Full Admin Control).
-- **Control de Cambios:** A seguir manejando mediante ramas de control (Ej. V1.8.x para refinamientos sutiles, V1.9.0 para grandes despliegues de infraestructura).
+### BUG_04: Sistema de Inventario Físico Defasado (Solucionado en V2.2)
+- **Síntoma:** Los Tabacos físicos, las cestas retornadas y las Mermas producidas por los fabriquines no se veían en la bodega maestra ni en el Kardex hasta que el Administrador diera clic en "Liquidar Semana" el día Sábado. Esto dejaba a la planta trabajando "a ciegas" de Lunes a Viernes.
+- **Solución Aplicada:** Reescritura pura del código de Node (`/recepcion_diaria_guardar`). Se implementó lógica de cálculo **Transaccional Diferencial** para todos los inputs numéricos (Tabacos, Cestas, Extras, Recorte, Vena). Cada vez que se da click en "Guardar", el servidor deduce matemáticamente cuántos ítems **nuevos** se teclearon respecto al guardado anterior, e inyecta "Comprobantes Instantáneos" en el Kardex, manteniendo todos los stocks en la vida real.
+
+### BUG_05: Fraude de Inventarios Negativos / Cestas Ficticias (Solucionado en V2.2)
+- **Síntoma:** El sistema permitía "Despachar" Materia Prima (Capa, Capote) o Cestas de Colores que físicamente el sistema no detentaba, provocando existencias fantasma en la Base de Datos (Ej: Cestas Rojas = `-1`).
+- **Solución Aplicada:** Inyección de barreras transaccionales pre-validatorias en el Backend. Antes de ejecutar la resta de Supabase, el sistema hace una ponderación local: si el saldo físico es menor a la meta del fabriquin, cancela todo el *Request* y dispara una alerta visual roja denegando el egreso.
+
+---
+
+## 🚀 8. Evolución Arquitectónica General (Serie V2.X)
+
+### Módulo Administrativo de Nómina (Desacople Total)
+Se extirpó la mala práctica de forzar a los almacenistas logísticos a manejar e imprimir Excel(s) y temas Salariales en plena rampa de bodega. Ahora el módulo de Recepción Diaria simplemente "Cierra/Liquida" la semana desde el punto de vista numérico, y dichas tirillas de cobro aterrizan en un panel exclusivo y silencioso de **`/nomina`**. Allí contabilidad mantiene el orden, agrupando los cierres y contando con botones limpios para Imprimir en PDF y "Archivar" finalmente los reportes luego de entregar los billetes. Todo este proceso es completamente asíncrono y desacoplado del almacén.
+
+### Analítica de Calidad (Lotes Visibles)
+Se incrustó un nuevo Dashboard secundario al fondo del Inventario llamado **"Lotes de Tabaco en Mesa"**. Este lee y formatea (DD/MM al DD/MM) incansablemente las bases de datos de recepción de la **semana activa cursante** para revelar frente al supervisor de calidad exactamente qué volúmenes de tabaco trajo cada Fabriquín al recinto de Envolvedoras, logrando una herramienta inigualable de auditoría al descubrir averías y rechazos.
+
+---
+
+## 🏁 9. Conclusión V2.2 (Enterprise-Ready)
+- **Status:** Sistema Erradicado de Monolito Arcaico. Convertido en un **ERP Transaccional Completamente Escalable**. Protegido mediante criptografía BCrypt, con barreras lógicas de seguridad de inventario de nivel bancario, UX predictiva sin fisuras, e integraciones logísticas 100% aisladas del organigrama financiero. 
+- **Perspectiva Futura:** Migraciones UI/UX de frameworks para robustecer componentes. Integración con puntos de venta Directos.
