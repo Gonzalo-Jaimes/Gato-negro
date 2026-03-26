@@ -141,7 +141,19 @@
                 %>
                 <tr style="border-bottom: 1px solid #e5e7eb;">
                     <td style="padding: 12px; font-weight: bold; text-transform: capitalize;"><%= lote.empleados_fabriquines ? lote.empleados_fabriquines.codigo + ' - ' + lote.empleados_fabriquines.nombre : 'S/N' %></td>
-                    <td style="padding: 12px; color: #6b7280;"><%= lote.semana_inicio %></td>
+                    <% 
+                        let dStart = new Date(lote.semana_inicio + "T12:00:00");
+                        let dEnd = new Date(dStart);
+                        let day = dEnd.getDay(); 
+                        let diff = 6 - day; 
+                        if (diff < 0) diff += 7; 
+                        dEnd.setDate(dEnd.getDate() + diff);
+                        
+                        let startStr = dStart.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
+                        let endStr = dEnd.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
+                        let rangoVisual = startStr + " al " + endStr;
+                    %>
+                    <td style="padding: 12px; font-weight: bold; color: #6b7280;"><%= rangoVisual %></td>
                     <td style="padding: 12px; font-size: 17px; font-weight: 900; color: #d97706;"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
                     <td style="padding: 12px;">
                         <% if (lote.estado === 'liquidado') { %>
