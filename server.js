@@ -3,6 +3,7 @@ const session = require('express-session');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js'); 
 const QRCode = require('qrcode');
+const bcrypt = require('bcrypt');
 
 const app = express();
 
@@ -65,14 +66,19 @@ app.get('/', (req, res) => res.render('login'));
 app.post('/login', async (req, res) => {
     const { usuario, password } = req.body;
     
+    // Primero buscar si el usuario existe (Sin filtrar clave aquí porque ahora es un Hash)
     const { data: resultado, error } = await supabase
         .from('usuarios')
         .select('*')
         .eq('usuario', usuario)
-        .eq('password', password)
         .single(); 
 
-    if (error || !resultado) return res.send(mostrarAlerta('Oops...', 'Usuario o contraseña incorrectos!', 'error', '/'));
+    if (error || !resultado) return res.send(mostrarAlerta('Oops...', 'Usuario no encontrado.', 'error', '/'));
+    
+    // Comparar la contraseña tipeada con el Hash de Supabase
+    const passwordMatch = await bcrypt.compare(password, resultado.password);
+    
+    if (!passwordMatch) return res.send(mostrarAlerta('Acceso Denegado', 'La contraseña es incorrecta.', 'error', '/'));
     
     req.session.usuario = resultado.usuario;
     req.session.rol = resultado.rol;
@@ -406,16 +412,26 @@ app.post('/liquidar_semana/:id', async (req, res) => {
         }]);
     }
     
-    // Subproductos
+    // Subproductos (Ingresarlos al Inventario Físico Y TABLA HISTÓRICA KARDEX)
     if (reg.recorte_kg > 0) {
         const { data: invR } = await supabase.from('inventario').select('*').eq('material', 'Recorte').single();
         if (invR) await supabase.from('inventario').update({ cantidad: invR.cantidad + reg.recorte_kg }).eq('id', invR.id);
         else await supabase.from('inventario').insert([{ material: 'Recorte', cantidad: reg.recorte_kg, categoria: 'Materia Prima' }]);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Recorte', cantidad: reg.recorte_kg, usuario: 'Admin',
+            descripcion: `Ingreso de Merma por Liquidación: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
+        }]);
     }
     if (reg.vena_kg > 0) {
         const { data: invV } = await supabase.from('inventario').select('*').eq('material', 'Vena').single();
         if (invV) await supabase.from('inventario').update({ cantidad: invV.cantidad + reg.vena_kg }).eq('id', invV.id);
         else await supabase.from('inventario').insert([{ material: 'Vena', cantidad: reg.vena_kg, categoria: 'Materia Prima' }]);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Vena', cantidad: reg.vena_kg, usuario: 'Admin',
+            descripcion: `Ingreso de Merma por Liquidación: Fabriquín ${emp.codigo} - ${emp.nombre.split(' ').slice(0, 2).join(' ')}`
+        }]);
     }
     
     if (total_cestas > 0) {
