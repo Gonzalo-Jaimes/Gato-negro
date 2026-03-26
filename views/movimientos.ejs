@@ -98,10 +98,19 @@
                 <%= m.fecha %><br><span style="color: gray;"><%= m.hora %></span>
             </td>
             <td>
+                <% 
+                   let sufijo = "";
+                   let matStr = m.material.toLowerCase();
+                   if (matStr.includes('capa') || matStr.includes('capote') || matStr.includes('picadura') || matStr.includes('tripa') || matStr.includes('material') || matStr.includes('vena') || matStr.includes('recorte')) {
+                       sufijo = " Kg";
+                   } else if (matStr.includes('cesta') || matStr.includes('saca') || matStr.includes('caja')) {
+                       sufijo = " Uds";
+                   }
+                %>
                 <% if (m.tipo_movimiento === 'ENTRADA') { %>
-                    <span style="color: green; font-weight: bold; background: #dcfce7; padding: 5px 10px; border-radius: 20px;">+ <%= m.cantidad %></span>
+                    <span style="color: green; font-weight: bold; background: #dcfce7; padding: 5px 10px; border-radius: 20px;">+ <%= m.cantidad %><%= sufijo %></span>
                 <% } else { %>
-                    <span style="color: red; font-weight: bold; background: #fee2e2; padding: 5px 10px; border-radius: 20px;">- <%= m.cantidad %></span>
+                    <span style="color: red; font-weight: bold; background: #fee2e2; padding: 5px 10px; border-radius: 20px;">- <%= m.cantidad %><%= sufijo %></span>
                 <% } %>
             </td>
             <td style="text-transform: capitalize; font-weight: bold;"><%= m.material %></td>
