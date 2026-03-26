@@ -63,18 +63,38 @@
     </div>
 </div>
 
-<h2 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px;">📅 Kardex (Historial de Movimientos)</h2>
-<table>
-    <tr>
-        <th>Fecha / Hora</th>
-        <th>Movimiento</th>
-        <th>Material</th>
-        <th>Detalle / Destino</th>
-    </tr>
+<!-- DataTables CSS y jQuery -->
+<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
+<style>
+    /* Soporte básico para que DataTables encaje con el esquema visual */
+    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
+        margin-bottom: 20px;
+        margin-top: 10px;
+    }
+    table.dataTable.no-footer { border-bottom: 2px solid #ccc; }
+    body.dark-mode .dataTables_wrapper .dataTables_length, body.dark-mode .dataTables_wrapper .dataTables_filter, body.dark-mode .dataTables_wrapper .dataTables_info, body.dark-mode .dataTables_wrapper .dataTables_paginate {
+        color: #eee !important;
+    }
+    body.dark-mode .dataTables_wrapper .dataTables_filter input { background-color: #333; color: white; border: 1px solid #555; }
+    body.dark-mode .dataTables_wrapper .dataTables_length select { background-color: #333; color: white; border: 1px solid #555; }
+</style>
+
+<h2 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px;" class="dynamic-text">📅 Kardex Interactivo (Historial de Movimientos)</h2>
+<table id="tablaMovimientos" class="display" style="width:100%">
+    <thead>
+        <tr>
+            <th>Fecha / Hora</th>
+            <th>Movimiento</th>
+            <th>Material</th>
+            <th>Detalle / Destino</th>
+        </tr>
+    </thead>
+    <tbody>
     <% if (locals.movimientos && locals.movimientos.length > 0) { %>
         <% locals.movimientos.forEach(function(m) { %>
         <tr>
             <td style="font-size: 12px; font-weight: bold;">
+                <span style="display:none;"><%= m.fecha %> <%= m.hora %></span> <!-- Para ordenamiento invisible -->
                 <%= m.fecha %><br><span style="color: gray;"><%= m.hora %></span>
             </td>
             <td>
@@ -90,9 +110,22 @@
             </td>
         </tr>
         <% }); %>
-    <% } else { %>
-        <tr><td colspan="4" style="color: gray; padding: 20px;">No hay movimientos registrados.</td></tr>
     <% } %>
+    </tbody>
 </table>
+
+<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
+<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
+<script>
+    $(document).ready(function() {
+        $('#tablaMovimientos').DataTable({
+            "language": {
+                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
+            },
+            "order": [], // Deja el orden por defecto como lo entrega la BD
+            "pageLength": 25 // Muestra 25 resultados por defecto para mayor visibilidad
+        });
+    });
+</script>
 
 <%- include('partials/footer') %>

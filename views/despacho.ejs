@@ -26,26 +26,36 @@
         </select>
 
         <div id="saldo_alerta" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #d97706;">
-            <strong>⚠️ Tiene Saldo en Casa:</strong> Este fabriquin aún tiene material para <span id="saldo_info" style="font-weight: 900; font-size:18px;">0</span> tabacos. 
-            <br><small>El sistema le entregará físicamente solo el diferencial para alcanzar su nueva meta.</small>
+            <strong>⚠️ Tiene Saldo en Casa:</strong> Este fabriquin aún debe <span id="saldo_info" style="font-weight: 900; font-size:18px;">0</span> tabacos. 
+            <br><small>El nuevo material se sumará a su deuda actual.</small>
         </div>
 
-        <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Meta de Tabacos a Asignar (La Tarea Semanal Total):</label>
-        <input type="number" name="meta_tabacos" id="meta_tabacos" placeholder="Ej: 20000" style="width: 100%; font-size: 18px; margin-bottom: 20px;" required>
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Tabacos Físicos a Asignar Hoy (Nueva Tarea):</label>
+        <input type="number" name="meta_tabacos" id="meta_tabacos" placeholder="Ej: 1000" style="width: 100%; font-size: 18px; margin-bottom: 20px;" required>
+
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Color de Cesta (Préstamo):</label>
+        <select name="color_cesta" id="color_cesta" style="width: 100%; font-size: 16px; margin-bottom: 20px;" required>
+            <option value="Cestas Rojas">🔴 Cestas Rojas</option>
+            <option value="Cestas Azules">🔵 Cestas Azules</option>
+            <option value="Cestas Negras">⚫ Cestas Negras</option>
+        </select>
 
         <button type="button" onclick="simularCalculo()" style="width: 100%; background: #3b82f6; font-size: 16px; margin-bottom: 20px;">🧮 Simular Pesaje (Vista Previa)</button>
 
         <!-- CAJA DE RESULTADO -->
         <div id="resultado_calculo" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin-top:0; color:#1f2937;">Material a Pesar y Extraer de Bodega:</h3>
-            <p><strong>Meta Total (Tarea):</strong> <span id="res_meta"></span></p>
-            <p style="color: #ef4444;"><strong>- Material Ya en Casa:</strong> <span id="res_casa"></span></p>
+            <p style="color: #ef4444;"><strong>Deuda Anterior:</strong> <span id="res_casa"></span></p>
+            <p style="color: #10b981; font-weight:bold; font-size:18px;">Nueva Deuda Total: <span id="res_meta"></span> Tabacos</p>
             <hr>
-            <p style="color: #10b981; font-weight:bold; font-size:18px;">🎟️ Producción Física a Entregar: <span id="res_fisico"></span> Tabacos</p>
-            <ul style="font-size: 18px;">
-                <li>Capa (x1.0 kg): <strong id="peso_capa">0</strong> Kg</li>
-                <li>Capote (x1.8 kg): <strong id="peso_capote">0</strong> Kg</li>
-                <li>Picadura (x7.0 kg): <strong id="peso_picadura">0</strong> Kg</li>
+            <ul style="font-size: 18px; list-style-type: none; padding-left: 0;">
+                <li>🎟️ <strong><span id="res_fisico"></span> Tabacos (Materia Prima):</strong></li>
+                <br>
+                <li>&nbsp; • Capa (x1.0 kg): <strong id="peso_capa">0</strong> Kg</li>
+                <li>&nbsp; • Capote (x1.8 kg): <strong id="peso_capote">0</strong> Kg</li>
+                <li>&nbsp; • Picadura (x7.0 kg): <strong id="peso_picadura">0</strong> Kg</li>
+                <br>
+                <li>🧺 <strong>Cestas a Prestar:</strong> <strong id="cant_cestas">0</strong> unidad(es)</li>
             </ul>
         </div>
 
@@ -80,17 +90,18 @@
         const select = document.getElementById('empleado_id');
         if(!select.value) return alert("Selecciona un empleado primero.");
 
-        const meta = parseFloat(document.getElementById('meta_tabacos').value) || 0;
+        const a_entregar = parseFloat(document.getElementById('meta_tabacos').value) || 0;
         const option = select.options[select.selectedIndex];
         const saldo = parseFloat(option.getAttribute('data-saldo')) || 0;
-
-        if (meta <= saldo) {
-            alert("La meta (tarea) debe ser MAYOR al saldo que actualmente tiene en casa. De lo contrario no hace falta entregarle nada.");
+        const meta = saldo + a_entregar; // La meta total es el saldo viejo + lo nuevo entregado hoy
+        
+        if (a_entregar <= 0) {
+            alert("No puedes entregar 0 tabacos.");
             return;
         }
 
-        const a_entregar = meta - saldo; // Cantidad a la que se le dará material fisico hoy
         const mult = a_entregar / 1000;  // Constantes x cada mil
+        const cestas = Math.ceil(mult);
 
         document.getElementById('res_meta').innerText = meta.toLocaleString('es-CO');
         document.getElementById('res_casa').innerText = saldo.toLocaleString('es-CO');
@@ -99,6 +110,7 @@
         document.getElementById('peso_capa').innerText = (1.0 * mult).toFixed(2);
         document.getElementById('peso_capote').innerText = (1.8 * mult).toFixed(2);
         document.getElementById('peso_picadura').innerText = (7.0 * mult).toFixed(2);
+        document.getElementById('cant_cestas').innerText = cestas;
 
         document.getElementById('resultado_calculo').style.display = 'block';
         document.getElementById('btn_submit').disabled = false;

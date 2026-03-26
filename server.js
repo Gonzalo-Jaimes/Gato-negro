@@ -237,21 +237,23 @@ app.post('/despachar_tarea', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
     const empleadoId = req.body.empleado_id;
-    const metaTabacos = parseInt(req.body.meta_tabacos) || 0;
+    const fisicoEntregado = parseInt(req.body.meta_tabacos) || 0;
+    const colorCesta = req.body.color_cesta || "Cestas";
     
     const { data: empleado } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleadoId).single();
     if (!empleado) return res.send(mostrarAlerta('Error', 'Empleado no encontrado', 'error'));
     
     const saldoEnCasa = parseInt(empleado.deuda_tabacos) || 0;
-    const aEntregar = metaTabacos - saldoEnCasa;
+    const nuevaMeta = saldoEnCasa + fisicoEntregado;
     
-    if (aEntregar <= 0) return res.send(mostrarAlerta('Error Lógico', 'La meta debe ser mayor al saldo en casa', 'warning'));
+    if (fisicoEntregado <= 0) return res.send(mostrarAlerta('Error Lógico', 'La entrega debe ser mayor a cero', 'warning'));
     
     // Cálculo de kilogramos (x1000 tabacos -> 1kg capa, 1.8kg capote, 7kg picadura)
-    const factor = aEntregar / 1000;
+    const factor = fisicoEntregado / 1000;
     const capaKg = (factor * 1.0).toFixed(2);
     const capoteKg = (factor * 1.8).toFixed(2);
     const picaduraKg = (factor * 7.0).toFixed(2);
+    const cestasCant = Math.ceil(factor); // 1 cesta por cada 1000, redondeo hacia arriba
     
     const tiempo = obtenerHoraColombia();
     
@@ -263,32 +265,41 @@ app.post('/despachar_tarea', async (req, res) => {
             let m = item.material.toLowerCase();
             if (m.includes('capa') && c > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - c }).eq('id', item.id); c = 0; }
             if (m.includes('capote') && cp > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - cp }).eq('id', item.id); cp = 0; }
-            if ((m.includes('picadura') || m.includes('tripa') || m.includes('material')) && pi > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - pi }).eq('id', item.id); pi = 0; }
+            if ((m.includes('picadura') || m.includes('tripa') || m.includes('material')) && m !== 'materia prima' && pi > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - pi }).eq('id', item.id); pi = 0; }
+        }
+        
+        // Descontar Canastas
+        if (cestasCant > 0) {
+            let mCesta = inv.find(i => i.material.toLowerCase() === colorCesta.toLowerCase());
+            if (mCesta) await supabase.from('inventario').update({ cantidad: mCesta.cantidad - cestasCant }).eq('id', mCesta.id);
         }
     }
     
-    // 2. Registro histórico (Kardex)
-    await supabase.from('movimientos').insert([{
-        fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA',
-        material: 'MATERIA PRIMA', cantidad: 1, usuario: 'Admin',
-        descripcion: `Despacho Tarea [${metaTabacos}] a ${empleado.codigo}. (Físico: Capa ${capaKg}kg, Capote ${capoteKg}kg, Picadura ${picaduraKg}kg.)`
-    }]);
+    // 2. Registro histórico (Kardex) DESAGREGADO
+    const desc = `Despacho Tarea [${nuevaMeta} META GLOBAL] a ${empleado.codigo}`;
+    await supabase.from('movimientos').insert([
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capa', cantidad: parseFloat(capaKg), usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capote', cantidad: parseFloat(capoteKg), usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Picadura', cantidad: parseFloat(picaduraKg), usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: colorCesta, cantidad: cestasCant, usuario: 'Admin', descripcion: desc }
+    ]);
 
     // 3. ACTUALIZAR DEUDA ROTATIVA
-    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: metaTabacos }).eq('id', empleado.id);
+    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaMeta }).eq('id', empleado.id);
 
     // 4. Imprimir soporte Formato V1.8
     const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
     res.render('formato_despacho', {
         empleado: empleado,
-        meta: metaTabacos,
+        meta: nuevaMeta, // La meta que se imprime es el Total Deuda
         saldo_casa: saldoEnCasa,
         fecha_actual: fechaText,
         params: {
             capa: capaKg, capote: capoteKg, picadura: picaduraKg,
             saldo_capa: (saldoEnCasa / 1000 * 1.0).toFixed(2),
             saldo_capote: (saldoEnCasa / 1000 * 1.8).toFixed(2),
-            saldo_picadura: (saldoEnCasa / 1000 * 7.0).toFixed(2)
+            saldo_picadura: (saldoEnCasa / 1000 * 7.0).toFixed(2),
+            cestas: cestasCant, color_cesta: colorCesta
         }
     });
 });
@@ -862,7 +873,10 @@ app.post('/recibir_empaque/:id', async (req, res) => {
 app.get('/analitica', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
 
-    // 1. Producción (Entradas de Bodega)
+    // 1. Carga masiva de todos los movimientos para BI Frontend
+    const { data: movsBrutos } = await supabase.from('movimientos').select('tipo_movimiento, material, cantidad, fecha').order('id', { ascending: false }).limit(2000);
+    
+    // Producción tradicional (Entradas de Bodega) para mantener código viejo vivo
     const { data: movEntradas } = await supabase.from('movimientos').select('material, cantidad').eq('tipo_movimiento', 'ENTRADA');
     
     let prodNormales = 0, prodAnillados = 0, prodEnvoltura = 0;
@@ -913,6 +927,7 @@ app.get('/analitica', async (req, res) => {
 
     res.render('analitica', {
         session: req.session,
+        raw_movs: movsBrutos,
         produccion: { normales: prodNormales, anillados: prodAnillados, envoltura: prodEnvoltura },
         finanzas: { ingresos: totalIngresos, nomina: totalNomina, mantenimiento: totalMtto }
     });
