@@ -16,41 +16,32 @@
             <table style="width: 100%; border-collapse: collapse; text-align: center;">
                 <thead style="background: #111; color: white;">
                     <tr>
-                        <th style="padding: 12px;">Fabriquín</th>
-                        <th style="padding: 12px;">Producción ($)</th>
-                        <th style="padding: 12px; background: #991b1b;">Deuda (-)</th>
-                        <th style="padding: 12px; background: #065f46;">A PAGAR ($)</th>
-                        <th style="padding: 12px;">Acción</th>
+                        <th style="padding: 12px;">Planilla Semana</th>
+                        <th style="padding: 12px;">Fabriquín Asignado</th>
+                        <th style="padding: 12px; background: #065f46;">Monto a PAGAR ($)</th>
+                        <th style="padding: 12px;">Cierre Contable</th>
                     </tr>
                 </thead>
                 <tbody>
-                    <% if (nomina.length === 0) { %>
-                        <tr><td colspan="5" style="padding: 20px;">No hay empleados registrados.</td></tr>
+                    <% if (cierres_pendientes.length === 0) { %>
+                        <tr><td colspan="4" style="padding: 20px;">No hay cierres semanales pendientes de revisión.</td></tr>
                     <% } else { %>
-                        <% nomina.forEach(n => { %>
-                            <% if (n.pago_neto > 0) { %>
-                            <tr style="border-bottom: 1px solid #f3f4f6; background-color: #f0fdf4;">
-                            <% } else { %>
+                        <% cierres_pendientes.forEach(c => { %>
                             <tr style="border-bottom: 1px solid #f3f4f6;">
-                            <% } %>
-                                <td style="padding: 15px; font-weight: bold; text-transform: capitalize;"><%= n.usuario %></td>
-                                <td style="padding: 15px; color: #059669; font-weight: bold;">$<%= n.ganancia_pendiente.toLocaleString('es-CO') %> COP</td>
-                                <td style="padding: 15px; color: #ef4444; font-weight: bold;">$<%= n.deuda_activa.toLocaleString('es-CO') %> COP</td>
-                                <% if (n.pago_neto >= 0) { %>
+                                <td style="padding: 15px; color: #6b7280; font-weight: bold;"><%= c.semana_inicio %></td>
+                                <td style="padding: 15px; font-weight: bold; text-transform: capitalize;"><%= c.empleados_fabriquines ? c.empleados_fabriquines.codigo + ' - ' + c.empleados_fabriquines.nombre : 'S/N' %></td>
                                 <td style="padding: 15px; font-size: 18px; font-weight: bold; color: #1d4ed8;">
-                                <% } else { %>
-                                <td style="padding: 15px; font-size: 18px; font-weight: bold; color: #ef4444;">
-                                <% } %>
-                                    $<%= n.pago_neto.toLocaleString('es-CO') %> COP
+                                    $<%= c.total_ganado ? c.total_ganado.toLocaleString('es-CO') : 0 %> COP
                                 </td>
-                                <td style="padding: 15px;">
-                                    <% if (n.ganancia_pendiente > 0 || n.deuda_activa > 0) { %>
-                                        <a href="/factura_nomina/<%= n.usuario %>" style="display:inline-block; background: #111; color: white; text-decoration:none; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">
-                                            📄 Generar Factura
-                                        </a>
-                                    <% } else { %>
-                                        <span style="color: #9ca3af; font-size: 12px;">Sin Novedad</span>
-                                    <% } %>
+                                <td style="padding: 15px; display: flex; gap: 10px; justify-content: center;">
+                                    <a href="/imprimir_nomina_v18/<%= c.id %>" target="_blank" style="background: #374151; color: white; text-decoration:none; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                                        📄 Imprimir PDF
+                                    </a>
+                                    <form action="/archivar_cierre_v18/<%= c.id %>" method="POST" style="margin: 0;" onsubmit="return confirm('¿Seguro que ya pagó y archiva esta nómina?');">
+                                        <button type="submit" style="background: #10b981; color: white; text-decoration:none; border: none; padding: 8px 15px; border-radius: 4px; font-weight: bold; cursor: pointer;">
+                                            ✅ Archivar Pago
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                         <% }) %>

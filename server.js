@@ -267,6 +267,22 @@ app.post('/despachar_tarea', async (req, res) => {
     const { data: inv } = await supabase.from('inventario').select('*');
     if (inv) {
         let c = parseFloat(capaKg), cp = parseFloat(capoteKg), pi = parseFloat(picaduraKg);
+        
+        // PRE-VALIDACION DE STOCK FÍSICO (Anti-Negativos)
+        let mCesta = inv.find(i => i.material.toLowerCase() === colorCesta.toLowerCase());
+        if (!mCesta || mCesta.cantidad < cestasCant) {
+            return res.send(mostrarAlerta('Stock Insuficiente', `No hay suficientes ${colorCesta} prestables. Requeridas: ${cestasCant}, Disponibles: ${mCesta ? mCesta.cantidad : 0}`, 'error'));
+        }
+        
+        let iCapa = inv.find(i => i.material.toLowerCase().includes('capa'));
+        let iCapote = inv.find(i => i.material.toLowerCase().includes('capote'));
+        let iPicadura = inv.find(i => (i.material.toLowerCase().includes('picadura') || i.material.toLowerCase().includes('tripa') || i.material.toLowerCase().includes('material')) && i.material.toLowerCase() !== 'materia prima');
+        
+        if (!iCapa || iCapa.cantidad < c) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capa física. Requerida: ${c}kg, Disponible: ${iCapa ? iCapa.cantidad : 0}kg`, 'error'));
+        if (!iCapote || iCapote.cantidad < cp) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capote físico. Requerida: ${cp}kg, Disponible: ${iCapote ? iCapote.cantidad : 0}kg`, 'error'));
+        if (!iPicadura || iPicadura.cantidad < pi) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Picadura física. Requerida: ${pi}kg, Disponible: ${iPicadura ? iPicadura.cantidad : 0}kg`, 'error'));
+        
+        // EJECUCIÓN DEL DESCUENTO SEGURO
         for (let item of inv) {
             let m = item.material.toLowerCase();
             if (m.includes('capa') && c > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - c }).eq('id', item.id); c = 0; }
@@ -275,9 +291,8 @@ app.post('/despachar_tarea', async (req, res) => {
         }
         
         // Descontar Canastas
-        if (cestasCant > 0) {
-            let mCesta = inv.find(i => i.material.toLowerCase() === colorCesta.toLowerCase());
-            if (mCesta) await supabase.from('inventario').update({ cantidad: mCesta.cantidad - cestasCant }).eq('id', mCesta.id);
+        if (cestasCant > 0 && mCesta) {
+            await supabase.from('inventario').update({ cantidad: mCesta.cantidad - cestasCant }).eq('id', mCesta.id);
         }
     }
     
@@ -333,14 +348,37 @@ app.post('/recepcion_diaria_guardar', async (req, res) => {
     const regId = req.body.registro_id;
     const tiempo = obtenerHoraColombia();
     
+    // Cálculo Diferencial Matemático para inyectar en Vivo los Tabacos a la Bodega Maestro.
+    const newLun = parseInt(req.body.lun_tabacos) || 0;
+    const newMar = parseInt(req.body.mar_tabacos) || 0;
+    const newMie = parseInt(req.body.mie_tabacos) || 0;
+    const newJue = parseInt(req.body.jue_tabacos) || 0;
+    const newVie = parseInt(req.body.vie_tabacos) || 0;
+    const newSab = parseInt(req.body.sab_tabacos) || 0;
+    const newTotal = newLun + newMar + newMie + newJue + newVie + newSab;
+
+    let oldTotal = 0;
+    if (regId && regId !== '') {
+        const { data: oldReg } = await supabase.from('recepcion_diaria').select('*').eq('id', regId).single();
+        if (oldReg) oldTotal = oldReg.lun_tabacos + oldReg.mar_tabacos + oldReg.mie_tabacos + oldReg.jue_tabacos + oldReg.vie_tabacos + oldReg.sab_tabacos;
+    }
+    
+    const diferencia = newTotal - oldTotal;
+    if (diferencia !== 0) {
+        // Actualizar Inventario en Vivo (Soluciona el problema logístico de espera sabatina)
+        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
+        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + diferencia }).eq('id', invT.id);
+        else await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: diferencia, categoria: 'En Proceso' }]);
+    }
+    
     const dataObj = {
         empleado_id: empId, semana_inicio: tiempo.fecha,
-        lun_cestas: parseInt(req.body.lun_cestas) || 0, lun_tabacos: parseInt(req.body.lun_tabacos) || 0,
-        mar_cestas: parseInt(req.body.mar_cestas) || 0, mar_tabacos: parseInt(req.body.mar_tabacos) || 0,
-        mie_cestas: parseInt(req.body.mie_cestas) || 0, mie_tabacos: parseInt(req.body.mie_tabacos) || 0,
-        jue_cestas: parseInt(req.body.jue_cestas) || 0, jue_tabacos: parseInt(req.body.jue_tabacos) || 0,
-        vie_cestas: parseInt(req.body.vie_cestas) || 0, vie_tabacos: parseInt(req.body.vie_tabacos) || 0,
-        sab_cestas: parseInt(req.body.sab_cestas) || 0, sab_tabacos: parseInt(req.body.sab_tabacos) || 0,
+        lun_cestas: parseInt(req.body.lun_cestas) || 0, lun_tabacos: newLun,
+        mar_cestas: parseInt(req.body.mar_cestas) || 0, mar_tabacos: newMar,
+        mie_cestas: parseInt(req.body.mie_cestas) || 0, mie_tabacos: newMie,
+        jue_cestas: parseInt(req.body.jue_cestas) || 0, jue_tabacos: newJue,
+        vie_cestas: parseInt(req.body.vie_cestas) || 0, vie_tabacos: newVie,
+        sab_cestas: parseInt(req.body.sab_cestas) || 0, sab_tabacos: newSab,
         recorte_kg: parseFloat(req.body.recorte_kg) || 0, vena_kg: parseFloat(req.body.vena_kg) || 0,
         extra_tabacos: parseInt(req.body.extra_tabacos) || 0, estado: 'pendiente'
     };
@@ -392,9 +430,9 @@ app.post('/liquidar_semana/:id', async (req, res) => {
     
     // 3. ACTUALIZAR INVENTARIOS (KARDEX / BODEGA MAESTRA)
     if (total_tabacos > 0) {
-        const { data: invT } = await supabase.from('inventario').select('*').eq('material', 'Tabacos').single();
-        if (invT) await supabase.from('inventario').update({ cantidad: invT.cantidad + total_tabacos }).eq('id', invT.id);
-        else await supabase.from('inventario').insert([{ material: 'Tabacos', cantidad: total_tabacos, categoria: 'En Proceso' }]);
+        // Los Tabacos físicos YA ESTÁN en la bodega maestra (se sumaron día a día en /guardar). 
+        // Solo dejamos el rastro histórico formal en Movimientos/Kardex como un "Cierre Consolidado" de la Tarea.
+        // Evitamos sumar al inventarioT.cantidad para no duplicar los tabacos físicos.
         
         await supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: 'Tabacos', cantidad: total_tabacos, usuario: 'Admin',
@@ -444,12 +482,8 @@ app.post('/liquidar_semana/:id', async (req, res) => {
         fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: total_tabacos, precio_por_unidad: VALOR_TABACO, total_ganado: total_ganado, estado: 'PAGADO'
     }]);
 
-    // 4. GENERAR NÓMINA IMPRIMIBLE FORMATO EXCEL V1.8
-    res.render('formato_nomina_v18', {
-        empleado: emp, reg: reg, tiempo: tiempo,
-        totales: { tabacos: total_tabacos, cestas: total_cestas },
-        pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_ganado, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }
-    });
+    // REDIRECCIÓN DIRECTA A NOMINA (El PDF ahora se saca desde Contabilidad)
+    res.redirect('/nomina');
 });
 
 // ---------------- MÁQUINAS Y EQUIPOS ----------------
@@ -696,23 +730,56 @@ app.get('/cierre_diario', async (req, res) => {
 app.get('/nomina', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
+    // Viejos arrays de la fase pasada
     const { data: usuarios } = await supabase.from('usuarios').select('*').in('rol', ['fabriquin', 'fabricacion', 'envolvedor']);
-    const { data: prod_pendientes } = await supabase.from('produccion_fabriquines').select('*').eq('estado', 'PENDIENTE');
     const { data: deudas_activas } = await supabase.from('deudores_fabriquines').select('*').eq('estado', 'ACTIVA');
     
-    const nomina = (usuarios || []).map(u => {
-        let ganancia = 0;
-        let deudas = 0;
-        (prod_pendientes || []).forEach(p => { if (p.usuario === u.usuario) ganancia += parseFloat(p.total_ganado); });
-        (deudas_activas || []).forEach(d => { if (d.usuario === u.usuario) deudas += parseFloat(d.monto_deuda); });
-        
-        u.ganancia_pendiente = ganancia;
-        u.deuda_activa = deudas;
-        u.pago_neto = ganancia - deudas;
-        return u;
-    });
+    // Nuevos arreglos Listos Para Imprimir V1.8 (Administración Central)
+    const { data: cierres_pendientes } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('estado', 'liquidado');
     
-    res.render('nomina', { nomina, deudas_activas: deudas_activas || [] });
+    res.render('nomina', { 
+        nomina: [], 
+        deudas_activas: deudas_activas || [], 
+        cierres_pendientes: cierres_pendientes || [] 
+    });
+});
+
+// --- V2.0 DESACOPLE PDF ---
+app.get('/imprimir_nomina_v18/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const regId = req.params.id;
+    
+    // Traer el registro con los datos del empleado emparentado
+    const { data: reg } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('id', regId).single();
+    if (!reg) return res.redirect('/nomina');
+    
+    const emp = reg.empleados_fabriquines;
+    const total_cestas = reg.lun_cestas + reg.mar_cestas + reg.mie_cestas + reg.jue_cestas + reg.vie_cestas + reg.sab_cestas;
+    const total_tabacos = reg.lun_tabacos + reg.mar_tabacos + reg.mie_tabacos + reg.jue_tabacos + reg.vie_tabacos + reg.sab_tabacos;
+    
+    const VALOR_TABACO = 85; 
+    const VALOR_RECORTE = 6500;
+    const VALOR_VENA = 3500;
+    const VALOR_EXTRA = 230;
+    
+    const pago_tabacos = total_tabacos * VALOR_TABACO;
+    const pago_recorte = reg.recorte_kg * VALOR_RECORTE;
+    const pago_vena = reg.vena_kg * VALOR_VENA;
+    const pago_extras = reg.extra_tabacos * VALOR_EXTRA;
+    const total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
+    
+    res.render('formato_nomina_v18', {
+        empleado: emp, reg: reg, tiempo: obtenerHoraColombia(),
+        totales: { tabacos: total_tabacos, cestas: total_cestas },
+        pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_ganado, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }
+    });
+});
+
+app.post('/archivar_cierre_v18/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    // Archivar y sacar del tablero de PDF central
+    await supabase.from('recepcion_diaria').update({ estado: 'pagado_y_archivado' }).eq('id', req.params.id);
+    res.redirect('/nomina');
 });
 
 // --- GENERAR FACTURA IMPRIMIBLE ---
