@@ -268,7 +268,7 @@ app.post('/despachar_tarea', async (req, res) => {
     const capaKg = (factor * 1.0).toFixed(2);
     const capoteKg = (factor * 1.8).toFixed(2);
     const picaduraKg = (factor * 7.0).toFixed(2);
-    const cestasCant = Math.ceil(factor); // 1 cesta por cada 1000, redondeo hacia arriba
+    const cestasCant = Math.ceil(fisicoEntregado / 1250); // Regla Gato Negro: 1 cesta por cada 1250 tabacos
     
     const tiempo = obtenerHoraColombia();
     
@@ -412,7 +412,26 @@ app.post('/recepcion_diaria_guardar', async (req, res) => {
 
     // Inyectar TODAS las diferencias diariamente!
     await difStock('Tabacos', 'En Proceso', newTotal - oldTab, 'Lotes Tarea');
-    await difStock('Cestas Generales', 'Herramientas', newTotalC - oldCest, 'Retorno Bulto');
+
+    // --- RETORNO DE CESTAS AL COLOR CORRECTO ---
+    // Buscamos el último despacho de este fabriquín para saber qué color de cesta se prestó
+    const difCestas = newTotalC - oldCest;
+    let colorCestaRetorno = 'Cestas Generales'; // fallback seguro
+    if (difCestas !== 0) {
+        const { data: ultimoDespacho } = await supabase.from('movimientos')
+            .select('material')
+            .ilike('material', 'Cestas%')
+            .ilike('descripcion', `%${emp ? emp.codigo : ''}%`)
+            .order('id', { ascending: false })
+            .limit(1)
+            .single();
+        if (ultimoDespacho && ultimoDespacho.material) {
+            colorCestaRetorno = ultimoDespacho.material;
+        }
+    }
+    await difStock(colorCestaRetorno, 'Herramientas', difCestas, 'Retorno Bulto');
+    // --- FIN RETORNO CESTAS ---
+
     await difStock('Tabacos Extras (Ventas)', 'Producto Terminado', newExtra - oldExt, 'Compra Directa');
     await difStock('Recorte', 'Materia Prima', newRecorte - oldRec, 'Merma');
     await difStock('Vena', 'Materia Prima', newVena - oldVen, 'Merma');
