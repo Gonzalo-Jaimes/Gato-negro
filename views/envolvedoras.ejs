@@ -1,0 +1,93 @@
+<%- include('partials/header') %>
+
+<style>
+    .tbl-env { width: 100%; border-collapse: collapse; min-width: 1200px; }
+    .tbl-env th, .tbl-env td { border: 1px solid #d1d5db; padding: 4px 6px; text-align: center; font-size: 13px; }
+    .tbl-env th { background: #f3f4f6; position: sticky; top: 0; z-index: 10; }
+    .tbl-env td input[type=number] { width: 48px; text-align: center; border: 1px solid #ccc; padding: 3px; border-radius: 4px; }
+    .tbl-env td input[type=number]:focus { outline: 2px solid #10b981; }
+    .btn-g  { background: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-lq { background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 3px; }
+</style>
+
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0;">🌯 Área Envolvedoras — Control Semanal</h1>
+    <p style="color: gray; margin-top: 5px;">Registra las cestas que llevan para envolver y las que regresan con tabaco envuelto (Lun→Sáb). Al liquidar se genera el pago por cesta.</p>
+</div>
+
+<div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.08);">
+<table class="tbl-env">
+    <thead>
+        <tr>
+            <th rowspan="2" style="width: 13%; text-align: left; padding-left: 8px;">ENVOLVEDORA</th>
+            <th colspan="6" style="background:#dbeafe; color:#1e40af;">LLEVAN PARA ENVOLVER (Cestas con tabacos anillados)</th>
+            <th colspan="6" style="background:#d1fae5; color:#065f46;">TRAEN TABACO ENVUELTO (Cestas devueltas)</th>
+            <th colspan="6" style="background:#fef9c3; color:#854d0e;">SUMINISTROS ENTREGADOS</th>
+            <th rowspan="2" style="background:#f3f4f6;">ACCIONES</th>
+        </tr>
+        <tr>
+            <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+            <th style="background:#d1fae5;">Lun</th><th style="background:#d1fae5;">Mar</th><th style="background:#d1fae5;">Mié</th><th style="background:#d1fae5;">Jue</th><th style="background:#d1fae5;">Vie</th><th style="background:#d1fae5;">Sáb</th>
+            <th style="background:#fef9c3; font-size:11px;">Papel(g)</th><th style="background:#fef9c3; font-size:11px;">Cinta</th><th style="background:#fef9c3; font-size:11px;">Anillos</th><th style="background:#fef9c3; font-size:11px;">CajBTO</th><th style="background:#fef9c3; font-size:11px;">CajPeq</th><th style="background:#fef9c3; font-size:11px;">Marc.</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% empleados.forEach(emp => {
+            const reg = registros.find(r => r.empleado_id === emp.id) || {};
+            const totalIn  = (reg.lun_cestas_in||0)+(reg.mar_cestas_in||0)+(reg.mie_cestas_in||0)+(reg.jue_cestas_in||0)+(reg.vie_cestas_in||0)+(reg.sab_cestas_in||0);
+            const totalOut = (reg.lun_cestas_out||0)+(reg.mar_cestas_out||0)+(reg.mie_cestas_out||0)+(reg.jue_cestas_out||0)+(reg.vie_cestas_out||0)+(reg.sab_cestas_out||0);
+            const precioCesta = reg.precio_cesta || 11000;
+            const pagoEstimado = totalOut * precioCesta;
+        %>
+        <form action="/guardar_envoltedora" method="POST">
+            <input type="hidden" name="empleado_id" value="<%= emp.id %>">
+            <input type="hidden" name="registro_id" value="<%= reg.id || '' %>">
+            <input type="hidden" name="precio_cesta" value="<%= precioCesta %>">
+        <tr style="border-bottom: 1px solid #e5e7eb;">
+            <!-- NOMBRE -->
+            <td style="text-align:left; padding-left:8px; font-weight:bold; font-size:12px;">
+                <%= emp.codigo %> – <%= emp.nombre %>
+                <% if (totalOut > 0) { %>
+                <br><span style="color:#10b981; font-size:11px; font-weight:normal;">
+                    ✔ <%= totalOut %> cestas | $<%= pagoEstimado.toLocaleString('es-CO') %>
+                </span>
+                <% } %>
+            </td>
+            <!-- CESTAS QUE LLEVAN (IN) -->
+            <td><input type="number" name="lun_cestas_in"  value="<%= reg.lun_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="mar_cestas_in"  value="<%= reg.mar_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="mie_cestas_in"  value="<%= reg.mie_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="jue_cestas_in"  value="<%= reg.jue_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="vie_cestas_in"  value="<%= reg.vie_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="sab_cestas_in"  value="<%= reg.sab_cestas_in  || '' %>" min="0"></td>
+            <!-- CESTAS QUE TRAEN (OUT) -->
+            <td style="background:#f0fdf4;"><input type="number" name="lun_cestas_out" value="<%= reg.lun_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="mar_cestas_out" value="<%= reg.mar_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="mie_cestas_out" value="<%= reg.mie_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="jue_cestas_out" value="<%= reg.jue_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="vie_cestas_out" value="<%= reg.vie_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="sab_cestas_out" value="<%= reg.sab_cestas_out || '' %>" min="0"></td>
+            <!-- SUMINISTROS -->
+            <td style="background:#fefce8;"><input type="number" name="papel_trans_g" value="<%= reg.papel_trans_g || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fefce8;"><input type="number" name="cinta"       value="<%= reg.cinta       || '' %>" min="0"></td>
+            <td style="background:#fefce8;"><input type="number" name="anillos"     value="<%= reg.anillos     || '' %>" min="0"></td>
+            <td style="background:#fefce8;"><input type="number" name="cajas_bto"   value="<%= reg.cajas_bto   || '' %>" min="0"></td>
+            <td style="background:#fefce8;"><input type="number" name="cajitas_peq" value="<%= reg.cajitas_peq || '' %>" min="0"></td>
+            <td style="background:#fefce8;"><input type="number" name="marcadores"  value="<%= reg.marcadores  || '' %>" min="0"></td>
+            <!-- ACCIONES -->
+            <td style="min-width: 120px;">
+                <button type="submit" class="btn-g">💾 Guardar</button>
+                <% if (reg.id && totalOut > 0) { %>
+                <form action="/liquidar_envolvedora/<%= reg.id %>" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('¿Liquidar a <%= emp.nombre %>? Se generará el pago de $<%= pagoEstimado.toLocaleString('es-CO') %>')">
+                    <button type="submit" class="btn-lq">✅ Liquidar</button>
+                </form>
+                <% } %>
+            </td>
+        </tr>
+        </form>
+        <% }); %>
+    </tbody>
+</table>
+</div>
+
+<%- include('partials/footer') %>

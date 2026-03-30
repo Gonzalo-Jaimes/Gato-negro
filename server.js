@@ -100,7 +100,8 @@ app.get('/logout', (req, res) => {
 app.get('/empleados', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo', { ascending: true });
-    res.render('empleados', { empleados: empleados || [] });
+    const { data: prestamos } = await supabase.from('prestamos_fabriquines').select('*').order('id', { ascending: false });
+    res.render('empleados', { empleados: empleados || [], prestamos: prestamos || [] });
 });
 
 app.post('/agregar_empleado', async (req, res) => {
@@ -119,6 +120,71 @@ app.post('/eliminar_empleado/:id', async (req, res) => {
     await supabase.from('empleados_fabriquines').delete().eq('id', req.params.id);
     res.redirect('/empleados');
 });
+
+// ---------------- MÓDULO PRÉSTAMOS FABRIQUINES ----------------
+app.post('/nuevo_prestamo', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const empId = req.body.empleado_id;
+    const montoNuevo = parseInt(req.body.monto_total) || 0;
+    const concepto  = req.body.concepto || '';
+    if (montoNuevo <= 0) return res.send(mostrarAlerta('Error', 'El monto debe ser mayor a cero.', 'warning'));
+
+    // Buscar préstamo activo existente → acumular
+    const { data: activo } = await supabase.from('prestamos_fabriquines')
+        .select('*').eq('empleado_id', empId).eq('estado', 'activo').single();
+
+    if (activo) {
+        // Sumar al saldo pendiente del préstamo activo
+        const nuevoSaldo = activo.saldo_pendiente + montoNuevo;
+        await supabase.from('prestamos_fabriquines').update({
+            saldo_pendiente: nuevoSaldo,
+            monto_total: activo.monto_total + montoNuevo,
+            concepto: (activo.concepto || '') + ` + ${concepto}`
+        }).eq('id', activo.id);
+    } else {
+        // Crear nuevo préstamo
+        await supabase.from('prestamos_fabriquines').insert([{
+            empleado_id: empId,
+            monto_total: montoNuevo,
+            saldo_pendiente: montoNuevo,
+            concepto: concepto,
+            fecha_prestamo: new Date().toISOString().split('T')[0],
+            estado: 'activo'
+        }]);
+    }
+    res.redirect('/empleados');
+});
+
+app.post('/abonar_prestamo/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const prestamoId = req.params.id;
+    const abono = parseInt(req.body.monto_abono) || 0;
+    if (abono <= 0) return res.send(mostrarAlerta('Error', 'El abono debe ser mayor a cero.', 'warning'));
+
+    const { data: prestamo } = await supabase.from('prestamos_fabriquines').select('*').eq('id', prestamoId).single();
+    if (!prestamo) return res.send(mostrarAlerta('Error', 'Préstamo no encontrado.', 'error'));
+
+    const nuevoSaldo = Math.max(0, prestamo.saldo_pendiente - abono);
+    const nuevoEstado = nuevoSaldo === 0 ? 'pagado' : 'activo';
+
+    await supabase.from('prestamos_fabriquines').update({
+        saldo_pendiente: nuevoSaldo,
+        estado: nuevoEstado
+    }).eq('id', prestamoId);
+
+    // Registrar abono en historial
+    const tiempo = obtenerHoraColombia();
+    await supabase.from('abonos_prestamo').insert([{
+        prestamo_id: prestamoId,
+        empleado_id: prestamo.empleado_id,
+        monto_abono: abono,
+        fecha_abono: tiempo.fecha,
+        semana_ref: `Semana del ${tiempo.fecha}`
+    }]);
+
+    res.redirect('/empleados');
+});
+
 
 // ---------------- INVENTARIO Y KARDEX (DIVIDIDO) ----------------
 
@@ -263,73 +329,92 @@ app.post('/despachar_tarea', async (req, res) => {
     
     if (fisicoEntregado <= 0) return res.send(mostrarAlerta('Error Lógico', 'La entrega debe ser mayor a cero', 'warning'));
     
-    // Cálculo de kilogramos (x1000 tabacos -> 1kg capa, 1.8kg capote, 7kg picadura)
+    // Kg base calculados automáticamente
     const factor = fisicoEntregado / 1000;
-    const capaKg = (factor * 1.0).toFixed(2);
-    const capoteKg = (factor * 1.8).toFixed(2);
-    const picaduraKg = (factor * 7.0).toFixed(2);
-    const cestasCant = Math.ceil(fisicoEntregado / 1250); // Regla Gato Negro: 1 cesta por cada 1250 tabacos
+    const capaKgBase     = parseFloat((factor * 1.0).toFixed(2));
+    const capoteKgBase   = parseFloat((factor * 1.8).toFixed(2));
+    const picaduraKgBase = parseFloat((factor * 7.0).toFixed(2));
+
+    // Kg reales enviados desde el form (el admin puede haberlos editado)
+    const capaKgReal     = parseFloat(req.body.capa_kg)     || capaKgBase;
+    const capoteKgReal   = parseFloat(req.body.capote_kg)   || capoteKgBase;
+    const picaduraKgReal = parseFloat(req.body.picadura_kg) || picaduraKgBase;
+    const cestasCant     = parseInt(req.body.cestas_cant)   || Math.ceil(fisicoEntregado / 1250);
+    
+    // Saldo anterior de material del fabriquín
+    const saldoCapaAnt     = parseFloat(empleado.saldo_capa_kg)     || 0;
+    const saldoCapoteAnt   = parseFloat(empleado.saldo_capote_kg)   || 0;
+    const saldoPicaduraAnt = parseFloat(empleado.saldo_picadura_kg) || 0;
+
+    // Nuevo saldo = ant + base calculada - real entregado
+    const nuevoSaldoCapa     = parseFloat((saldoCapaAnt     + capaKgBase     - capaKgReal).toFixed(2));
+    const nuevoSaldoCapote   = parseFloat((saldoCapoteAnt   + capoteKgBase   - capoteKgReal).toFixed(2));
+    const nuevoSaldoPicadura = parseFloat((saldoPicaduraAnt + picaduraKgBase - picaduraKgReal).toFixed(2));
     
     const tiempo = obtenerHoraColombia();
     
-    // 1. Descontar del inventario maestro (si existe el material)
+    // 1. Descontar del inventario maestro
     const { data: inv } = await supabase.from('inventario').select('*');
     if (inv) {
-        let c = parseFloat(capaKg), cp = parseFloat(capoteKg), pi = parseFloat(picaduraKg);
+        let c = capaKgReal, cp = capoteKgReal, pi = picaduraKgReal;
         
-        // PRE-VALIDACION DE STOCK FÍSICO (Anti-Negativos)
         let mCesta = inv.find(i => i.material.toLowerCase() === colorCesta.toLowerCase());
         if (!mCesta || mCesta.cantidad < cestasCant) {
-            return res.send(mostrarAlerta('Stock Insuficiente', `No hay suficientes ${colorCesta} prestables. Requeridas: ${cestasCant}, Disponibles: ${mCesta ? mCesta.cantidad : 0}`, 'error'));
+            return res.send(mostrarAlerta('Stock Insuficiente', `No hay suficientes ${colorCesta}. Requeridas: ${cestasCant}, Disponibles: ${mCesta ? mCesta.cantidad : 0}`, 'error'));
         }
         
-        let iCapa = inv.find(i => i.material.toLowerCase().includes('capa'));
-        let iCapote = inv.find(i => i.material.toLowerCase().includes('capote'));
+        let iCapa    = inv.find(i => i.material.toLowerCase().includes('capa'));
+        let iCapote  = inv.find(i => i.material.toLowerCase().includes('capote'));
         let iPicadura = inv.find(i => (i.material.toLowerCase().includes('picadura') || i.material.toLowerCase().includes('tripa') || i.material.toLowerCase().includes('material')) && i.material.toLowerCase() !== 'materia prima');
         
-        if (!iCapa || iCapa.cantidad < c) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capa física. Requerida: ${c}kg, Disponible: ${iCapa ? iCapa.cantidad : 0}kg`, 'error'));
-        if (!iCapote || iCapote.cantidad < cp) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capote físico. Requerida: ${cp}kg, Disponible: ${iCapote ? iCapote.cantidad : 0}kg`, 'error'));
-        if (!iPicadura || iPicadura.cantidad < pi) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Picadura física. Requerida: ${pi}kg, Disponible: ${iPicadura ? iPicadura.cantidad : 0}kg`, 'error'));
+        if (!iCapa    || iCapa.cantidad    < c)  return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capa. Requerida: ${c}kg, Disponible: ${iCapa ? iCapa.cantidad : 0}kg`, 'error'));
+        if (!iCapote  || iCapote.cantidad  < cp) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capote. Requerida: ${cp}kg, Disponible: ${iCapote ? iCapote.cantidad : 0}kg`, 'error'));
+        if (!iPicadura || iPicadura.cantidad < pi) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Picadura. Requerida: ${pi}kg, Disponible: ${iPicadura ? iPicadura.cantidad : 0}kg`, 'error'));
         
-        // EJECUCIÓN DEL DESCUENTO SEGURO
         for (let item of inv) {
             let m = item.material.toLowerCase();
-            if (m.includes('capa') && c > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - c }).eq('id', item.id); c = 0; }
-            if (m.includes('capote') && cp > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - cp }).eq('id', item.id); cp = 0; }
+            if (m.includes('capa')    && c  > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - c  }).eq('id', item.id); c  = 0; }
+            if (m.includes('capote')  && cp > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - cp }).eq('id', item.id); cp = 0; }
             if ((m.includes('picadura') || m.includes('tripa') || m.includes('material')) && m !== 'materia prima' && pi > 0) { await supabase.from('inventario').update({ cantidad: item.cantidad - pi }).eq('id', item.id); pi = 0; }
         }
-        
-        // Descontar Canastas
         if (cestasCant > 0 && mCesta) {
             await supabase.from('inventario').update({ cantidad: mCesta.cantidad - cestasCant }).eq('id', mCesta.id);
         }
     }
     
-    // 2. Registro histórico (Kardex) DESAGREGADO
+    // 2. Kardex
     const nombreCorto = empleado.nombre.split(' ').slice(0, 2).join(' ');
     const desc = `Despacho Tarea [${nuevaMeta} META GLOBAL] a ${empleado.codigo} - ${nombreCorto}`;
     await supabase.from('movimientos').insert([
-        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capa', cantidad: parseFloat(capaKg), usuario: 'Admin', descripcion: desc },
-        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capote', cantidad: parseFloat(capoteKg), usuario: 'Admin', descripcion: desc },
-        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Picadura', cantidad: parseFloat(picaduraKg), usuario: 'Admin', descripcion: desc },
-        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: colorCesta, cantidad: cestasCant, usuario: 'Admin', descripcion: desc }
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capa',    cantidad: capaKgReal,     usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capote',  cantidad: capoteKgReal,   usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Picadura',cantidad: picaduraKgReal, usuario: 'Admin', descripcion: desc },
+        { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: colorCesta,cantidad: cestasCant,     usuario: 'Admin', descripcion: desc }
     ]);
 
-    // 3. ACTUALIZAR DEUDA ROTATIVA
-    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaMeta }).eq('id', empleado.id);
+    // 3. Actualizar deuda de tabacos + saldos de material
+    await supabase.from('empleados_fabriquines').update({
+        deuda_tabacos:     nuevaMeta,
+        saldo_capa_kg:     Math.max(0, nuevoSaldoCapa),
+        saldo_capote_kg:   Math.max(0, nuevoSaldoCapote),
+        saldo_picadura_kg: Math.max(0, nuevoSaldoPicadura)
+    }).eq('id', empleado.id);
 
-    // 4. Imprimir soporte Formato V1.8
+    // 4. Formato imprimible
     const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
     res.render('formato_despacho', {
         empleado: empleado,
-        meta: nuevaMeta, // La meta que se imprime es el Total Deuda
+        meta: nuevaMeta,
         saldo_casa: saldoEnCasa,
         fecha_actual: fechaText,
         params: {
-            capa: capaKg, capote: capoteKg, picadura: picaduraKg,
-            saldo_capa: (saldoEnCasa / 1000 * 1.0).toFixed(2),
-            saldo_capote: (saldoEnCasa / 1000 * 1.8).toFixed(2),
-            saldo_picadura: (saldoEnCasa / 1000 * 7.0).toFixed(2),
+            capa: capaKgReal.toFixed(2), capote: capoteKgReal.toFixed(2), picadura: picaduraKgReal.toFixed(2),
+            saldo_capa:     saldoCapaAnt.toFixed(2),
+            saldo_capote:   saldoCapoteAnt.toFixed(2),
+            saldo_picadura: saldoPicaduraAnt.toFixed(2),
+            nuevo_saldo_capa:     Math.max(0, nuevoSaldoCapa).toFixed(2),
+            nuevo_saldo_capote:   Math.max(0, nuevoSaldoCapote).toFixed(2),
+            nuevo_saldo_picadura: Math.max(0, nuevoSaldoPicadura).toFixed(2),
             cestas: cestasCant, color_cesta: colorCesta
         }
     });
@@ -1115,6 +1200,72 @@ app.get('/analitica', async (req, res) => {
         produccion: { normales: prodNormales, anillados: prodAnillados, envoltura: prodEnvoltura },
         finanzas: { ingresos: totalIngresos, nomina: totalNomina, mantenimiento: totalMtto }
     });
+});
+// ============================================================================
+// 🌯 MÓDULO ENVOLVEDORAS V2.5
+// ============================================================================
+app.get('/envolvedoras', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    // Empleados del tipo envolvedora (usamos misma tabla, filtrar por área si se agrega campo)
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
+    const { data: registros }  = await supabase.from('recepcion_envolvedoras').select('*').eq('estado', 'pendiente');
+    res.render('envolvedoras', { empleados: empleados || [], registros: registros || [] });
+});
+
+app.post('/guardar_envoltedora', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const empId = req.body.empleado_id;
+    const regId = req.body.registro_id;
+    const tiempo = obtenerHoraColombia();
+
+    const campos = {
+        empleado_id: empId,
+        lun_cestas_in:  parseInt(req.body.lun_cestas_in)  || 0, mar_cestas_in:  parseInt(req.body.mar_cestas_in)  || 0,
+        mie_cestas_in:  parseInt(req.body.mie_cestas_in)  || 0, jue_cestas_in:  parseInt(req.body.jue_cestas_in)  || 0,
+        vie_cestas_in:  parseInt(req.body.vie_cestas_in)  || 0, sab_cestas_in:  parseInt(req.body.sab_cestas_in)  || 0,
+        lun_cestas_out: parseInt(req.body.lun_cestas_out) || 0, mar_cestas_out: parseInt(req.body.mar_cestas_out) || 0,
+        mie_cestas_out: parseInt(req.body.mie_cestas_out) || 0, jue_cestas_out: parseInt(req.body.jue_cestas_out) || 0,
+        vie_cestas_out: parseInt(req.body.vie_cestas_out) || 0, sab_cestas_out: parseInt(req.body.sab_cestas_out) || 0,
+        papel_trans_g: parseFloat(req.body.papel_trans_g) || 0,
+        cinta:        parseInt(req.body.cinta)        || 0,
+        anillos:      parseInt(req.body.anillos)      || 0,
+        cajas_bto:    parseInt(req.body.cajas_bto)    || 0,
+        cajitas_peq:  parseInt(req.body.cajitas_peq)  || 0,
+        marcadores:   parseInt(req.body.marcadores)   || 0,
+        precio_cesta: parseInt(req.body.precio_cesta) || 11000,
+        estado: 'pendiente'
+    };
+
+    if (regId && regId !== '') {
+        await supabase.from('recepcion_envolvedoras').update(campos).eq('id', regId);
+    } else {
+        campos.semana_inicio = tiempo.fecha;
+        await supabase.from('recepcion_envolvedoras').insert([campos]);
+    }
+    res.redirect('/envolvedoras');
+});
+
+app.post('/liquidar_envolvedora/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const regId = req.params.id;
+    const { data: reg } = await supabase.from('recepcion_envolvedoras').select('*').eq('id', regId).single();
+    if (!reg) return res.send(mostrarAlerta('Error', 'Registro no encontrado.', 'error'));
+
+    const totalCestasOut = reg.lun_cestas_out + reg.mar_cestas_out + reg.mie_cestas_out +
+                           reg.jue_cestas_out + reg.vie_cestas_out + reg.sab_cestas_out;
+    const pago = totalCestasOut * reg.precio_cesta;
+
+    // Registrar en nómina
+    const tiempo = obtenerHoraColombia();
+    await supabase.from('produccion_fabriquines').insert([{
+        fecha: tiempo.fecha, usuario: String(reg.empleado_id),
+        cantidad_producida: totalCestasOut,
+        precio_por_unidad: reg.precio_cesta,
+        total_ganado: pago, estado: 'PENDIENTE'
+    }]);
+
+    await supabase.from('recepcion_envolvedoras').update({ estado: 'pagado' }).eq('id', regId);
+    res.send(mostrarAlerta('✅ Liquidada', `Envolvedora liquidada. Total a cobrar: $${pago.toLocaleString('es-CO')} COP por ${totalCestasOut} cestas.`, 'success'));
 });
 
 module.exports = app;
