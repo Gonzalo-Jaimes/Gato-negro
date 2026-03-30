@@ -347,16 +347,30 @@ app.post('/despachar_tarea', async (req, res) => {
     const capoteKgReal   = parseFloat(req.body.capote_kg)   || capoteKgBase;
     const picaduraKgReal = parseFloat(req.body.picadura_kg) || picaduraKgBase;
     const cestasCant     = parseInt(req.body.cestas_cant)   || Math.ceil(fisicoEntregado / 1250);
+
+    // Material EXTRA (por capa mala, faltante, etc.) — genera deuda de material
+    const extraCapaKg     = parseFloat(req.body.extra_capa_kg)     || 0;
+    const extraCapoteKg   = parseFloat(req.body.extra_capote_kg)   || 0;
+    const extraPicaduraKg = parseFloat(req.body.extra_picadura_kg) || 0;
+
+    // Total entregado hoy (normal + extra)
+    const capaTotalEntregado     = capaKgReal     + extraCapaKg;
+    const capoteTotalEntregado   = capoteKgReal   + extraCapoteKg;
+    const picaduraTotalEntregado = picaduraKgReal + extraPicaduraKg;
     
     // Saldo anterior de material del fabriquín
+    // Positivo = tiene material en casa (por tabacos pendientes semana ant.)
+    // Negativo = debe material extra que se le dio antes
     const saldoCapaAnt     = parseFloat(empleado.saldo_capa_kg)     || 0;
     const saldoCapoteAnt   = parseFloat(empleado.saldo_capote_kg)   || 0;
     const saldoPicaduraAnt = parseFloat(empleado.saldo_picadura_kg) || 0;
 
-    // Nuevo saldo = ant + base calculada - real entregado
-    const nuevoSaldoCapa     = parseFloat((saldoCapaAnt     + capaKgBase     - capaKgReal).toFixed(2));
-    const nuevoSaldoCapote   = parseFloat((saldoCapoteAnt   + capoteKgBase   - capoteKgReal).toFixed(2));
-    const nuevoSaldoPicadura = parseFloat((saldoPicaduraAnt + picaduraKgBase - picaduraKgReal).toFixed(2));
+    // Nuevo saldo de material:
+    // saldo_ant (material que ya tenía en casa) + base nueva - total entregado hoy
+    // Si el resultado es negativo = debe material (se lo dimos de más)
+    const nuevoSaldoCapa     = parseFloat((saldoCapaAnt     + capaKgBase     - capaTotalEntregado).toFixed(2));
+    const nuevoSaldoCapote   = parseFloat((saldoCapoteAnt   + capoteKgBase   - capoteTotalEntregado).toFixed(2));
+    const nuevoSaldoPicadura = parseFloat((saldoPicaduraAnt + picaduraKgBase - picaduraTotalEntregado).toFixed(2));
     
     const tiempo = obtenerHoraColombia();
     
@@ -453,12 +467,12 @@ app.post('/despachar_tarea', async (req, res) => {
         deuda_tabacos: nuevaMeta
     }).eq('id', empleado.id);
 
-    // 4B. Actualizar saldos de material (requiere migracion SQL v250 - no falla si no existe)
+    // 4B. Actualizar saldos de material — SIN Math.max para permitir negativos (deuda de material extra)
     try {
         await supabase.from('empleados_fabriquines').update({
-            saldo_capa_kg:     Math.max(0, nuevoSaldoCapa),
-            saldo_capote_kg:   Math.max(0, nuevoSaldoCapote),
-            saldo_picadura_kg: Math.max(0, nuevoSaldoPicadura)
+            saldo_capa_kg:     nuevoSaldoCapa,
+            saldo_capote_kg:   nuevoSaldoCapote,
+            saldo_picadura_kg: nuevoSaldoPicadura
         }).eq('id', empleado.id);
     } catch(e) { }
 
@@ -472,11 +486,12 @@ app.post('/despachar_tarea', async (req, res) => {
         saldo_casa: saldoEnCasa,
         fecha_actual: `${tiempo.fecha} ${tiempo.hora}`,
         params: {
-            capa: capaKgReal.toFixed(2), capote: capoteKgReal.toFixed(2), picadura: picaduraKgReal.toFixed(2),
+            capa: capaTotalEntregado.toFixed(2), capote: capoteTotalEntregado.toFixed(2), picadura: picaduraTotalEntregado.toFixed(2),
+            extra_capa: extraCapaKg, extra_capote: extraCapoteKg, extra_picadura: extraPicaduraKg,
             saldo_capa: saldoCapaAnt.toFixed(2), saldo_capote: saldoCapoteAnt.toFixed(2), saldo_picadura: saldoPicaduraAnt.toFixed(2),
-            nuevo_saldo_capa: Math.max(0, nuevoSaldoCapa).toFixed(2),
-            nuevo_saldo_capote: Math.max(0, nuevoSaldoCapote).toFixed(2),
-            nuevo_saldo_picadura: Math.max(0, nuevoSaldoPicadura).toFixed(2),
+            nuevo_saldo_capa: nuevoSaldoCapa.toFixed(2),
+            nuevo_saldo_capote: nuevoSaldoCapote.toFixed(2),
+            nuevo_saldo_picadura: nuevoSaldoPicadura.toFixed(2),
             cestas: cestasCant, color_cesta: colorCesta
         },
         suministros: { goma_uds, goma_num, costo_goma, periodico_kg, costo_periodico },
@@ -813,15 +828,43 @@ app.post('/liquidar_semana/:id', async (req, res) => {
     
     // 2. DESCONTAR LA DEUDA DE TABACOS ROTATIVA
     let nueva_deuda = emp.deuda_tabacos - total_tabacos;
-    if (nueva_deuda < 0) nueva_deuda = 0; 
-    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nueva_deuda }).eq('id', emp.id);
+    if (nueva_deuda < 0) nueva_deuda = 0;
+
+    // 2B. CALCULAR SALDO DE MATERIAL POR TABACOS PENDIENTES:
+    //     Si quedan N tabacos sin entregar, el fabriquín tiene en casa
+    //     el material correspondiente a esos N tabacos. Lo guardamos
+    //     para que el próximo despacho lo muestre como "Saldo Anterior".
+    //     ADEMÁS sumamos cualquier deuda extra de material que ya existía
+    //     (saldo_capa_kg negativo = le dieron material extra que aún debe)
+    let saldoMaterialExtra_capa     = parseFloat(emp.saldo_capa_kg)     || 0;
+    let saldoMaterialExtra_capote   = parseFloat(emp.saldo_capote_kg)   || 0;
+    let saldoMaterialExtra_picadura = parseFloat(emp.saldo_picadura_kg) || 0;
+
+    // Material que corresponde a los tabacos PENDIENTES (en casa del fabriquín)
+    const materialPorDeuda_capa     = parseFloat((nueva_deuda / 1000 * 1.0).toFixed(2));
+    const materialPorDeuda_capote   = parseFloat((nueva_deuda / 1000 * 1.8).toFixed(2));
+    const materialPorDeuda_picadura = parseFloat((nueva_deuda / 1000 * 7.0).toFixed(2));
+
+    // El saldo_capa_kg final = material pendiente por tabacos + deuda extra de material
+    // (si saldoMaterialExtra es negativo = le dieron más material del que correspondía)
+    const nuevoSaldoCapa     = parseFloat((materialPorDeuda_capa     + Math.min(0, saldoMaterialExtra_capa)).toFixed(2));
+    const nuevoSaldoCapote   = parseFloat((materialPorDeuda_capote   + Math.min(0, saldoMaterialExtra_capote)).toFixed(2));
+    const nuevoSaldoPicadura = parseFloat((materialPorDeuda_picadura + Math.min(0, saldoMaterialExtra_picadura)).toFixed(2));
+
+    const updateEmp = { deuda_tabacos: nueva_deuda };
+    try {
+        updateEmp.saldo_capa_kg     = nuevoSaldoCapa;
+        updateEmp.saldo_capote_kg   = nuevoSaldoCapote;
+        updateEmp.saldo_picadura_kg = nuevoSaldoPicadura;
+    } catch(e) {}
+    await supabase.from('empleados_fabriquines').update(updateEmp).eq('id', emp.id);
     
-    // 3. ACTUALIZAR HISTORIAL FINANCIERO (Físico ya fue actualizado en vivo por Recepcion Diaria Diferencial)
+    // 3. ACTUALIZAR HISTORIAL FINANCIERO
     await supabase.from('produccion_fabriquines').insert([{
         fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: total_tabacos, precio_por_unidad: VALOR_TABACO, total_ganado: total_ganado, estado: 'PAGADO'
     }]);
 
-    // REDIRECCIÓN DIRECTA A NOMINA (El PDF ahora se saca desde Contabilidad)
+    // REDIRECCIÓN DIRECTA A NOMINA
     res.redirect('/nomina');
 });
 
