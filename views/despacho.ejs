@@ -126,7 +126,7 @@
         const saldo = divSeleccionado ? parseFloat(divSeleccionado.getAttribute('data-saldo')) || 0 : 0;
         const meta = saldo + a_entregar;
         const mult = a_entregar / 1000;
-        const cestas = Math.ceil(mult);
+        const cestas = Math.ceil(a_entregar / 1250); // 1250 tabacos por cesta
 
         document.getElementById('res_meta').innerText = meta.toLocaleString('es-CO');
         document.getElementById('res_casa').innerText = saldo.toLocaleString('es-CO');

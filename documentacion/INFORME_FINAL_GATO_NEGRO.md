@@ -159,283 +159,303 @@ Tengamos claro que apenas hemos cruzado la cúspide basal o primaria dentro del 
 * Supabase. (n.d.). *PostgreSQL Remote Database (Open Source Firebase Alternative Platform Docs)*. Recuperado de https://supabase.com/docs
 * Vercel Cloud Network. (n.d.). *Develop, preview, ship frontend framework edge functions*. Recuperado de https://vercel.com/docs
 
+---
+
+---
+
 ## 📸 Anexos Visuales del Desarrollo Conjunto
 
-A continuación se listan todas las capturas de pantalla e imágenes del proceso de desarrollo.
+> Capturas organizadas cronológicamente por módulo. Cada figura corresponde al estado real de la plataforma en su momento de desarrollo.
 
-### Anexo 1
+### 🔧 Módulo de Mantenimiento Predictivo de Máquinas (V1.x)
 
-![Captura 1](anexos/media__1773943931277.png)
+**Figura 1** — *media__1773943931277.png*
 
-### Anexo 2
+![Figura 1](anexos/media__1773943931277.png)
 
-![Captura 2](anexos/media__1773946090234.png)
+**Figura 2** — *media__1773946090234.png*
 
-### Anexo 3
+![Figura 2](anexos/media__1773946090234.png)
 
-![Captura 3](anexos/media__1773946414831.png)
+**Figura 3** — *media__1773946414831.png*
 
-### Anexo 4
+![Figura 3](anexos/media__1773946414831.png)
 
-![Captura 4](anexos/media__1773946515336.png)
+**Figura 4** — *media__1773946515336.png*
 
-### Anexo 5
+![Figura 4](anexos/media__1773946515336.png)
 
-![Captura 5](anexos/media__1773950633203.png)
+**Figura 5** — *media__1773950633203.png*
 
-### Anexo 6
+![Figura 5](anexos/media__1773950633203.png)
 
-![Captura 6](anexos/media__1773951085918.png)
+**Figura 6** — *media__1773951085918.png*
 
-### Anexo 7
+![Figura 6](anexos/media__1773951085918.png)
 
-![Captura 7](anexos/media__1773951731273.png)
+**Figura 7** — *media__1773951731273.png*
 
-### Anexo 8
+![Figura 7](anexos/media__1773951731273.png)
 
-![Captura 8](anexos/media__1773963063176.png)
+### ⚖️ Módulo de Recepción Diaria y Fabriquines (V1.8)
 
-### Anexo 9
+**Figura 8** — *media__1773963063176.png*
 
-![Captura 9](anexos/media__1773964418216.png)
+![Figura 8](anexos/media__1773963063176.png)
 
-### Anexo 10
+**Figura 9** — *media__1773964418216.png*
 
-![Captura 10](anexos/media__1773964903973.png)
+![Figura 9](anexos/media__1773964418216.png)
 
-### Anexo 11
+**Figura 10** — *media__1773964903973.png*
 
-![Captura 11](anexos/media__1773964933431.png)
+![Figura 10](anexos/media__1773964903973.png)
 
-### Anexo 12
+**Figura 11** — *media__1773964933431.png*
 
-![Captura 12](anexos/media__1773965197343.png)
+![Figura 11](anexos/media__1773964933431.png)
 
-### Anexo 13
+**Figura 12** — *media__1773965197343.png*
 
-![Captura 13](anexos/media__1773965216478.png)
+![Figura 12](anexos/media__1773965197343.png)
 
-### Anexo 14
+**Figura 13** — *media__1773965216478.png*
 
-![Captura 14](anexos/media__1773965631334.png)
+![Figura 13](anexos/media__1773965216478.png)
 
-### Anexo 15
+**Figura 14** — *media__1773965631334.png*
 
-![Captura 15](anexos/media__1774148818316.png)
+![Figura 14](anexos/media__1773965631334.png)
 
-### Anexo 16
+### 📦 Inventario Global y Motor Transaccional Kardex (V2.2)
 
-![Captura 16](anexos/media__1774148823856.png)
+**Figura 15** — *media__1774148818316.png*
 
-### Anexo 17
+![Figura 15](anexos/media__1774148818316.png)
 
-![Captura 17](anexos/media__1774148851383.png)
+**Figura 16** — *media__1774148823856.png*
 
-### Anexo 18
+![Figura 16](anexos/media__1774148823856.png)
 
-![Captura 18](anexos/media__1774156382011.png)
+**Figura 17** — *media__1774148851383.png*
 
-### Anexo 19
+![Figura 17](anexos/media__1774148851383.png)
 
-![Captura 19](anexos/media__1774157671244.png)
+**Figura 18** — *media__1774156382011.png*
 
-### Anexo 20
+![Figura 18](anexos/media__1774156382011.png)
 
-![Captura 20](anexos/media__1774157683936.png)
+**Figura 19** — *media__1774157671244.png*
 
-### Anexo 21
+![Figura 19](anexos/media__1774157671244.png)
 
-![Captura 21](anexos/media__1774157696414.png)
+**Figura 20** — *media__1774157683936.png*
 
-### Anexo 22
+![Figura 20](anexos/media__1774157683936.png)
 
-![Captura 22](anexos/media__1774157739916.png)
+**Figura 21** — *media__1774157696414.png*
 
-### Anexo 23
+![Figura 21](anexos/media__1774157696414.png)
 
-![Captura 23](anexos/media__1774157763823.png)
+**Figura 22** — *media__1774157739916.png*
 
-### Anexo 24
+![Figura 22](anexos/media__1774157739916.png)
 
-![Captura 24](anexos/media__1774158267250.png)
+**Figura 23** — *media__1774157763823.png*
 
-### Anexo 25
+![Figura 23](anexos/media__1774157763823.png)
 
-![Captura 25](anexos/media__1774158320814.png)
+### 💰 Módulo de Nómina Contable y Liquidación Semanal (V2.1)
 
-### Anexo 26
+**Figura 24** — *media__1774158267250.png*
 
-![Captura 26](anexos/media__1774158350516.png)
+![Figura 24](anexos/media__1774158267250.png)
 
-### Anexo 27
+**Figura 25** — *media__1774158320814.png*
 
-![Captura 27](anexos/media__1774158389640.png)
+![Figura 25](anexos/media__1774158320814.png)
 
-### Anexo 28
+**Figura 26** — *media__1774158350516.png*
 
-![Captura 28](anexos/media__1774158422105.png)
+![Figura 26](anexos/media__1774158350516.png)
 
-### Anexo 29
+**Figura 27** — *media__1774158389640.png*
 
-![Captura 29](anexos/media__1774158700383.png)
+![Figura 27](anexos/media__1774158389640.png)
 
-### Anexo 30
+**Figura 28** — *media__1774158422105.png*
 
-![Captura 30](anexos/media__1774159335926.png)
+![Figura 28](anexos/media__1774158422105.png)
 
-### Anexo 31
+**Figura 29** — *media__1774158700383.png*
 
-![Captura 31](anexos/media__1774159400908.png)
+![Figura 29](anexos/media__1774158700383.png)
 
-### Anexo 32
+### 🖨️ Sistema de Fichas Técnicas y Códigos QR (V1.8)
 
-![Captura 32](anexos/media__1774159430273.png)
+**Figura 30** — *media__1774159335926.png*
 
-### Anexo 33
+![Figura 30](anexos/media__1774159335926.png)
 
-![Captura 33](anexos/media__1774159469964.png)
+**Figura 31** — *media__1774159400908.png*
 
-### Anexo 34
+![Figura 31](anexos/media__1774159400908.png)
 
-![Captura 34](anexos/media__1774159906243.png)
+**Figura 32** — *media__1774159430273.png*
 
-### Anexo 35
+![Figura 32](anexos/media__1774159430273.png)
 
-![Captura 35](anexos/media__1774159963873.png)
+**Figura 33** — *media__1774159469964.png*
 
-### Anexo 36
+![Figura 33](anexos/media__1774159469964.png)
 
-![Captura 36](anexos/media__1774319598444.jpg)
+**Figura 34** — *media__1774159906243.png*
 
-### Anexo 37
+![Figura 34](anexos/media__1774159906243.png)
 
-![Captura 37](anexos/media__1774319619271.png)
+**Figura 35** — *media__1774159963873.png*
 
-### Anexo 38
+![Figura 35](anexos/media__1774159963873.png)
 
-![Captura 38](anexos/media__1774319671345.png)
+### 📊 Documentación Base: Excels y Registros Previos al ERP
 
-### Anexo 39
+**Figura 36** — *media__1774319598444.jpg*
 
-![Captura 39](anexos/media__1774319723211.png)
+![Figura 36](anexos/media__1774319598444.jpg)
 
-### Anexo 40
+**Figura 37** — *media__1774319619271.png*
 
-![Captura 40](anexos/media__1774322412517.png)
+![Figura 37](anexos/media__1774319619271.png)
 
-### Anexo 41
+**Figura 38** — *media__1774319671345.png*
 
-![Captura 41](anexos/media__1774322441916.png)
+![Figura 38](anexos/media__1774319671345.png)
 
-### Anexo 42
+**Figura 39** — *media__1774319723211.png*
 
-![Captura 42](anexos/media__1774322688064.png)
+![Figura 39](anexos/media__1774319723211.png)
 
-### Anexo 43
+**Figura 40** — *media__1774322412517.png*
 
-![Captura 43](anexos/media__1774322831541.png)
+![Figura 40](anexos/media__1774322412517.png)
 
-### Anexo 44
+**Figura 41** — *media__1774322441916.png*
 
-![Captura 44](anexos/media__1774491845412.png)
+![Figura 41](anexos/media__1774322441916.png)
 
-### Anexo 45
+**Figura 42** — *media__1774322688064.png*
 
-![Captura 45](anexos/media__1774491950272.png)
+![Figura 42](anexos/media__1774322688064.png)
 
-### Anexo 46
+**Figura 43** — *media__1774322831541.png*
 
-![Captura 46](anexos/media__1774492085082.png)
+![Figura 43](anexos/media__1774322831541.png)
 
-### Anexo 47
+### 📈 Dashboard Analítico BI con Chart.js (V2.3)
 
-![Captura 47](anexos/media__1774492210176.png)
+**Figura 44** — *media__1774491845412.png*
 
-### Anexo 48
+![Figura 44](anexos/media__1774491845412.png)
 
-![Captura 48](anexos/media__1774492263355.png)
+**Figura 45** — *media__1774491950272.png*
 
-### Anexo 49
+![Figura 45](anexos/media__1774491950272.png)
 
-![Captura 49](anexos/media__1774493937918.png)
+**Figura 46** — *media__1774492085082.png*
 
-### Anexo 50
+![Figura 46](anexos/media__1774492085082.png)
 
-![Captura 50](anexos/media__1774494351792.png)
+**Figura 47** — *media__1774492210176.png*
 
-### Anexo 51
+![Figura 47](anexos/media__1774492210176.png)
 
-![Captura 51](anexos/media__1774533205858.png)
+**Figura 48** — *media__1774492263355.png*
 
-### Anexo 52
+![Figura 48](anexos/media__1774492263355.png)
 
-![Captura 52](anexos/media__1774540251756.png)
+**Figura 49** — *media__1774493937918.png*
 
-### Anexo 53
+![Figura 49](anexos/media__1774493937918.png)
 
-![Captura 53](anexos/media__1774541378549.png)
+**Figura 50** — *media__1774494351792.png*
 
-### Anexo 54
+![Figura 50](anexos/media__1774494351792.png)
 
-![Captura 54](anexos/media__1774541408538.png)
+**Figura 51** — *media__1774533205858.png*
 
-### Anexo 55
+![Figura 51](anexos/media__1774533205858.png)
 
-![Captura 55](anexos/media__1774542232860.png)
+**Figura 52** — *media__1774540251756.png*
 
-### Anexo 56
+![Figura 52](anexos/media__1774540251756.png)
 
-![Captura 56](anexos/media__1774877227606.png)
+**Figura 53** — *media__1774541378549.png*
 
-### Anexo 57
+![Figura 53](anexos/media__1774541378549.png)
 
-![Captura 57](anexos/media__1774879879746.png)
+**Figura 54** — *media__1774541408538.png*
 
-### Anexo 58
+![Figura 54](anexos/media__1774541408538.png)
 
-![Captura 58](anexos/media__1774879917611.png)
+**Figura 55** — *media__1774542232860.png*
 
-### Anexo 59
+![Figura 55](anexos/media__1774542232860.png)
 
-![Captura 59](anexos/media__1774879983155.png)
+### 🏭 Fase 3 – Menú Modular por Áreas e Historial de Entregas (V2.4)
 
-### Anexo 60
+**Figura 56** — *media__1774877227606.png*
 
-![Captura 60](anexos/media__1774880637465.png)
+![Figura 56](anexos/media__1774877227606.png)
 
-### Anexo 61
+**Figura 57** — *media__1774879879746.png*
 
-![Captura 61](anexos/media__1774880731950.png)
+![Figura 57](anexos/media__1774879879746.png)
 
-### Anexo 62
+**Figura 58** — *media__1774879917611.png*
 
-![Captura 62](anexos/media__1774881285365.png)
+![Figura 58](anexos/media__1774879917611.png)
 
-### Anexo 63
+**Figura 59** — *media__1774879983155.png*
 
-![Captura 63](anexos/media__1774882222601.png)
+![Figura 59](anexos/media__1774879983155.png)
 
-### Anexo 64
+**Figura 60** — *media__1774880637465.png*
 
-![Captura 64](anexos/media__1774882515113.png)
+![Figura 60](anexos/media__1774880637465.png)
 
-### Anexo 65
+**Figura 61** — *media__1774880731950.png*
 
-![Captura 65](anexos/media__1774882623247.png)
+![Figura 61](anexos/media__1774880731950.png)
 
-### Anexo 66
+**Figura 62** — *media__1774881285365.png*
 
-![Captura 66](anexos/media__1774883922604.png)
+![Figura 62](anexos/media__1774881285365.png)
 
-### Anexo 67
+**Figura 63** — *media__1774882222601.png*
 
-![Captura 67](anexos/media__1774883941355.png)
+![Figura 63](anexos/media__1774882222601.png)
 
-### Anexo 68
+**Figura 64** — *media__1774882515113.png*
 
-![Captura 68](anexos/media__1774884248448.png)
+![Figura 64](anexos/media__1774882515113.png)
 
-### Anexo 69
+**Figura 65** — *media__1774882623247.png*
 
-![Captura 69](anexos/media__1774884506081.png)
+![Figura 65](anexos/media__1774882623247.png)
+
+**Figura 66** — *media__1774883922604.png*
+
+![Figura 66](anexos/media__1774883922604.png)
+
+**Figura 67** — *media__1774883941355.png*
+
+![Figura 67](anexos/media__1774883941355.png)
+
+**Figura 68** — *media__1774884248448.png*
+
+![Figura 68](anexos/media__1774884248448.png)
+
+**Figura 69** — *media__1774884506081.png*
+
+![Figura 69](anexos/media__1774884506081.png)
 
