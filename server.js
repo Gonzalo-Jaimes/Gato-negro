@@ -302,16 +302,22 @@ app.post('/registrar_venta', async (req, res) => {
 });
 
 // ============================================================================
-// 🔥 MÓDULO V1.8 P2P: DESPACHO ROTATIVO AL FORMATO FABRIQUIN 2025 🔥
+// 🔥 RUTAS DEL SISTEMA V1.5 - MEJORAS DE DESPACHO Y MATERIA PRIMA 🔥
 // ============================================================================
 app.get('/despacho', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
+    // Obtener fabriquines y sus deudas reales (ahora unificado en empleados_fabriquines)
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
     
-    res.render('despacho', { 
-        empleados: empleados || []
-    });
+    // Traer préstamos activos para mostrarlos en el modal de despacho
+    let prestamosActivos = [];
+    try {
+        const { data: p } = await supabase.from('prestamos_fabriquines').select('*').eq('estado', 'activo');
+        prestamosActivos = p || [];
+    } catch(e) {}
+
+    res.render('despacho', { empleados: empleados || [], prestamos: prestamosActivos });
 });
 
 app.post('/despachar_tarea', async (req, res) => {
@@ -365,11 +371,11 @@ app.post('/despachar_tarea', async (req, res) => {
         
         let iCapa    = inv.find(i => i.material.toLowerCase().includes('capa'));
         let iCapote  = inv.find(i => i.material.toLowerCase().includes('capote'));
-        let iPicadura = inv.find(i => (i.material.toLowerCase().includes('picadura') || i.material.toLowerCase().includes('tripa') || i.material.toLowerCase().includes('material')) && i.material.toLowerCase() !== 'materia prima');
+        let iPicadura= inv.find(i => (i.material.toLowerCase().includes('picadura') || i.material.toLowerCase().includes('tripa') || i.material.toLowerCase().includes('material')) && i.material.toLowerCase() !== 'materia prima');
         
-        if (!iCapa    || iCapa.cantidad    < c)  return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capa. Requerida: ${c}kg, Disponible: ${iCapa ? iCapa.cantidad : 0}kg`, 'error'));
-        if (!iCapote  || iCapote.cantidad  < cp) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Capote. Requerida: ${cp}kg, Disponible: ${iCapote ? iCapote.cantidad : 0}kg`, 'error'));
-        if (!iPicadura || iPicadura.cantidad < pi) return res.send(mostrarAlerta('Stock Insuficiente', `Falta Picadura. Requerida: ${pi}kg, Disponible: ${iPicadura ? iPicadura.cantidad : 0}kg`, 'error'));
+        if (!iCapa || iCapa.cantidad < c) { return res.send(mostrarAlerta('Stock Insuficiente', 'No hay suficiente Capa en el inventario.', 'error')); }
+        if (!iCapote || iCapote.cantidad < cp) { return res.send(mostrarAlerta('Stock Insuficiente', 'No hay suficiente Capote en el inventario.', 'error')); }
+        if (!iPicadura || iPicadura.cantidad < pi) { return res.send(mostrarAlerta('Stock Insuficiente', 'No hay suficiente Picadura en el inventario.', 'error')); }
         
         for (let item of inv) {
             let m = item.material.toLowerCase();
@@ -382,9 +388,9 @@ app.post('/despachar_tarea', async (req, res) => {
         }
     }
     
-    // 2. Kardex
+    // 2. Kardex // Omitimos Kardex de Goma y Periódico temporalmente
     const nombreCorto = empleado.nombre.split(' ').slice(0, 2).join(' ');
-    const desc = `Despacho Tarea [${nuevaMeta} META GLOBAL] a ${empleado.codigo} - ${nombreCorto}`;
+    const desc = `Despacho Tarea [${nuevaMeta} META] a ${empleado.codigo} - ${nombreCorto}`;
     await supabase.from('movimientos').insert([
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capa',    cantidad: capaKgReal,     usuario: 'Admin', descripcion: desc },
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: 'Capote',  cantidad: capoteKgReal,   usuario: 'Admin', descripcion: desc },
@@ -392,21 +398,70 @@ app.post('/despachar_tarea', async (req, res) => {
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: colorCesta,cantidad: cestasCant,     usuario: 'Admin', descripcion: desc }
     ]);
 
-    // 3A. Actualizar deuda de tabacos (SIEMPRE - columna original garantizada)
+    // 3. Actualizar Goma, Periódico y Préstamos
+    const abono_prestamo = parseInt(req.body.abono_prestamo) || 0;
+    const nuevo_prestamo = parseInt(req.body.nuevo_prestamo) || 0;
+    const goma_uds       = parseFloat(req.body.goma_uds)     || 0;
+    const goma_num       = req.body.goma_num                 || "";
+    const periodico_kg   = parseFloat(req.body.periodico_kg) || 0;
+
+    const valor_goma      = 60000;
+    const valor_periodico = 6000;
+    
+    const costo_goma      = goma_uds * valor_goma;
+    const costo_periodico = periodico_kg * valor_periodico;
+    const total_nuevos_cargos = nuevo_prestamo + costo_goma + costo_periodico;
+
+    // Obtener préstamo activo o crearlo
+    let saldoAntPrestamo = 0;
+    let nuevoSaldoPrestamo = 0;
+    try {
+        const { data: prest } = await supabase.from('prestamos_fabriquines').select('*').eq('empleado_id', empleado.id).eq('estado', 'activo').single();
+        if (prest) {
+            saldoAntPrestamo = parseFloat(prest.saldo_pendiente);
+            nuevoSaldoPrestamo = saldoAntPrestamo + total_nuevos_cargos - abono_prestamo;
+            nuevoSaldoPrestamo = Math.max(0, nuevoSaldoPrestamo); // Evitar negativos
+            const nuevoEstado = nuevoSaldoPrestamo === 0 ? 'pagado' : 'activo';
+            
+            await supabase.from('prestamos_fabriquines').update({ 
+                saldo_pendiente: nuevoSaldoPrestamo, 
+                estado: nuevoEstado,
+                monto_total: parseFloat(prest.monto_total) + total_nuevos_cargos // Aumentamos la base
+            }).eq('id', prest.id);
+
+            if (abono_prestamo > 0) {
+                await supabase.from('abonos_prestamo').insert([{
+                    prestamo_id: prest.id, empleado_id: empleado.id, monto_abono: abono_prestamo,
+                    fecha_abono: tiempo.fecha, semana_ref: `Despacho ${tiempo.fecha}`
+                }]);
+            }
+        } else if (total_nuevos_cargos > 0) {
+            saldoAntPrestamo = 0;
+            nuevoSaldoPrestamo = total_nuevos_cargos - abono_prestamo;
+            if (nuevoSaldoPrestamo > 0) {
+                await supabase.from('prestamos_fabriquines').insert([{
+                    empleado_id: empleado.id, monto_total: total_nuevos_cargos,
+                    saldo_pendiente: nuevoSaldoPrestamo, concepto: desc, estado: 'activo'
+                }]);
+            }
+        }
+    } catch(e) {}
+
+    // 4A. Actualizar deuda de tabacos (SIEMPRE)
     await supabase.from('empleados_fabriquines').update({
         deuda_tabacos: nuevaMeta
     }).eq('id', empleado.id);
 
-    // 3B. Actualizar saldos de material (requiere migracion SQL v250 - no falla el flujo si no existe)
+    // 4B. Actualizar saldos de material (requiere migracion SQL v250 - no falla si no existe)
     try {
         await supabase.from('empleados_fabriquines').update({
             saldo_capa_kg:     Math.max(0, nuevoSaldoCapa),
             saldo_capote_kg:   Math.max(0, nuevoSaldoCapote),
             saldo_picadura_kg: Math.max(0, nuevoSaldoPicadura)
         }).eq('id', empleado.id);
-    } catch(e) { /* columnas aún no migradas — sin problema */ }
+    } catch(e) { }
 
-    // 4. Formato imprimible
+    // 5. Formato imprimible
     const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
     res.render('formato_despacho', {
         empleado: empleado,
@@ -422,6 +477,16 @@ app.post('/despachar_tarea', async (req, res) => {
             nuevo_saldo_capote:   Math.max(0, nuevoSaldoCapote).toFixed(2),
             nuevo_saldo_picadura: Math.max(0, nuevoSaldoPicadura).toFixed(2),
             cestas: cestasCant, color_cesta: colorCesta
+        },
+        suministros: {
+            goma_uds: goma_uds, goma_num: goma_num, costo_goma: costo_goma,
+            periodico_kg: periodico_kg, costo_periodico: costo_periodico
+        },
+        prestamo: {
+            saldo_anterior: saldoAntPrestamo,
+            abono: abono_prestamo,
+            nuevo_saldo: nuevoSaldoPrestamo,
+            nuevos_cargos: total_nuevos_cargos
         }
     });
 });
@@ -984,12 +1049,34 @@ app.get('/imprimir_nomina_v18/:id', async (req, res) => {
     const pago_recorte = reg.recorte_kg * VALOR_RECORTE;
     const pago_vena = reg.vena_kg * VALOR_VENA;
     const pago_extras = reg.extra_tabacos * VALOR_EXTRA;
-    const total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
+    let total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
+    
+    // Buscar si tuvo descuentos por préstamos o suministros en esta semana
+    let descuentos = 0;
+    try {
+        const { data: abonos } = await supabase.from('abonos_prestamo')
+            .select('monto_abono')
+            .eq('empleado_id', emp.id)
+            .gte('fecha_abono', reg.semana_inicio);
+            
+        if (abonos) {
+            abonos.forEach(a => descuentos += parseFloat(a.monto_abono || 0));
+        }
+    } catch(e) {}
+
+    const total_neto = Math.max(0, total_ganado - descuentos);
     
     res.render('formato_nomina_v18', {
         empleado: emp, reg: reg, tiempo: obtenerHoraColombia(),
         totales: { tabacos: total_tabacos, cestas: total_cestas },
-        pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_ganado, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }
+        pagos: { 
+            pago_tabacos, pago_recorte, pago_vena, pago_extras, 
+            total_bruto: total_ganado,
+            descuentos: descuentos,
+            total_neto: total_neto,
+            valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, 
+            valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA 
+        }
     });
 });
 

@@ -22,13 +22,17 @@
                style="width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 4px;"
                oninput="filtrarFabriquines()" onfocus="mostrarDropdown()" onblur="setTimeout(cerrarDropdown, 200)">
         <div id="fab_dropdown" style="display:none; background:#1e1e1e; border: 1px solid #f59e0b; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 100;">
-            <% empleados.forEach(emp => { %>
+            <% empleados.forEach(emp => { 
+                const prest = prestamos.find(p => p.empleado_id === emp.id);
+                const saldoPrest = prest ? prest.saldo_pendiente : 0;
+            %>
             <div class="fab-opcion"
                  data-id="<%= emp.id %>"
                  data-saldo="<%= emp.deuda_tabacos %>"
                  data-capa="<%= emp.saldo_capa_kg || 0 %>"
                  data-capote="<%= emp.saldo_capote_kg || 0 %>"
                  data-picadura="<%= emp.saldo_picadura_kg || 0 %>"
+                 data-prestamo="<%= saldoPrest %>"
                  data-texto="<%= emp.codigo %> - <%= emp.nombre %>"
                  onclick="seleccionarFab(this)"
                  style="padding: 10px 14px; cursor: pointer; color: #eee; border-bottom: 1px solid #333; font-size: 15px;">
@@ -67,6 +71,51 @@
             <option value="Cestas Azules">🔵 Cestas Azules</option>
             <option value="Cestas Negras">⚫ Cestas Negras</option>
         </select>
+
+        <!-- 4. PRÉSTAMOS Y SUMINISTROS EXTRA -->
+        <div style="background: #fef9c3; border: 1px solid #fde047; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top:0; color:#854d0e; font-size:16px;">💰 Gestión de Préstamos y Suministros (Opcional)</h3>
+            
+            <p style="margin: 0 0 10px 0; color: #b45309; font-weight: bold;">
+                Deuda Actual (Préstamo): $<span id="lbl_deuda_prestamo">0</span> COP
+            </p>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💸 Abono al Préstamo ($):</label>
+                    <input type="number" name="abono_prestamo" id="abono_prestamo" placeholder="Ej: 50000" min="0" oninput="validarAbono()"
+                           style="width: 100%; padding: 8px; border: 1px solid #ca8a04; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💵 Nuevo Préstamo ($):</label>
+                    <input type="number" name="nuevo_prestamo" placeholder="Ej: 200000" min="0"
+                           style="width: 100%; padding: 8px; border: 1px solid #ca8a04; border-radius: 6px;">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #ca8a04; margin: 15px 0;">
+
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💧 Goma (Uds 0.25):</label>
+                    <input type="number" name="goma_uds" placeholder="Ej: 0.25" step="0.01" min="0" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">🔢 Goma (# Ref):</label>
+                    <input type="text" name="goma_num" placeholder="Ej: #23" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">🗞️ Periódico (Kg):</label>
+                    <input type="number" name="periodico_kg" placeholder="Ej: 1" step="0.5" min="0" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+            </div>
+            <p style="margin: 8px 0 0 0; font-size:12px; color:#713f12;">
+                * La Goma ($60.000 /ud) y Periódico ($6.000 /kg) se sumarán automáticamente a la deuda del préstamo.
+            </p>
+        </div>
 
         <!-- SIMULAR -->
         <button type="button" onclick="simularCalculo()" style="width: 100%; background: #3b82f6; font-size: 16px; margin-bottom: 20px;">🧮 Calcular Pesaje</button>
@@ -119,6 +168,8 @@
 </div>
 
 <script>
+    let currentPrestamo = 0;
+
     // --- BUSCADOR DE FABRIQUINES ---
     function mostrarDropdown() { document.getElementById('fab_dropdown').style.display = 'block'; }
     function cerrarDropdown()  { document.getElementById('fab_dropdown').style.display = 'none'; }
@@ -134,6 +185,11 @@
         document.getElementById('empleado_id').value = div.getAttribute('data-id');
         cerrarDropdown();
 
+        // Préstamo
+        currentPrestamo = parseFloat(div.getAttribute('data-prestamo')) || 0;
+        document.getElementById('lbl_deuda_prestamo').innerText = currentPrestamo.toLocaleString('es-CO');
+        document.getElementById('abono_prestamo').max = currentPrestamo;
+        
         const saldo = parseFloat(div.getAttribute('data-saldo')) || 0;
         document.getElementById('saldo_alerta').style.display = saldo > 0 ? 'block' : 'none';
         if (saldo > 0) document.getElementById('saldo_info').innerText = saldo.toLocaleString('es-CO');
@@ -149,6 +205,14 @@
 
         document.getElementById('resultado_calculo').style.display = 'none';
         document.getElementById('btn_submit').disabled = true;
+    }
+
+    function validarAbono() {
+        const abono = parseFloat(document.getElementById('abono_prestamo').value) || 0;
+        if (abono > currentPrestamo) {
+            alert("El abono no puede superar la deuda actual de $" + currentPrestamo.toLocaleString());
+            document.getElementById('abono_prestamo').value = currentPrestamo;
+        }
     }
 
     // --- SIMULACIÓN CON MATERIAL EDITABLE ---

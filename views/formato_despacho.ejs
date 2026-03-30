@@ -46,7 +46,8 @@
             <img src="/img/logo.png" alt="Gato Negro Logo" style="width: 120px; margin-bottom: 10px;">
             <h2>FABRICA DE TABACOS GATO NEGRO</h2>
             "Gonzalo Jaimes Bastos"<br>
-            RIF. V-06676738-4
+            RIF. V-06676738-4<br><br>
+            <span style="font-size: 18px; border: 1px solid #000; padding: 5px;">ORDEN DE PRODUCCIÓN Y DESPACHO V2.6.1</span>
         </div>
         
         <table class="datos-empleado">
@@ -117,11 +118,44 @@
                 <!-- ITEMS FIJOS -->
                 <tr><td class="left-align">CESTAS (<%= params.color_cesta %>)</td><td>UDS</td><td>0</td><td style="font-weight: bold; font-size: 16px;"><%= params.cestas %></td><td></td><td></td><td></td></tr>
                 <tr><td class="left-align">SACAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td class="left-align">GOMA</td><td>LITROS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td class="left-align">PERIODICO</td><td>KG</td><td>0</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td class="left-align">TRAPOS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                
+                <!-- GOMA -->
+                <tr>
+                    <td class="left-align">GOMA <%= suministros && suministros.goma_num ? suministros.goma_num : '' %></td>
+                    <td>UDS</td>
+                    <td></td>
+                    <td style="font-weight: bold; font-size: 15px;"><%= suministros && suministros.goma_uds ? suministros.goma_uds : '' %></td>
+                    <td style="color: #b45309; font-weight:bold;"><%= suministros && suministros.costo_goma ? suministros.costo_goma.toLocaleString('es-CO') : '' %></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+                <!-- PERIODICO -->
+                <tr>
+                    <td class="left-align">PERIODICO</td>
+                    <td>KG</td>
+                    <td></td>
+                    <td style="font-weight: bold; font-size: 15px;"><%= suministros && suministros.periodico_kg > 0 ? suministros.periodico_kg : '' %></td>
+                    <td style="color: #b45309; font-weight:bold;"><%= suministros && suministros.costo_periodico ? suministros.costo_periodico.toLocaleString('es-CO') : '' %></td>
+                    <td></td>
+                    <td></td>
+                </tr>
+
+                <!-- PRÉSTAMOS -->
+                <tr>
+                    <td class="left-align" style="color: #991b1b;">PRÉSTAMOS</td>
+                    <td>$COP</td>
+                    <td style="font-weight:bold;"><%= prestamo && prestamo.saldo_anterior ? prestamo.saldo_anterior.toLocaleString('es-CO') : '0' %></td>
+                    <td style="font-weight:bold;"><%= prestamo && prestamo.nuevos_cargos > 0 ? prestamo.nuevos_cargos.toLocaleString('es-CO') : '' %></td>
+                    <td style="font-weight:bold; color:#047857;"><%= prestamo && prestamo.abono > 0 ? prestamo.abono.toLocaleString('es-CO') : '' %></td>
+                    <td style="font-weight:bold; color:#991b1b;"><%= prestamo && prestamo.nuevo_saldo ? prestamo.nuevo_saldo.toLocaleString('es-CO') : '0' %></td>
+                    <td></td>
+                </tr>
+
+                <tr><td class="left-align">MARCADOR</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
                 <tr><td class="left-align">RESORTES</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
-                <tr><td class="left-align">MAQ. ROLLERAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">MAQUINAS ROLLERAS</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
+                <tr><td class="left-align">CUCHILLAS / CORTADORES</td><td>UDS</td><td>0</td><td></td><td></td><td></td><td></td></tr>
             </tbody>
         </table>
         
