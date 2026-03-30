@@ -545,6 +545,40 @@ app.get('/eliminar_maquina/:id', async (req, res) => {
     res.redirect('/maquinas');
 });
 
+// --- EDITAR MÁQUINA Y FORZAR HISTÓRICO DE MTTO ---
+app.post('/editar_maquina/:id', async (req, res) => {
+    if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
+    
+    // Objeto con los datos a actualizar
+    const datosActualizados = {
+        nombre: req.body.nombre,
+        area: req.body.area,
+        marca: req.body.marca,
+        modelo: req.body.modelo,
+        horas_dia: parseInt(req.body.horas_dia) || 8,
+        codigo: req.body.codigo,
+        estado: req.body.estado,
+        observaciones: req.body.observaciones,
+        fabricante: req.body.fabricante,
+        frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30
+    };
+
+    // Si el administrador le metió una fecha manual histórica, la inyectamos para apagar alertas rojas
+    if (req.body.ultimo_mtto) {
+        datosActualizados.ultimo_mtto = req.body.ultimo_mtto;
+    }
+
+    const { error } = await supabase.from('maquinas')
+        .update(datosActualizados)
+        .eq('id', req.params.id);
+
+    if (error) {
+        console.error("❌ ERROR AL EDITAR MÁQUINA:", error);
+    }
+
+    res.redirect('/maquinas');
+});
+
 // --- FICHA TÉCNICA DIGITAL (CV DE LA MÁQUINA) ---
 app.get('/maquinas/ficha/:id', async (req, res) => {
     const maquinaId = req.params.id;
@@ -683,6 +717,44 @@ app.get('/maquina/:id/qr', async (req, res) => {
 });
 
 // ==================== FASE 5: NÓMINA Y FACTURACIÓN ====================
+
+// --- DASHBOARD ANALÍTICO Y FINANCIERO (V2.3) ---
+app.get('/analitica', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+
+    // 1. Obtener gastos de Nómina (Pagos completados a la mano obrera)
+    const { data: produccion } = await supabase.from('produccion_fabriquines')
+                                         .select('total_ganado')
+                                         .eq('estado', 'PAGADO');
+    let totalNomina = 0;
+    if (produccion) {
+        produccion.forEach(p => totalNomina += parseFloat(p.total_ganado || 0));
+    }
+
+    // 2. Obtener gastos Confidenciales de Mantenimiento de Maquinaria
+    const { data: mantenimientos } = await supabase.from('mantenimiento')
+                                             .select('costo_mo, costo_mat')
+                                             .eq('estado', 'REALIZADO');
+    let totalMantenimiento = 0;
+    if (mantenimientos) {
+        mantenimientos.forEach(m => totalMantenimiento += (parseFloat(m.costo_mo || 0) + parseFloat(m.costo_mat || 0)));
+    }
+
+    // 3. Obtener Ingresos Mayoristas (Anclado temporalmente en 0 hasta V3.0)
+    const totalIngresos = 0; 
+
+    // 4. Agrupar la sábana gigante de datos de Movimientos para Chart.js
+    const { data: raw_movs } = await supabase.from('movimientos')
+                                         .select('tipo_movimiento, material, cantidad, fecha');
+
+    const finanzas = {
+        ingresos: totalIngresos,
+        nomina: totalNomina,
+        mantenimiento: totalMantenimiento
+    };
+
+    res.render('analitica', { finanzas, raw_movs: raw_movs || [] });
+});
 
 // --- PANEL DEL FABRIQUÍN (Cierre Diario) ---
 app.get('/cierre_diario', async (req, res) => {

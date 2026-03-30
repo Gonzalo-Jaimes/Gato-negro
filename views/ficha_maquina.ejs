@@ -125,21 +125,7 @@
         <div class="dato-item" style="grid-column: 1 / -1;"><strong>Observaciones</strong><span><%= maquina.observaciones || 'Ninguna' %></span></div>
     </div>
 
-    <!-- PANEL FINANCIERO -->
-    <div class="panel-financiero" style="background: #1e293b; color: white; padding: 20px; border-radius: 8px; margin-bottom: 30px; display: flex; justify-content: space-around; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-        <div>
-            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Correctivos</span>
-            <span style="font-size: 22px; font-weight: bold; color: #ef4444;">$<%= (maquina.costo_correctivo || 0).toLocaleString('es-CO') %> COP</span>
-        </div>
-        <div style="border-left: 1px solid #475569; padding-left: 20px;">
-            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💰 Total Preventivos</span>
-            <span style="font-size: 22px; font-weight: bold; color: #10b981;">$<%= (maquina.costo_preventivo || 0).toLocaleString('es-CO') %> COP</span>
-        </div>
-        <div style="border-left: 1px solid #475569; padding-left: 20px;">
-            <span style="display: block; font-size: 12px; color: #cbd5e1; text-transform: uppercase;">💵 Inversión Total</span>
-            <span style="font-size: 22px; font-weight: bold;">$<%= (maquina.costo_total || 0).toLocaleString('es-CO') %> COP</span>
-        </div>
-    </div>
+    <!-- PANEL FINANCIERO (REMOVIDO POR POLÍTICAS DE SEGURIDAD V2.2) -->
 
     <div class="historial-title">
         <h2>📋 Historial Clínico (Mantenimientos)</h2>

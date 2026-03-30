@@ -1,5 +1,19 @@
 <%- include('partials/header') %>
 
+<!-- SELECT2 & JQUERY CDNs -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* Soporte Dark Mode Robusto para la Librería Select2 */
+    html.dark-mode .select2-container--default .select2-selection--single { background-color: #222 !important; border-color: #444 !important; color: white !important; height: 38px; }
+    html.dark-mode .select2-container--default .select2-selection--single .select2-selection__rendered { color: white !important; line-height: 38px; }
+    html.dark-mode .select2-dropdown { background-color: #222 !important; color: white !important; border-color: #444 !important; z-index: 9999; }
+    html.dark-mode .select2-container--default .select2-results__option--selected { background-color: #444 !important; }
+    html.dark-mode .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #3b82f6 !important; color: white !important; }
+    html.dark-mode .select2-search--dropdown .select2-search__field { background-color: #111 !important; color: white !important; border: 1px solid #555 !important; }
+</style>
 <h1>🔧 Órdenes de Mantenimiento</h1>
 <hr>
 
@@ -17,18 +31,19 @@
 
     <div>
         <label><strong>Máquina / Equipo:</strong></label><br>
-        <select name="maquina" required style="width: 100%; padding: 8px;">
-            <option value="">Seleccione un equipo...</option>
+        <select name="maquina" class="select2-maquinas" required style="width: 100%; padding: 8px;">
+            <option value="">Seleccione o escriba un equipo...</option>
             <% maquinas.forEach(function(m) { %>
                 <option value="<%= m.nombre %>"><%= m.nombre %> (<%= m.codigo %>)</option>
             <% }); %>
         </select>
     </div>
     <div>
-        <label><strong>Tipo de Mantenimiento:</strong></label><br>
+        <label><strong>Tipo de Actividad / Mantenimiento:</strong></label><br>
         <select name="tipo" style="width: 100%; padding: 8px;">
-            <option value="Preventivo">🟢 Mantenimiento Preventivo</option>
-            <option value="Correctivo">🔴 Mantenimiento Correctivo</option>
+            <option value="Limpieza Post-Produccion">🔵 Limpieza y Rutina Post-Producción</option>
+            <option value="Preventivo">🟢 Mantenimiento Preventivo (Rutina Pesada)</option>
+            <option value="Correctivo">🔴 Mantenimiento Correctivo (Alerta Máxima)</option>
         </select>
     </div>
 
@@ -94,7 +109,9 @@
         <td><%= mtto.fecha %><br><small><%= mtto.hora %></small></td>
         <td style="text-transform: capitalize;"><strong><%= mtto.maquina %></strong></td>
         <td>
-            <% if (mtto.tipo === 'Preventivo') { %> 🟢 Preventivo <% } else { %> 🔴 Correctivo <% } %>
+            <% if (mtto.tipo === 'Preventivo') { %> 🟢 Preventivo 
+            <% } else if (mtto.tipo === 'Correctivo') { %> 🔴 Correctivo
+            <% } else { %> 🔵 <%= mtto.tipo %> <% } %>
         </td>
         <td style="text-transform: capitalize;"><%= mtto.hecho_por %></td>
         <td style="text-align: left; font-size: 14px;">
@@ -114,6 +131,15 @@
 </table>
 
 <script>
+    // Inicialización del Motor Inteligente de Búsqueda de Máquinas
+    $(document).ready(function() {
+        $('.select2-maquinas').select2({
+            placeholder: "🔍 Escriba el nombre o código...",
+            allowClear: true,
+            width: '100%' // Forzar acoplamiento con CSS heredado
+        });
+    });
+
     document.getElementById('inputBusqueda').addEventListener('keyup', function() {
         let textoBusqueda = this.value.toLowerCase();
         let filas = document.querySelectorAll('.fila-mtto');

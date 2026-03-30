@@ -1,7 +1,7 @@
 # Análisis Arquitectónico y Documentación Técnica: Gato Negro ERP
 ## Sistema Avanzado de Gestión de Producción y Cierres Contables
 
-**Versión Actual**: 2.2.0 (Estable - Producción)  
+**Versión Actual**: 2.3.0 (Estable - Producción)  
 **Fecha de Actualización**: Finales de Marzo 2026  
 **Despliegue**: Frontend en Vercel (Edge Network) + Backend Serverless en Supabase (PostgreSQL)  
 
@@ -28,8 +28,8 @@
 - **V1.8.2:** Muerte del sistema de Pedidos Libres. Transición a Despacho Dirigido, Recepción Acumulativa Matricial (L-S) y Cierres de Nómina complejos.
 - **V2.0.0:** Implementación de Seguridad Criptográfica (BCrypt) para todos los usuarios y blindaje del Login.
 - **V2.1.0:** Desacople Contable. Creación del Módulo de Nómina para centralizar impresión de pagos e integrar Control de Lotes.
-- **V2.2.0 (Actual):** Motor Transaccional y Diferencial "En Vivo". Inteligencia matemática para inyectar al Kardex las Mermas, Cestas y Extras de Venta de forma instantánea. Control estricto transaccional anti-negativos (Sobregiros de stock).
-
+- **V2.2.0:** Motor Transaccional y Diferencial "En Vivo". Inteligencia matemática para inyectar al Kardex las Mermas, Cestas y Extras de Venta de forma instantánea. Control estricto transaccional anti-negativos (Sobregiros de stock).
+- **V2.3.0 (Actual):** Módulo Analítico Financiero (BI) con renderizado dinámico `Chart.js` y Módulo Avanzado de Mantenimiento e Impresión QR Selectiva.
 ---
 
 ## 🏗️ 2. Arquitectura General (V1.8)
@@ -167,4 +167,15 @@ Se incrustó un nuevo Dashboard secundario al fondo del Inventario llamado **"Lo
 
 ## 🏁 9. Conclusión V2.2 (Enterprise-Ready)
 - **Status:** Sistema Erradicado de Monolito Arcaico. Convertido en un **ERP Transaccional Completamente Escalable**. Protegido mediante criptografía BCrypt, con barreras lógicas de seguridad de inventario de nivel bancario, UX predictiva sin fisuras, e integraciones logísticas 100% aisladas del organigrama financiero. 
-- **Perspectiva Futura:** Migraciones UI/UX de frameworks para robustecer componentes. Integración con puntos de venta Directos.
+
+---
+
+## 📊 10. Evolución Business Intelligence (Serie V2.3)
+
+### Dashboard Analítico Centralizado
+A raíz de políticas de seguridad financiera, todo el componente de *Inversión Monetaria* expuesto públicamente en Códigos QR de las máquinas de manufactura, fue extirpado de la vista pública y confinado al **Motor Analítico (Business Intelligence)**. Este motor asíncrono sumariza el inventario (`movimientos`), destila los balances absolutos de la `nómina_historica` pagada y contabiliza todos los repuestos averiados para brindar una sábana gigante de Big Data procesable en tiempo real a la gerencia, inyectado sobre `Chart.js`.
+
+### Mantenimiento Extendido (UI/UX Select2 & Post-Limpieza)
+El control industrial requería mayor flexibilidad interactiva. Se ancló la librería **Select2** para predecir nombres de máquinas reduciendo fricción (Scrolls), se tipificó el *Mantenimiento Autónomo (Limpieza Rutinaria)* permitiendo un trackeo histórico sin afectar el ciclo del mantenimiento preventivo pesado, y se creó la arquitectura de **Spool Mágico**. Ahora la interfaz `QR_Maquinas` inyecta Casillas Selectivas por cada dispositivo en el Dom, filtrando y pre-ocultando con el atributo `@media print` las fíchas irrelevantes y ahorrando consumibles de papel en oficina al oprimir imprimir.
+
+- **Perspectiva Futura:** Fase 3 (Producción P2P: Expansión de deuda/entregas hacia Eslabones de Empaque / Anilladores). Integración con puntos de venta Directos.

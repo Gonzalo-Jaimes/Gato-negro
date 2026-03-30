@@ -47,7 +47,7 @@
         <th>Máquina / Equipo</th>
         <th>Ubicación / Trabajo</th>
         <th>Marca - Modelo</th>
-        <th>Salud y Costos</th>
+        <th>Salud del Equipo</th>
         <th>Acción</th>
     </tr>
 
@@ -74,15 +74,82 @@
             <% } else { %>
                 <span style="color: green; font-size: 13px;">🟢 Mtto al Día (<%= m.dias_para_mtto %>d)</span>
             <% } %>
-
-            <br><span style="font-size: 13px;">💰 <b>$<%= m.costo_historico.toLocaleString('es-CO') %> COP</b> invertidos</span>
         </td>
         <td>
-            <a href="/eliminar_maquina/<%= m.id %>">
-                <button style="background: #ef4444; padding: 6px 12px;">🗑 Borrar</button>
+            <button onclick="document.getElementById('modal-editar-<%= m.id %>').style.display='block'" style="background: #3b82f6; padding: 6px 12px; margin-bottom: 5px; color:white; border-radius: 4px; border:none; cursor: pointer;">✏️ Editar</button>
+            <br>
+            <a href="/eliminar_maquina/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">
+                <button style="background: #ef4444; padding: 6px 12px; color:white; border-radius: 4px; border:none; cursor: pointer;">🗑 Borrar</button>
             </a>
         </td>
     </tr>
+
+    <!-- MODAL EDITAR MÁQUINA -->
+    <div id="modal-editar-<%= m.id %>" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); z-index: 999; overflow-y: auto;">
+        <div style="background: white; width: 500px; max-width: 90%; margin: 50px auto; padding: 20px; border-radius: 8px; position: relative;">
+            <button onclick="document.getElementById('modal-editar-<%= m.id %>').style.display='none'" style="position: absolute; top: 10px; right: 10px; background: none; color: black; font-size: 20px; border:none; cursor: pointer;">✖</button>
+            <h2 style="margin-top: 0; color: #222;">✏️ Editar: <%= m.nombre %></h2>
+            <form action="/editar_maquina/<%= m.id %>" method="POST" style="display: flex; flex-direction: column; gap: 10px; color: #333;">
+                
+                <label><strong>Nombre de la Máquina:</strong></label>
+                <input type="text" name="nombre" value="<%= m.nombre %>" required style="padding: 8px; border: 1px solid #ccc;">
+
+                <label><strong>Área:</strong></label>
+                <input type="text" name="area" value="<%= m.area %>" style="padding: 8px; border: 1px solid #ccc;">
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label><strong>Marca:</strong></label>
+                        <input type="text" name="marca" value="<%= m.marca %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label><strong>Modelo:</strong></label>
+                        <input type="text" name="modelo" value="<%= m.modelo %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;">
+                    </div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div style="flex: 1;">
+                        <label><strong>Código de Inventario:</strong></label>
+                        <input type="text" name="codigo" value="<%= m.codigo %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;">
+                    </div>
+                    <div style="flex: 1;">
+                        <label><strong>Horas Operación/Día:</strong></label>
+                        <input type="number" name="horas_dia" value="<%= m.horas_dia %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;">
+                    </div>
+                </div>
+                
+                <label><strong>Estado Actual:</strong></label>
+                <select name="estado" style="padding: 8px; border: 1px solid #ccc;">
+                    <option value="Funcional" <%= m.estado === 'Funcional' ? 'selected' : '' %>>🟢 Funcional (Optimo)</option>
+                    <option value="Falla Menor" <%= m.estado === 'Falla Menor' ? 'selected' : '' %>>🟡 Falla Menor (Trabajando)</option>
+                    <option value="No Funcional" <%= m.estado === 'No Funcional' ? 'selected' : '' %>>🔴 No Funcional (Detenida)</option>
+                    <option value="Guardada" <%= m.estado === 'Guardada' ? 'selected' : '' %>>⚪ Guardada en Bodega</option>
+                </select>
+
+                <div style="background: #e0e7ff; padding: 10px; border-left: 4px solid #4338ca; margin-top: 10px; border-radius: 4px;">
+                    <label style="color: #4338ca; font-weight: bold;">Configuración Matemática de Mtto:</label>
+                    <p style="font-size: 13px; color: #555; margin: 5px 0;">La frecuencia en días dictamina las alertas preventivas.</p>
+                    <div style="display: flex; gap: 10px; align-items: center;">
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px;"><strong>Frecuencia (Días):</strong></label>
+                            <input type="number" name="frecuencia_mtto_dias" value="<%= m.frecuencia_mtto_dias %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;" required>
+                        </div>
+                        <div style="flex: 1;">
+                            <label style="font-size: 12px;"><strong>Último Histórico:</strong></label>
+                            <input type="date" name="ultimo_mtto" value="<%= m.ultimo_mtto ? m.ultimo_mtto : '' %>" style="padding: 8px; width: 100%; box-sizing: border-box; border: 1px solid #ccc;">
+                        </div>
+                    </div>
+                </div>
+
+                <label><strong>Observaciones y Fabricante:</strong></label>
+                <input type="text" name="observaciones" value="<%= m.observaciones %>" style="padding: 8px; border: 1px solid #ccc;" placeholder="Observaciones">
+                <input type="hidden" name="fabricante" value="<%= m.fabricante %>">
+
+                <button type="submit" style="background: #2563eb; color: white; padding: 12px; margin-top: 15px; font-weight: bold; font-size: 16px; border: none; border-radius: 6px; cursor: pointer;">💾 Aplicar Cambios Master</button>
+            </form>
+        </div>
+    </div>
     <% }); %>
 </table>
 
