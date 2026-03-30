@@ -143,46 +143,69 @@
     <h2>Menú</h2>
     
     <% if (session.rol === "admin") { %>
+        <!-- 🏢 ADMINISTRACIÓN GLOBAL -->
         <div style="margin-bottom: 5px;">
-    <a href="#" onclick="document.getElementById('submenu-inv').style.display = document.getElementById('submenu-inv').style.display === 'none' ? 'block' : 'none';">
-        📦 Inventario ▾
-    </a>
-    <div id="submenu-inv" style="display: none; background-color: #2a2a2a; border-left: 3px solid #f59e0b; margin-left: 10px;">
-        <a href="/inventario">📊 Stock (Tarjetas)</a>
-        <a href="/movimientos">🔄 Entradas y Salidas</a>
-    </div>
-</div>
-
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-emp').style.display = document.getElementById('submenu-emp').style.display === 'none' ? 'block' : 'none';">
-                📦 Área Empacado ▾
+            <a href="#" onclick="document.getElementById('submenu-admin').style.display = document.getElementById('submenu-admin').style.display === 'none' ? 'block' : 'none';">
+                🏢 Central de Negocios ▾
             </a>
-            <!-- Bloque de Producción V1.8 -->
-            <div style="font-size: 13px; font-weight: bold; color: gray; margin-bottom: 10px; margin-top: 15px; border-bottom: 1px solid #333; padding-bottom: 5px;">🏭 PRODUCCIÓN P2P</div>
-            <a href="/despacho">📝 Despachar Tarea (Fabriquines)</a>
-            <a href="/recepcion_diaria">⚖️ Recepción Diaria (L-S)</a>
-            <a href="/recepcion_empaque">📦 Recepción (Anillado / Empaque)</a>
-        </div>
-        <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="/nomina">💰 Nómina y Pagos</a>
-        </div>
-
-        <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="/analitica">📈 Dashboard Analítico</a>
-        </div>
-
-        <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-maq').style.display = document.getElementById('submenu-maq').style.display === 'none' ? 'block' : 'none';">
-                ⚙️ Equipos y Mtto ▾
-            </a>
-            <div id="submenu-maq" style="display: none; background-color: #2a2a2a; border-left: 3px solid #2563eb; margin-left: 10px;">
-                <a href="/maquinas">⚙️ Inventario Máquinas</a>
-                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
-                <a href="/maquinas/qrs">🖨️ Códigos QR y Fichas</a>
+            <div id="submenu-admin" style="display: none; background-color: #2a2a2a; border-left: 3px solid #64748b; margin-left: 10px;">
+                <a href="/inventario">📦 Inventario Global</a>
+                <a href="/movimientos">🔄 Movimientos / Kardex</a>
+                <a href="/nomina">💰 Nómina y Pagos</a>
+                <a href="/analitica">📈 Dashboard Analítico BI</a>
+                <a href="/empleados">👨‍🏭 Plantilla Empleados</a>
             </div>
         </div>
-        <a href="/empleados">👨‍🏭 Empleados Fabriquines</a>
-        <a href="/usuarios">👥 Usuarios del Sistema</a>
+
+        <!-- 🏭 ÁREA FABRIQUINES -->
+        <div style="margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-fabs').style.display = document.getElementById('submenu-fabs').style.display === 'none' ? 'block' : 'none';">
+                🏭 Área Fabriquines ▾
+            </a>
+            <div id="submenu-fabs" style="display: none; background-color: #2a2a2a; border-left: 3px solid #f59e0b; margin-left: 10px;">
+                <a href="/despacho">📝 Asignar Despachos (Hojas)</a>
+                <a href="/recepcion_diaria">⚖️ Recepción Diaria (L-S)</a>
+                <a href="/entregas_historicas">🔎 Historial / Trazabilidad</a>
+            </div>
+        </div>
+
+        <!-- 💍 ÁREA ANILLADORES -->
+        <div style="margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-anilla').style.display = document.getElementById('submenu-anilla').style.display === 'none' ? 'block' : 'none';">
+                💍 Área Anilladores ▾
+            </a>
+            <div id="submenu-anilla" style="display: none; background-color: #2a2a2a; border-left: 3px solid #8b5cf6; margin-left: 10px;">
+                <a href="#" style="pointer-events: none; opacity: 0.5;">🔜 Despachar Crudos...</a>
+                <a href="#" style="pointer-events: none; opacity: 0.5;">🔜 Recibir Anillados...</a>
+            </div>
+        </div>
+
+        <!-- 🍬 ÁREA ENVOLVEDORAS -->
+        <div style="margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-empaque').style.display = document.getElementById('submenu-empaque').style.display === 'none' ? 'block' : 'none';">
+                🍬 Área Empacado ▾
+            </a>
+            <div id="submenu-empaque" style="display: none; background-color: #2a2a2a; border-left: 3px solid #ec4899; margin-left: 10px;">
+                <a href="/recepcion_empaque">📦 Recepción (Empaque Físico)</a>
+            </div>
+        </div>
+
+        <!-- ⚙️ MANTENIMIENTO -->
+        <div style="margin-bottom: 5px;">
+            <a href="#" onclick="document.getElementById('submenu-maint').style.display = document.getElementById('submenu-maint').style.display === 'none' ? 'block' : 'none';">
+                ⚙️ Mantenimiento ▾
+            </a>
+            <div id="submenu-maint" style="display: none; background-color: #2a2a2a; border-left: 3px solid #3b82f6; margin-left: 10px;">
+                <a href="/maquinas">⚙️ Inventario Máquinas</a>
+                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
+                <a href="/maquinas/qrs">🖨️ Etiquetas QR / Fichas</a>
+            </div>
+        </div>
+
+        <!-- 🔐 SISTEMA -->
+        <div style="margin-bottom: 5px;">
+            <a href="/usuarios">👥 Accesos y Usuarios</a>
+        </div>
         
     <% } else if (session.rol === "fabricacion" || session.rol === "fabriquin" || session.rol === "envolvedor") { %>
         <a href="/pedidos">📋 Pedidos</a>

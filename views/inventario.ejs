@@ -120,55 +120,6 @@
     }
 </script>
 
-<div style="margin-top: 50px; background: white; padding: 20px; border-radius: 8px; border-top: 4px solid #f59e0b; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-    <h2 style="margin-top: 0; color: #444;">📦 Lotes de Tabaco en Mesa (Sin Procesar)</h2>
-    <p style="color: #666; margin-bottom: 20px; font-size: 14px;">Trazabilidad en tiempo real de los tabacos entregados en la semana por cada fabriquin. Utilice estos lotes para devoluciones por calidad. <strong>(Ya están sumados en el acumulado global de arriba)</strong>.</p>
-    
-    <table style="width: 100%; border-collapse: collapse; text-align: left;">
-        <thead style="background: #1f2937; color: white;">
-            <tr>
-                <th style="padding: 12px; border-radius: 8px 0 0 0;">Fabriquín</th>
-                <th style="padding: 12px;">Semana del</th>
-                <th style="padding: 12px;">Tabacos Totales</th>
-                <th style="padding: 12px; border-radius: 0 8px 0 0;">Estado Lote</th>
-            </tr>
-        </thead>
-        <tbody>
-            <% if (typeof lotes_pendientes !== 'undefined' && lotes_pendientes.length > 0) { %>
-                <% lotes_pendientes.forEach(lote => { 
-                    let sumaLote = lote.lun_tabacos + lote.mar_tabacos + lote.mie_tabacos + lote.jue_tabacos + lote.vie_tabacos + lote.sab_tabacos;
-                    if (sumaLote > 0) {
-                %>
-                <tr style="border-bottom: 1px solid #e5e7eb;">
-                    <td style="padding: 12px; font-weight: bold; text-transform: capitalize;"><%= lote.empleados_fabriquines ? lote.empleados_fabriquines.codigo + ' - ' + lote.empleados_fabriquines.nombre : 'S/N' %></td>
-                    <% 
-                        let dStart = new Date(lote.semana_inicio + "T12:00:00");
-                        let dEnd = new Date(dStart);
-                        let day = dEnd.getDay(); 
-                        let diff = 6 - day; 
-                        if (diff < 0) diff += 7; 
-                        dEnd.setDate(dEnd.getDate() + diff);
-                        
-                        let startStr = dStart.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
-                        let endStr = dEnd.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit' });
-                        let rangoVisual = startStr + " al " + endStr;
-                    %>
-                    <td style="padding: 12px; font-weight: bold; color: #6b7280;"><%= rangoVisual %></td>
-                    <td style="padding: 12px; font-size: 17px; font-weight: 900; color: #d97706;"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
-                    <td style="padding: 12px;">
-                        <% if (lote.estado === 'liquidado') { %>
-                            <span style="background: #e5e7eb; color: #374151; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Cerrado / Cuentas</span>
-                        <% } else { %>
-                            <span style="background: #fef08a; color: #854d0e; padding: 5px 10px; border-radius: 4px; font-size: 12px; font-weight: bold;">Mesa / Activo</span>
-                        <% } %>
-                    </td>
-                </tr>
-                <% } }); %>
-            <% } else { %>
-                <tr><td colspan="4" style="padding: 20px; text-align: center; color: #6b7280; font-style: italic;">No se han recepcionado tabacos físicos durante esta semana.</td></tr>
-            <% } %>
-        </tbody>
-    </table>
-</div>
+
 
 <%- include('partials/footer') %>

@@ -1,7 +1,7 @@
 # Análisis Arquitectónico y Documentación Técnica: Gato Negro ERP
 ## Sistema Avanzado de Gestión de Producción y Cierres Contables
 
-**Versión Actual**: 2.3.0 (Estable - Producción)  
+**Versión Actual**: 2.4.0 (Estable - Producción)  
 **Fecha de Actualización**: Finales de Marzo 2026  
 **Despliegue**: Frontend en Vercel (Edge Network) + Backend Serverless en Supabase (PostgreSQL)  
 
@@ -29,7 +29,8 @@
 - **V2.0.0:** Implementación de Seguridad Criptográfica (BCrypt) para todos los usuarios y blindaje del Login.
 - **V2.1.0:** Desacople Contable. Creación del Módulo de Nómina para centralizar impresión de pagos e integrar Control de Lotes.
 - **V2.2.0:** Motor Transaccional y Diferencial "En Vivo". Inteligencia matemática para inyectar al Kardex las Mermas, Cestas y Extras de Venta de forma instantánea. Control estricto transaccional anti-negativos (Sobregiros de stock).
-- **V2.3.0 (Actual):** Módulo Analítico Financiero (BI) con renderizado dinámico `Chart.js` y Módulo Avanzado de Mantenimiento e Impresión QR Selectiva.
+- **V2.3.0:** Módulo Analítico Financiero (BI) con renderizado dinámico `Chart.js` y Módulo Avanzado de Mantenimiento e Impresión QR Selectiva.
+- **V2.4.0 (Actual):** **Deploy Inicial Fase 3**. Desacople de Navegación por Eslabones Industriales. Extracción de Lotes a un Historial Transaccional Big Data en Tiempo Real `(/entregas_historicas)`.
 ---
 
 ## 🏗️ 2. Arquitectura General (V1.8)

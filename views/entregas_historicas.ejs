@@ -1,0 +1,87 @@
+<%- include('partials/header') %>
+
+<h1>🔎 Historial y Trazabilidad de Entregas Logísticas</h1>
+<hr>
+
+<p style="color: #555; font-size: 15px; margin-bottom: 20px;">Use la barra de búsqueda para auditar semanas, nombres de fabriquines o estados específicos. La tabla mostrará el rendimiento detallado de devoluciones físicas.</p>
+
+<div style="margin-bottom: 20px;">
+    <input type="text" id="buscadorHistorico" placeholder="🔍 Escribe para buscar Fabriquín, Fecha (Ej: 26/03), o Estado..." style="width: 100%; max-width: 500px; padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+</div>
+
+<div style="background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto;">
+    <table style="width: 100%; border-collapse: collapse; text-align: center; min-width: 900px;" id="tablaHistorico">
+        <thead style="background: #111; color: white;">
+            <tr>
+                <th style="padding: 15px; text-align: left;">Fabriquín / Obrero</th>
+                <th style="padding: 15px;">Semana del (ID)</th>
+                <th style="padding: 15px; background: #1e3a8a;">Tabacos (Total)</th>
+                <th style="padding: 15px; background: #065f46;">Cestas Totales</th>
+                <th style="padding: 15px; background: #991b1b;">Recorte Acum.</th>
+                <th style="padding: 15px; background: #9a3412;">Vena Acum.</th>
+                <th style="padding: 15px;">Estado de Cuenta</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (typeof entregas !== 'undefined' && entregas.length > 0) { %>
+                <% entregas.forEach(lote => { 
+                    let sumaLote = lote.lun_tabacos + lote.mar_tabacos + lote.mie_tabacos + lote.jue_tabacos + lote.vie_tabacos + lote.sab_tabacos;
+                    let sumaCestas = lote.lun_cestas + lote.mar_cestas + lote.mie_cestas + lote.jue_cestas + lote.vie_cestas + lote.sab_cestas;
+                    
+                    if (sumaLote > 0 || sumaCestas > 0 || lote.recorte_kg > 0 || lote.vena_kg > 0) {
+                        
+                        // Cálculo de fechas formales Lunes a Sábado
+                        let dStart = new Date(lote.semana_inicio + "T12:00:00");
+                        let dEnd = new Date(dStart);
+                        let day = dEnd.getDay(); 
+                        let diff = 6 - day; 
+                        if (diff < 0) diff += 7; 
+                        dEnd.setDate(dEnd.getDate() + diff);
+                        
+                        let startStr = dStart.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        let endStr = dEnd.toLocaleDateString('es-CO', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                        let rangoVisual = startStr + " al " + endStr;
+                %>
+                <tr class="fila-entrega" style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 15px; font-weight: bold; text-align: left; text-transform: capitalize;">
+                        <%= lote.empleados_fabriquines ? lote.empleados_fabriquines.codigo + ' - ' + lote.empleados_fabriquines.nombre : 'DESCONOCIDO' %>
+                    </td>
+                    
+                    <td style="padding: 15px; font-weight: bold; color: #4b5563;"><%= rangoVisual %></td>
+                    
+                    <td style="padding: 15px; font-size: 18px; font-weight: 900; color: #2563eb;"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
+                    <td style="padding: 15px; font-size: 16px; font-weight: bold; color: #059669;"><%= sumaCestas %> cestas</td>
+                    <td style="padding: 15px; font-weight: bold; color: #dc2626;"><%= lote.recorte_kg ? lote.recorte_kg.toFixed(2) : '0.00' %> kg</td>
+                    <td style="padding: 15px; font-weight: bold; color: #ea580c;"><%= lote.vena_kg ? lote.vena_kg.toFixed(2) : '0.00' %> kg</td>
+                    
+                    <td style="padding: 15px;">
+                        <% if (lote.estado !== 'pendiente') { %>
+                            <span style="background: #d1fae5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">✔ Liquidada y Pagada</span>
+                        <% } else { %>
+                            <span style="background: #fef08a; color: #854d0e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">🟡 Semana Abierta (Sin Liquidar)</span>
+                        <% } %>
+                    </td>
+                </tr>
+                <% } }); %>
+            <% } else { %>
+                <tr><td colspan="7" style="padding: 30px; text-align: center; color: #6b7280; font-style: italic;">No hay registros históricos de entregas en la base de datos.</td></tr>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // Buscador Big Data Asíncrono en Cliente (Filtrado de Tablas)
+    document.getElementById('buscadorHistorico').addEventListener('keyup', function() {
+        let textoBusqueda = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-entrega');
+        
+        filas.forEach(fila => {
+            // Evaluamos la fila completa (Fecha, Nombre, Estado)
+            let match = fila.innerText.toLowerCase().includes(textoBusqueda);
+            fila.style.display = match ? '' : 'none';
+        });
+    });
+</script>
+
+<%- include('partials/footer') %>

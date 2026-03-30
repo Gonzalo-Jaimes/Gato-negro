@@ -483,6 +483,18 @@ app.post('/liquidar_semana/:id', async (req, res) => {
     res.redirect('/nomina');
 });
 
+// --- NUEVO MÓDULO BIG DATA: HISTORIAL DE ENTREGAS ---
+app.get('/entregas_historicas', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    // Traemos TODAS las hojas, cerradas y pendientes, en orden de creación inversa (Más nuevas arriba)
+    const { data: entregas } = await supabase.from('recepcion_diaria')
+        .select('*, empleados_fabriquines(*)')
+        .order('id', { ascending: false });
+        
+    res.render('entregas_historicas', { entregas: entregas || [] });
+});
+
 // ---------------- MÁQUINAS Y EQUIPOS ----------------
 app.get('/maquinas', async (req, res) => {
     if (!req.session.rol || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) return res.redirect('/');
