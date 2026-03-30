@@ -1,125 +1,39 @@
 <%- include('partials/header') %>
 
 <h1>👨‍🏭 Gestión de Empleados Fabriquines</h1>
-<p style="color: gray;">Agrega trabajadores, registra préstamos y consulta sus saldos de material.</p>
+<p style="color: gray;">Agrega o elimina administrativamente a los trabajadores (Código F01, etc).</p>
 <hr>
 
-<div style="display: flex; gap: 30px; flex-wrap: wrap; align-items: flex-start;">
-    <!-- FORMULARIO NUEVO EMPLEADO -->
-    <div class="card" style="flex: 1; min-width: 280px; border-top: 4px solid #22c55e;">
-        <h2 style="margin-top:0;">Registrar Nuevo Empleado</h2>
-        <form action="/agregar_empleado" method="POST">
-            <input type="text" name="codigo" placeholder="Ej: F01" required style="width: 90px; margin-bottom: 8px;">
-            <input type="text" name="nombre" placeholder="Nombre completo" required style="width: 100%; margin-bottom: 8px;">
-            <input type="text" name="cedula" placeholder="Cédula (V- / CC-)" required style="width: 100%; margin-bottom: 8px;">
-            <button type="submit" style="background: #22c55e; width: 100%;">✚ Habilitar Trabajador</button>
-        </form>
-    </div>
+<h2>Registrar Nuevo Empleado</h2>
+<form action="/agregar_empleado" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+    <input type="text" name="codigo" placeholder="Ej: F01" required style="width: 100px;">
+    <input type="text" name="nombre" placeholder="Nombre completo del Fabriquín" required style="width: 300px;">
+    <input type="text" name="cedula" placeholder="Cédula (V- / CC-)" required style="width: 150px;">
+    <button type="submit" style="background: #22c55e;">✚ Habilitar Trabajador</button>
+</form>
 
-    <!-- FORMULARIO NUEVO PRÉSTAMO -->
-    <div class="card" style="flex: 1; min-width: 280px; border-top: 4px solid #f59e0b;">
-        <h2 style="margin-top:0;">💵 Otorgar Préstamo</h2>
-        <form action="/nuevo_prestamo" method="POST">
-            <label style="font-size:13px; color:gray;">Fabriquín:</label>
-            <select name="empleado_id" required style="width: 100%; margin-bottom: 8px;">
-                <option value="">-- Selecciona --</option>
-                <% empleados.forEach(e => { %>
-                <option value="<%= e.id %>"><%= e.codigo %> - <%= e.nombre %></option>
-                <% }); %>
-            </select>
-            <label style="font-size:13px; color:gray;">Monto Prestado ($COP):</label>
-            <input type="number" name="monto_total" placeholder="Ej: 100000" min="1" required style="width: 100%; margin-bottom: 8px;">
-            <label style="font-size:13px; color:gray;">Concepto:</label>
-            <input type="text" name="concepto" placeholder="Motivo del préstamo" style="width: 100%; margin-bottom: 8px;">
-            <button type="submit" style="background: #f59e0b; color:#111; width: 100%; font-weight:bold;">💵 Registrar Préstamo</button>
-        </form>
-    </div>
-</div>
+<hr>
 
-<hr style="margin: 30px 0;">
-
-<!-- TABLA DE EMPLEADOS CON PRÉSTAMOS -->
-<h2>Lista de Trabajadores y Préstamos Activos</h2>
-<div style="overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.08);">
-<table style="width: 100%; border-collapse: collapse; min-width: 750px;">
-    <thead style="background: #111; color: white;">
-        <tr>
-            <th style="padding: 12px;">Código</th>
-            <th style="padding: 12px;">Nombre</th>
-            <th style="padding: 12px;">Cédula</th>
-            <th style="padding: 12px; color: #fcd34d;">Saldo Capa (kg)</th>
-            <th style="padding: 12px; color: #fcd34d;">Saldo Capote (kg)</th>
-            <th style="padding: 12px; color: #6ee7b7;">Préstamo Activo</th>
-            <th style="padding: 12px;">Acciones</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% empleados.forEach(function(e) {
-            const prestamo = prestamos.find(p => p.empleado_id === e.id && p.estado === 'activo');
-        %>
-        <tr style="border-bottom: 1px solid #e5e7eb;">
-            <td style="padding: 10px; font-weight:bold; text-align:center;"><%= e.codigo %></td>
-            <td style="padding: 10px;"><%= e.nombre %></td>
-            <td style="padding: 10px; color: gray; font-size: 13px;"><%= e.cedula %></td>
-            <td style="padding: 10px; text-align:center; color: <%= (e.saldo_capa_kg || 0) > 0 ? '#dc2626' : '#059669' %>; font-weight:bold;">
-                <%= parseFloat(e.saldo_capa_kg || 0).toFixed(2) %> kg
-            </td>
-            <td style="padding: 10px; text-align:center; color: <%= (e.saldo_capote_kg || 0) > 0 ? '#dc2626' : '#059669' %>; font-weight:bold;">
-                <%= parseFloat(e.saldo_capote_kg || 0).toFixed(2) %> kg
-            </td>
-            <td style="padding: 10px; text-align:center;">
-                <% if (prestamo) { %>
-                    <span style="color: #dc2626; font-weight:bold;">
-                        $<%= parseInt(prestamo.saldo_pendiente).toLocaleString('es-CO') %>
-                    </span>
-                    <br>
-                    <form action="/abonar_prestamo/<%= prestamo.id %>" method="POST" style="margin-top: 5px; display: flex; gap: 4px; justify-content: center;">
-                        <input type="number" name="monto_abono" placeholder="Abono $" min="1" max="<%= prestamo.saldo_pendiente %>"
-                               style="width: 110px; font-size:13px;" required>
-                        <button type="submit" style="background:#10b981; padding:4px 8px; font-size:12px;">✔ Abonar</button>
-                    </form>
-                <% } else { %>
-                    <span style="color: #059669; font-size: 13px;">Sin deuda</span>
-                <% } %>
-            </td>
-            <td style="padding: 10px; text-align:center;">
-                <form action="/eliminar_empleado/<%= e.id %>" method="POST"
-                      onsubmit="return confirm('¿ELIMINAR a <%= e.nombre %>? Toda su información desaparecerá.');"
-                      style="margin: 0; padding: 0;">
-                    <button type="submit" style="background: #ef4444; padding: 4px 10px;">🗑 Eliminar</button>
-                </form>
-            </td>
-        </tr>
-        <% }); %>
-    </tbody>
+<h2>Lista Histórica de Trabajadores</h2>
+<table>
+    <tr>
+        <th>Código</th>
+        <th>Nombre del Empleado (Fabriquín)</th>
+        <th>Documento (Cédula)</th>
+        <th>Herramienta</th>
+    </tr>
+    <% empleados.forEach(function(e) { %>
+    <tr>
+        <td><strong><%= e.codigo %></strong></td>
+        <td><%= e.nombre %></td>
+        <td><%= e.cedula %></td>
+        <td>
+            <form action="/eliminar_empleado/<%= e.id %>" method="POST" onsubmit="return confirm('¿⚠️ ESTÁ SEGURO DE ELIMINAR A <%= e.nombre %>? Toda su información de deuda desaparecerá.');" style="margin: 0; padding: 0;">
+                <button type="submit" style="background: #ef4444; padding: 4px 10px;">🗑 Despedir/Eliminar</button>
+            </form>
+        </td>
+    </tr>
+    <% }); %>
 </table>
-</div>
-
-<!-- HISTORIAL DE PRÉSTAMOS PAGADOS -->
-<% const pagados = prestamos.filter(p => p.estado === 'pagado'); %>
-<% if (pagados.length > 0) { %>
-<hr style="margin: 30px 0;">
-<h3>📋 Historial de Préstamos Pagados</h3>
-<table style="width: 100%; border-collapse: collapse; font-size: 13px;">
-    <thead><tr style="background: #374151; color: white;">
-        <th style="padding: 8px;">Fabriquín</th>
-        <th style="padding: 8px;">Monto</th>
-        <th style="padding: 8px;">Concepto</th>
-        <th style="padding: 8px;">Fecha</th>
-    </tr></thead>
-    <tbody>
-        <% pagados.forEach(p => {
-            const emp = empleados.find(e => e.id === p.empleado_id);
-        %>
-        <tr style="border-bottom: 1px solid #e5e7eb; opacity: 0.6;">
-            <td style="padding: 8px;"><%= emp ? emp.codigo + ' - ' + emp.nombre : 'N/A' %></td>
-            <td style="padding: 8px;">$<%= parseInt(p.monto_total).toLocaleString('es-CO') %></td>
-            <td style="padding: 8px;"><%= p.concepto || '—' %></td>
-            <td style="padding: 8px;"><%= p.fecha_prestamo %></td>
-        </tr>
-        <% }); %>
-    </tbody>
-</table>
-<% } %>
 
 <%- include('partials/footer') %>

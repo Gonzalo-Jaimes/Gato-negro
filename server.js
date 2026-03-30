@@ -392,13 +392,19 @@ app.post('/despachar_tarea', async (req, res) => {
         { fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: colorCesta,cantidad: cestasCant,     usuario: 'Admin', descripcion: desc }
     ]);
 
-    // 3. Actualizar deuda de tabacos + saldos de material
+    // 3A. Actualizar deuda de tabacos (SIEMPRE - columna original garantizada)
     await supabase.from('empleados_fabriquines').update({
-        deuda_tabacos:     nuevaMeta,
-        saldo_capa_kg:     Math.max(0, nuevoSaldoCapa),
-        saldo_capote_kg:   Math.max(0, nuevoSaldoCapote),
-        saldo_picadura_kg: Math.max(0, nuevoSaldoPicadura)
+        deuda_tabacos: nuevaMeta
     }).eq('id', empleado.id);
+
+    // 3B. Actualizar saldos de material (requiere migracion SQL v250 - no falla el flujo si no existe)
+    try {
+        await supabase.from('empleados_fabriquines').update({
+            saldo_capa_kg:     Math.max(0, nuevoSaldoCapa),
+            saldo_capote_kg:   Math.max(0, nuevoSaldoCapote),
+            saldo_picadura_kg: Math.max(0, nuevoSaldoPicadura)
+        }).eq('id', empleado.id);
+    } catch(e) { /* columnas aún no migradas — sin problema */ }
 
     // 4. Formato imprimible
     const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
@@ -429,11 +435,18 @@ app.get('/recepcion_diaria', async (req, res) => {
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
     const { data: registros } = await supabase.from('recepcion_diaria').select('*').eq('estado', 'pendiente');
     
-    // Filtrar para que solo salgan los que tienen deuda > 0 (tarea viva) o tienen un registro pendiente
+    // Traer préstamos activos para mostrar en la tabla
+    let prestamosActivos = [];
+    try {
+        const { data: p } = await supabase.from('prestamos_fabriquines').select('*').eq('estado', 'activo');
+        prestamosActivos = p || [];
+    } catch(e) { /* tabla aún no migrada */ }
+    
     const empleadosActivos = (empleados || []).filter(emp => emp.deuda_tabacos > 0 || (registros || []).some(r => r.empleado_id === emp.id));
     
-    res.render('recepcion_diaria', { empleados: empleadosActivos, registros: registros || [] });
+    res.render('recepcion_diaria', { empleados: empleadosActivos, registros: registros || [], prestamos: prestamosActivos });
 });
+
 
 app.post('/recepcion_diaria_guardar', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
@@ -539,6 +552,26 @@ app.post('/recepcion_diaria_guardar', async (req, res) => {
     } else {
         await supabase.from('recepcion_diaria').insert([dataObj]);
     }
+
+    // --- ABONO AL PRÉSTAMO (si se ingresó) ---
+    const prestamoId = req.body.prestamo_id;
+    const abonoMonto = parseInt(req.body.abono_prestamo) || 0;
+    if (prestamoId && abonoMonto > 0) {
+        try {
+            const { data: prest } = await supabase.from('prestamos_fabriquines').select('*').eq('id', prestamoId).single();
+            if (prest) {
+                const nuevoSaldo  = Math.max(0, prest.saldo_pendiente - abonoMonto);
+                const nuevoEstado = nuevoSaldo === 0 ? 'pagado' : 'activo';
+                await supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoEstado }).eq('id', prestamoId);
+                await supabase.from('abonos_prestamo').insert([{
+                    prestamo_id: prestamoId, empleado_id: empId,
+                    monto_abono: abonoMonto, fecha_abono: tiempo.fecha,
+                    semana_ref: `Registro ${tiempo.fecha}`
+                }]);
+            }
+        } catch(e) { /* tabla prestamos aún no migrada */ }
+    }
+
     res.redirect('/recepcion_diaria');
 });
 
@@ -1219,20 +1252,32 @@ app.post('/guardar_envoltedora', async (req, res) => {
     const tiempo = obtenerHoraColombia();
 
     const campos = {
-        empleado_id: empId,
-        lun_cestas_in:  parseInt(req.body.lun_cestas_in)  || 0, mar_cestas_in:  parseInt(req.body.mar_cestas_in)  || 0,
-        mie_cestas_in:  parseInt(req.body.mie_cestas_in)  || 0, jue_cestas_in:  parseInt(req.body.jue_cestas_in)  || 0,
-        vie_cestas_in:  parseInt(req.body.vie_cestas_in)  || 0, sab_cestas_in:  parseInt(req.body.sab_cestas_in)  || 0,
-        lun_cestas_out: parseInt(req.body.lun_cestas_out) || 0, mar_cestas_out: parseInt(req.body.mar_cestas_out) || 0,
-        mie_cestas_out: parseInt(req.body.mie_cestas_out) || 0, jue_cestas_out: parseInt(req.body.jue_cestas_out) || 0,
-        vie_cestas_out: parseInt(req.body.vie_cestas_out) || 0, sab_cestas_out: parseInt(req.body.sab_cestas_out) || 0,
-        papel_trans_g: parseFloat(req.body.papel_trans_g) || 0,
-        cinta:        parseInt(req.body.cinta)        || 0,
-        anillos:      parseInt(req.body.anillos)      || 0,
-        cajas_bto:    parseInt(req.body.cajas_bto)    || 0,
-        cajitas_peq:  parseInt(req.body.cajitas_peq)  || 0,
-        marcadores:   parseInt(req.body.marcadores)   || 0,
-        precio_cesta: parseInt(req.body.precio_cesta) || 11000,
+        empleado_id:      empId,
+        cestas_asignadas: parseInt(req.body.cestas_asignadas) || 0,
+        // Cestas IN
+        lun_cestas_in:  parseInt(req.body.lun_cestas_in)  || 0,
+        mar_cestas_in:  parseInt(req.body.mar_cestas_in)  || 0,
+        mie_cestas_in:  parseInt(req.body.mie_cestas_in)  || 0,
+        jue_cestas_in:  parseInt(req.body.jue_cestas_in)  || 0,
+        vie_cestas_in:  parseInt(req.body.vie_cestas_in)  || 0,
+        sab_cestas_in:  parseInt(req.body.sab_cestas_in)  || 0,
+        // Cestas OUT
+        lun_cestas_out: parseInt(req.body.lun_cestas_out) || 0,
+        mar_cestas_out: parseInt(req.body.mar_cestas_out) || 0,
+        mie_cestas_out: parseInt(req.body.mie_cestas_out) || 0,
+        jue_cestas_out: parseInt(req.body.jue_cestas_out) || 0,
+        vie_cestas_out: parseInt(req.body.vie_cestas_out) || 0,
+        sab_cestas_out: parseInt(req.body.sab_cestas_out) || 0,
+        // Papel base + extra diario + sobrante
+        papel_trans_g:    parseFloat(req.body.papel_trans_g)    || 0,
+        lun_papel_extra:  parseFloat(req.body.lun_papel_extra)  || 0,
+        mar_papel_extra:  parseFloat(req.body.mar_papel_extra)  || 0,
+        mie_papel_extra:  parseFloat(req.body.mie_papel_extra)  || 0,
+        jue_papel_extra:  parseFloat(req.body.jue_papel_extra)  || 0,
+        vie_papel_extra:  parseFloat(req.body.vie_papel_extra)  || 0,
+        sab_papel_extra:  parseFloat(req.body.sab_papel_extra)  || 0,
+        papel_sobrante_g: parseFloat(req.body.papel_sobrante_g) || 0,
+        precio_cesta:     parseInt(req.body.precio_cesta)       || 11000,
         estado: 'pendiente'
     };
 
