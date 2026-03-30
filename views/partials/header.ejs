@@ -231,4 +231,22 @@
     <a href="/logout" style="background: #333; text-align: center; border: 1px solid #444;">🚪 Cerrar sesión</a>
 </div>
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const path = window.location.pathname;
+        if (['/inventario', '/movimientos', '/nomina', '/analitica', '/empleados'].includes(path)) {
+            let el = document.getElementById('submenu-admin'); if (el) el.style.display = 'block';
+        }
+        if (['/despacho', '/recepcion_diaria', '/entregas_historicas'].includes(path)) {
+            let el = document.getElementById('submenu-fabs'); if (el) el.style.display = 'block';
+        }
+        if (['/recepcion_empaque'].includes(path)) {
+            let el = document.getElementById('submenu-empaque'); if (el) el.style.display = 'block';
+        }
+        if (['/maquinas', '/mantenimiento', '/maquinas/qrs'].includes(path)) {
+            let el = document.getElementById('submenu-maint'); if (el) el.style.display = 'block';
+        }
+    });
+</script>
+
 <div class="content">
