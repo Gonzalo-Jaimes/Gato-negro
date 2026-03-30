@@ -18,6 +18,7 @@ app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.urlencoded({ extended: true }));
+app.use(express.json());
 
 app.use(session({
     secret: 'gato_negro_nube',
@@ -461,33 +462,46 @@ app.post('/despachar_tarea', async (req, res) => {
         }).eq('id', empleado.id);
     } catch(e) { }
 
-    // 5. Formato imprimible
-    const fechaText = `${tiempo.fecha} ${tiempo.hora}`;
-    res.render('formato_despacho', {
-        empleado: empleado,
+    // 5. Guardar referencia del último despacho en sesión para poder imprimir después
+    req.session.ultimo_despacho = {
+        empleado_id: empleado.id,
+        empleado_nombre: empleado.nombre,
+        empleado_codigo: empleado.codigo,
+        empleado_cedula: empleado.cedula,
         meta: nuevaMeta,
         saldo_casa: saldoEnCasa,
-        fecha_actual: fechaText,
+        fecha_actual: `${tiempo.fecha} ${tiempo.hora}`,
         params: {
             capa: capaKgReal.toFixed(2), capote: capoteKgReal.toFixed(2), picadura: picaduraKgReal.toFixed(2),
-            saldo_capa:     saldoCapaAnt.toFixed(2),
-            saldo_capote:   saldoCapoteAnt.toFixed(2),
-            saldo_picadura: saldoPicaduraAnt.toFixed(2),
-            nuevo_saldo_capa:     Math.max(0, nuevoSaldoCapa).toFixed(2),
-            nuevo_saldo_capote:   Math.max(0, nuevoSaldoCapote).toFixed(2),
+            saldo_capa: saldoCapaAnt.toFixed(2), saldo_capote: saldoCapoteAnt.toFixed(2), saldo_picadura: saldoPicaduraAnt.toFixed(2),
+            nuevo_saldo_capa: Math.max(0, nuevoSaldoCapa).toFixed(2),
+            nuevo_saldo_capote: Math.max(0, nuevoSaldoCapote).toFixed(2),
             nuevo_saldo_picadura: Math.max(0, nuevoSaldoPicadura).toFixed(2),
             cestas: cestasCant, color_cesta: colorCesta
         },
-        suministros: {
-            goma_uds: goma_uds, goma_num: goma_num, costo_goma: costo_goma,
-            periodico_kg: periodico_kg, costo_periodico: costo_periodico
-        },
-        prestamo: {
-            saldo_anterior: saldoAntPrestamo,
-            abono: abono_prestamo,
-            nuevo_saldo: nuevoSaldoPrestamo,
-            nuevos_cargos: total_nuevos_cargos
-        }
+        suministros: { goma_uds, goma_num, costo_goma, periodico_kg, costo_periodico },
+        prestamo: { saldo_anterior: saldoAntPrestamo, abono: abono_prestamo, nuevo_saldo: nuevoSaldoPrestamo, nuevos_cargos: total_nuevos_cargos }
+    };
+
+    // Redirigir a recepción diaria con mensaje de éxito (el PDF se imprime manualmente si se necesita)
+    res.redirect(`/recepcion_diaria?ok=Tarea+asignada+a+${encodeURIComponent(empleado.nombre)}+—+${fisicoEntregado.toLocaleString()}+tabacos&despacho_id=${empleado.id}`);
+});
+
+// --- IMPRIMIR ORDEN DE DESPACHO (última guardada en sesión) ---
+app.get('/imprimir_despacho/:empleado_id', (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const d = req.session.ultimo_despacho;
+    if (!d || d.empleado_id != req.params.empleado_id) {
+        return res.send('<script>alert("No hay datos de despacho para este empleado. Haz el despacho primero."); window.close();</script>');
+    }
+    res.render('formato_despacho', {
+        empleado: { id: d.empleado_id, nombre: d.empleado_nombre, codigo: d.empleado_codigo, cedula: d.empleado_cedula },
+        meta: d.meta,
+        saldo_casa: d.saldo_casa,
+        fecha_actual: d.fecha_actual,
+        params: d.params,
+        suministros: d.suministros,
+        prestamo: d.prestamo
     });
 });
 
@@ -509,9 +523,135 @@ app.get('/recepcion_diaria', async (req, res) => {
     
     const empleadosActivos = (empleados || []).filter(emp => emp.deuda_tabacos > 0 || (registros || []).some(r => r.empleado_id === emp.id));
     
-    res.render('recepcion_diaria', { empleados: empleadosActivos, registros: registros || [], prestamos: prestamosActivos });
+    const successMsg  = req.query.ok       || null;
+    const despachoId  = req.query.despacho_id || null;
+
+    // Traer historial de movimientos de préstamos para el modal de historial
+    let historialPrestamos = {};
+    try {
+        const { data: abonos } = await supabase.from('abonos_prestamo')
+            .select('*')
+            .order('fecha_abono', { ascending: false });
+        (abonos || []).forEach(a => {
+            if (!historialPrestamos[a.empleado_id]) historialPrestamos[a.empleado_id] = [];
+            historialPrestamos[a.empleado_id].push(a);
+        });
+    } catch(e) {}
+
+    res.render('recepcion_diaria', { 
+        empleados: empleadosActivos, 
+        registros: registros || [], 
+        prestamos: prestamosActivos,
+        successMsg,
+        despachoId,
+        historialPrestamos
+    });
 });
 
+// --- REGISTRAR MOVIMIENTO DE PRÉSTAMO (cualquier día, desde recepción) ---
+app.post('/registrar_movimiento_prestamo', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.json({ ok: false });
+
+    const { empleado_id, tipo, monto, fecha, nota } = req.body;
+    const montoNum = parseInt(monto) || 0;
+    if (!empleado_id || montoNum <= 0) return res.json({ ok: false, msg: 'Datos inválidos' });
+
+    const tiempo = obtenerHoraColombia();
+    const fechaFinal = fecha || tiempo.fecha;
+
+    try {
+        if (tipo === 'abono') {
+            // Es un pago: buscar préstamo activo y abonar
+            const { data: prest } = await supabase.from('prestamos_fabriquines')
+                .select('*').eq('empleado_id', empleado_id).eq('estado', 'activo').single();
+            if (!prest) return res.json({ ok: false, msg: 'No hay préstamo activo para abonar' });
+
+            const nuevoSaldo = Math.max(0, parseFloat(prest.saldo_pendiente) - montoNum);
+            const nuevoEstado = nuevoSaldo === 0 ? 'pagado' : 'activo';
+
+            await supabase.from('prestamos_fabriquines').update({
+                saldo_pendiente: nuevoSaldo, estado: nuevoEstado
+            }).eq('id', prest.id);
+
+            await supabase.from('abonos_prestamo').insert([{
+                prestamo_id: prest.id,
+                empleado_id: parseInt(empleado_id),
+                monto_abono: montoNum,
+                fecha_abono: fechaFinal,
+                semana_ref: nota || tipo,
+                tipo: 'abono',
+                nota: nota || ''
+            }]);
+
+            return res.json({ ok: true, nuevo_saldo: nuevoSaldo, tipo: 'abono' });
+
+        } else {
+            // Es un préstamo nuevo o adelanto: buscar si hay activo y sumarlo, o crear nuevo
+            const { data: prestActivo } = await supabase.from('prestamos_fabriquines')
+                .select('*').eq('empleado_id', empleado_id).eq('estado', 'activo').single();
+
+            if (prestActivo) {
+                // Sumar al préstamo existente
+                const nuevoSaldo = parseFloat(prestActivo.saldo_pendiente) + montoNum;
+                await supabase.from('prestamos_fabriquines').update({
+                    saldo_pendiente: nuevoSaldo,
+                    monto_total: parseFloat(prestActivo.monto_total) + montoNum
+                }).eq('id', prestActivo.id);
+
+                // Registrar el movimiento como entrada en historial
+                await supabase.from('abonos_prestamo').insert([{
+                    prestamo_id: prestActivo.id,
+                    empleado_id: parseInt(empleado_id),
+                    monto_abono: -montoNum, // negativo = cargo
+                    fecha_abono: fechaFinal,
+                    semana_ref: nota || tipo,
+                    tipo: tipo,
+                    nota: nota || ''
+                }]);
+
+                return res.json({ ok: true, nuevo_saldo: nuevoSaldo, tipo });
+            } else {
+                // Crear préstamo nuevo
+                const { data: nuevoPrest } = await supabase.from('prestamos_fabriquines').insert([{
+                    empleado_id: parseInt(empleado_id),
+                    monto_total: montoNum,
+                    saldo_pendiente: montoNum,
+                    concepto: nota || tipo,
+                    estado: 'activo'
+                }]).select().single();
+
+                if (nuevoPrest) {
+                    await supabase.from('abonos_prestamo').insert([{
+                        prestamo_id: nuevoPrest.id,
+                        empleado_id: parseInt(empleado_id),
+                        monto_abono: -montoNum,
+                        fecha_abono: fechaFinal,
+                        semana_ref: nota || tipo,
+                        tipo: tipo,
+                        nota: nota || ''
+                    }]);
+                }
+
+                return res.json({ ok: true, nuevo_saldo: montoNum, tipo });
+            }
+        }
+    } catch(e) {
+        console.error('Error movimiento préstamo:', e);
+        return res.json({ ok: false, msg: e.message });
+    }
+});
+
+// --- VER HISTORIAL DE PRÉSTAMOS POR EMPLEADO (JSON) ---
+app.get('/historial_prestamo/:empleado_id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.json([]);
+    try {
+        const { data: abonos } = await supabase.from('abonos_prestamo')
+            .select('*')
+            .eq('empleado_id', req.params.empleado_id)
+            .order('fecha_abono', { ascending: false });
+        return res.json(abonos || []);
+    } catch(e) { return res.json([]); }
+});
 
 app.post('/recepcion_diaria_guardar', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
