@@ -159,281 +159,283 @@ Tengamos claro que apenas hemos cruzado la cúspide basal o primaria dentro del 
 * Supabase. (n.d.). *PostgreSQL Remote Database (Open Source Firebase Alternative Platform Docs)*. Recuperado de https://supabase.com/docs
 * Vercel Cloud Network. (n.d.). *Develop, preview, ship frontend framework edge functions*. Recuperado de https://vercel.com/docs
 
-
-
 ## 📸 Anexos Visuales del Desarrollo Conjunto
 
-A continuación se referencian todas las capturas (screenshots) de las interfaces o diagramas trabajados, ahora copiadas y vinculadas localmente.
+A continuación se listan todas las capturas de pantalla e imágenes del proceso de desarrollo.
 
-### Anexo Visual 1
+### Anexo 1
 
-![Anexo 1](anexos/media__1773943931277.png)
+![Captura 1](anexos/media__1773943931277.png)
 
-### Anexo Visual 2
+### Anexo 2
 
-![Anexo 2](anexos/media__1773946090234.png)
+![Captura 2](anexos/media__1773946090234.png)
 
-### Anexo Visual 3
+### Anexo 3
 
-![Anexo 3](anexos/media__1773946414831.png)
+![Captura 3](anexos/media__1773946414831.png)
 
-### Anexo Visual 4
+### Anexo 4
 
-![Anexo 4](anexos/media__1773946515336.png)
+![Captura 4](anexos/media__1773946515336.png)
 
-### Anexo Visual 5
+### Anexo 5
 
-![Anexo 5](anexos/media__1773950633203.png)
+![Captura 5](anexos/media__1773950633203.png)
 
-### Anexo Visual 6
+### Anexo 6
 
-![Anexo 6](anexos/media__1773951085918.png)
+![Captura 6](anexos/media__1773951085918.png)
 
-### Anexo Visual 7
+### Anexo 7
 
-![Anexo 7](anexos/media__1773951731273.png)
+![Captura 7](anexos/media__1773951731273.png)
 
-### Anexo Visual 8
+### Anexo 8
 
-![Anexo 8](anexos/media__1773963063176.png)
+![Captura 8](anexos/media__1773963063176.png)
 
-### Anexo Visual 9
+### Anexo 9
 
-![Anexo 9](anexos/media__1773964418216.png)
+![Captura 9](anexos/media__1773964418216.png)
 
-### Anexo Visual 10
+### Anexo 10
 
-![Anexo 10](anexos/media__1773964903973.png)
+![Captura 10](anexos/media__1773964903973.png)
 
-### Anexo Visual 11
+### Anexo 11
 
-![Anexo 11](anexos/media__1773964933431.png)
+![Captura 11](anexos/media__1773964933431.png)
 
-### Anexo Visual 12
+### Anexo 12
 
-![Anexo 12](anexos/media__1773965197343.png)
+![Captura 12](anexos/media__1773965197343.png)
 
-### Anexo Visual 13
+### Anexo 13
 
-![Anexo 13](anexos/media__1773965216478.png)
+![Captura 13](anexos/media__1773965216478.png)
 
-### Anexo Visual 14
+### Anexo 14
 
-![Anexo 14](anexos/media__1773965631334.png)
+![Captura 14](anexos/media__1773965631334.png)
 
-### Anexo Visual 15
+### Anexo 15
 
-![Anexo 15](anexos/media__1774148818316.png)
+![Captura 15](anexos/media__1774148818316.png)
 
-### Anexo Visual 16
+### Anexo 16
 
-![Anexo 16](anexos/media__1774148823856.png)
+![Captura 16](anexos/media__1774148823856.png)
 
-### Anexo Visual 17
+### Anexo 17
 
-![Anexo 17](anexos/media__1774148851383.png)
+![Captura 17](anexos/media__1774148851383.png)
 
-### Anexo Visual 18
+### Anexo 18
 
-![Anexo 18](anexos/media__1774156382011.png)
+![Captura 18](anexos/media__1774156382011.png)
 
-### Anexo Visual 19
+### Anexo 19
 
-![Anexo 19](anexos/media__1774157671244.png)
+![Captura 19](anexos/media__1774157671244.png)
 
-### Anexo Visual 20
+### Anexo 20
 
-![Anexo 20](anexos/media__1774157683936.png)
+![Captura 20](anexos/media__1774157683936.png)
 
-### Anexo Visual 21
+### Anexo 21
 
-![Anexo 21](anexos/media__1774157696414.png)
+![Captura 21](anexos/media__1774157696414.png)
 
-### Anexo Visual 22
+### Anexo 22
 
-![Anexo 22](anexos/media__1774157739916.png)
+![Captura 22](anexos/media__1774157739916.png)
 
-### Anexo Visual 23
+### Anexo 23
 
-![Anexo 23](anexos/media__1774157763823.png)
+![Captura 23](anexos/media__1774157763823.png)
 
-### Anexo Visual 24
+### Anexo 24
 
-![Anexo 24](anexos/media__1774158267250.png)
+![Captura 24](anexos/media__1774158267250.png)
 
-### Anexo Visual 25
+### Anexo 25
 
-![Anexo 25](anexos/media__1774158320814.png)
+![Captura 25](anexos/media__1774158320814.png)
 
-### Anexo Visual 26
+### Anexo 26
 
-![Anexo 26](anexos/media__1774158350516.png)
+![Captura 26](anexos/media__1774158350516.png)
 
-### Anexo Visual 27
+### Anexo 27
 
-![Anexo 27](anexos/media__1774158389640.png)
+![Captura 27](anexos/media__1774158389640.png)
 
-### Anexo Visual 28
+### Anexo 28
 
-![Anexo 28](anexos/media__1774158422105.png)
+![Captura 28](anexos/media__1774158422105.png)
 
-### Anexo Visual 29
+### Anexo 29
 
-![Anexo 29](anexos/media__1774158700383.png)
+![Captura 29](anexos/media__1774158700383.png)
 
-### Anexo Visual 30
+### Anexo 30
 
-![Anexo 30](anexos/media__1774159335926.png)
+![Captura 30](anexos/media__1774159335926.png)
 
-### Anexo Visual 31
+### Anexo 31
 
-![Anexo 31](anexos/media__1774159400908.png)
+![Captura 31](anexos/media__1774159400908.png)
 
-### Anexo Visual 32
+### Anexo 32
 
-![Anexo 32](anexos/media__1774159430273.png)
+![Captura 32](anexos/media__1774159430273.png)
 
-### Anexo Visual 33
+### Anexo 33
 
-![Anexo 33](anexos/media__1774159469964.png)
+![Captura 33](anexos/media__1774159469964.png)
 
-### Anexo Visual 34
+### Anexo 34
 
-![Anexo 34](anexos/media__1774159906243.png)
+![Captura 34](anexos/media__1774159906243.png)
 
-### Anexo Visual 35
+### Anexo 35
 
-![Anexo 35](anexos/media__1774159963873.png)
+![Captura 35](anexos/media__1774159963873.png)
 
-### Anexo Visual 36
+### Anexo 36
 
-![Anexo 36](anexos/media__1774319598444.jpg)
+![Captura 36](anexos/media__1774319598444.jpg)
 
-### Anexo Visual 37
+### Anexo 37
 
-![Anexo 37](anexos/media__1774319619271.png)
+![Captura 37](anexos/media__1774319619271.png)
 
-### Anexo Visual 38
+### Anexo 38
 
-![Anexo 38](anexos/media__1774319671345.png)
+![Captura 38](anexos/media__1774319671345.png)
 
-### Anexo Visual 39
+### Anexo 39
 
-![Anexo 39](anexos/media__1774319723211.png)
+![Captura 39](anexos/media__1774319723211.png)
 
-### Anexo Visual 40
+### Anexo 40
 
-![Anexo 40](anexos/media__1774322412517.png)
+![Captura 40](anexos/media__1774322412517.png)
 
-### Anexo Visual 41
+### Anexo 41
 
-![Anexo 41](anexos/media__1774322441916.png)
+![Captura 41](anexos/media__1774322441916.png)
 
-### Anexo Visual 42
+### Anexo 42
 
-![Anexo 42](anexos/media__1774322688064.png)
+![Captura 42](anexos/media__1774322688064.png)
 
-### Anexo Visual 43
+### Anexo 43
 
-![Anexo 43](anexos/media__1774322831541.png)
+![Captura 43](anexos/media__1774322831541.png)
 
-### Anexo Visual 44
+### Anexo 44
 
-![Anexo 44](anexos/media__1774491845412.png)
+![Captura 44](anexos/media__1774491845412.png)
 
-### Anexo Visual 45
+### Anexo 45
 
-![Anexo 45](anexos/media__1774491950272.png)
+![Captura 45](anexos/media__1774491950272.png)
 
-### Anexo Visual 46
+### Anexo 46
 
-![Anexo 46](anexos/media__1774492085082.png)
+![Captura 46](anexos/media__1774492085082.png)
 
-### Anexo Visual 47
+### Anexo 47
 
-![Anexo 47](anexos/media__1774492210176.png)
+![Captura 47](anexos/media__1774492210176.png)
 
-### Anexo Visual 48
+### Anexo 48
 
-![Anexo 48](anexos/media__1774492263355.png)
+![Captura 48](anexos/media__1774492263355.png)
 
-### Anexo Visual 49
+### Anexo 49
 
-![Anexo 49](anexos/media__1774493937918.png)
+![Captura 49](anexos/media__1774493937918.png)
 
-### Anexo Visual 50
+### Anexo 50
 
-![Anexo 50](anexos/media__1774494351792.png)
+![Captura 50](anexos/media__1774494351792.png)
 
-### Anexo Visual 51
+### Anexo 51
 
-![Anexo 51](anexos/media__1774533205858.png)
+![Captura 51](anexos/media__1774533205858.png)
 
-### Anexo Visual 52
+### Anexo 52
 
-![Anexo 52](anexos/media__1774540251756.png)
+![Captura 52](anexos/media__1774540251756.png)
 
-### Anexo Visual 53
+### Anexo 53
 
-![Anexo 53](anexos/media__1774541378549.png)
+![Captura 53](anexos/media__1774541378549.png)
 
-### Anexo Visual 54
+### Anexo 54
 
-![Anexo 54](anexos/media__1774541408538.png)
+![Captura 54](anexos/media__1774541408538.png)
 
-### Anexo Visual 55
+### Anexo 55
 
-![Anexo 55](anexos/media__1774542232860.png)
+![Captura 55](anexos/media__1774542232860.png)
 
-### Anexo Visual 56
+### Anexo 56
 
-![Anexo 56](anexos/media__1774877227606.png)
+![Captura 56](anexos/media__1774877227606.png)
 
-### Anexo Visual 57
+### Anexo 57
 
-![Anexo 57](anexos/media__1774879879746.png)
+![Captura 57](anexos/media__1774879879746.png)
 
-### Anexo Visual 58
+### Anexo 58
 
-![Anexo 58](anexos/media__1774879917611.png)
+![Captura 58](anexos/media__1774879917611.png)
 
-### Anexo Visual 59
+### Anexo 59
 
-![Anexo 59](anexos/media__1774879983155.png)
+![Captura 59](anexos/media__1774879983155.png)
 
-### Anexo Visual 60
+### Anexo 60
 
-![Anexo 60](anexos/media__1774880637465.png)
+![Captura 60](anexos/media__1774880637465.png)
 
-### Anexo Visual 61
+### Anexo 61
 
-![Anexo 61](anexos/media__1774880731950.png)
+![Captura 61](anexos/media__1774880731950.png)
 
-### Anexo Visual 62
+### Anexo 62
 
-![Anexo 62](anexos/media__1774881285365.png)
+![Captura 62](anexos/media__1774881285365.png)
 
-### Anexo Visual 63
+### Anexo 63
 
-![Anexo 63](anexos/media__1774882222601.png)
+![Captura 63](anexos/media__1774882222601.png)
 
-### Anexo Visual 64
+### Anexo 64
 
-![Anexo 64](anexos/media__1774882515113.png)
+![Captura 64](anexos/media__1774882515113.png)
 
-### Anexo Visual 65
+### Anexo 65
 
-![Anexo 65](anexos/media__1774882623247.png)
+![Captura 65](anexos/media__1774882623247.png)
 
-### Anexo Visual 66
+### Anexo 66
 
-![Anexo 66](anexos/media__1774883922604.png)
+![Captura 66](anexos/media__1774883922604.png)
 
-### Anexo Visual 67
+### Anexo 67
 
-![Anexo 67](anexos/media__1774883941355.png)
+![Captura 67](anexos/media__1774883941355.png)
 
-### Anexo Visual 68
+### Anexo 68
 
-![Anexo 68](anexos/media__1774884248448.png)
+![Captura 68](anexos/media__1774884248448.png)
+
+### Anexo 69
+
+![Captura 69](anexos/media__1774884506081.png)
 
