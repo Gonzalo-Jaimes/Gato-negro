@@ -1,0 +1,354 @@
+<%- include('partials/header') %>
+
+<style>
+.pic-grid     { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
+.pic-card     { background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
+.pic-card h3  { margin: 0 0 16px 0; font-size: 17px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
+.saco-badge   { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; margin: 2px; }
+.saco-35      { background: #1e40af; color: white; }
+.saco-28      { background: #0369a1; color: white; }
+.saco-21      { background: #0e7490; color: white; }
+.saco-14      { background: #065f46; color: white; }
+.saco-7       { background: #4d7c0f; color: white; }
+.saco-sob     { background: #9333ea; color: white; }
+.stat-box     { text-align: center; padding: 14px; border-radius: 10px; background: #f8fafc; }
+.stat-num     { font-size: 32px; font-weight: 900; line-height: 1; }
+.stat-lbl     { font-size: 11px; text-transform: uppercase; color: #6b7280; margin-top: 4px; }
+.inp-qty      { width: 70px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; font-size: 15px; }
+.btn-primary  { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; margin-top: 12px; }
+.btn-primary:hover { background: #1d4ed8; }
+.lote-card    { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
+.lote-card.activo  { border-left: 4px solid #16a34a; }
+.lote-card.agotado { border-left: 4px solid #9ca3af; opacity: 0.7; }
+
+/* Modal de entrega de sacos */
+.modal-overlay-pic  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9000; align-items: center; justify-content: center; }
+.modal-overlay-pic.activo { display: flex; }
+.modal-box-pic      { background: white; border-radius: 14px; padding: 28px; max-width: 600px; width: 95%; max-height: 88vh; overflow-y: auto; }
+.saco-selector      { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+.saco-item          { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.15s; }
+.saco-item:hover    { border-color: #2563eb; background: #eff6ff; }
+.saco-item.seleccionado { background: #2563eb; color: white; border-color: #1d4ed8; }
+@media (max-width: 700px) { .pic-grid { grid-template-columns: 1fr; } }
+</style>
+
+<h1>🌿 Bodega de Picadura Procesada</h1>
+<hr>
+
+<!-- RESUMEN DE STOCK ACTUAL -->
+<div class="pic-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 14px; margin-bottom: 28px;">
+    <% 
+        const pesos = [35, 28, 21, 14, 7];
+        const colores = { 35: 'saco-35', 28: 'saco-28', 21: 'saco-21', 14: 'saco-14', 7: 'saco-7' };
+        const conteos = {};
+        pesos.forEach(p => { conteos[p] = sacosDisponibles.filter(s => s.peso_kg == p).length; });
+        const sobrantesDisp = sacosDisponibles.filter(s => s.tipo === 'sobrante').length;
+        const totalDisp = sacosDisponibles.length;
+        const kgDisponibles = sacosDisponibles.reduce((acc, s) => acc + parseFloat(s.peso_kg), 0);
+    %>
+    <div class="stat-box" style="background: #eff6ff;">
+        <div class="stat-num" style="color:#2563eb;"><%= totalDisp %></div>
+        <div class="stat-lbl">Sacos Disponibles</div>
+    </div>
+    <div class="stat-box" style="background: #f0fdf4;">
+        <div class="stat-num" style="color:#16a34a;"><%= kgDisponibles.toFixed(0) %> kg</div>
+        <div class="stat-lbl">Kg en Bodega</div>
+    </div>
+    <% pesos.forEach(p => { %>
+    <div class="stat-box">
+        <div class="stat-num" style="font-size:26px; color:<%= colores[p].includes('35')?'#1e40af':colores[p].includes('28')?'#0369a1':colores[p].includes('21')?'#0e7490':colores[p].includes('14')?'#065f46':'#4d7c0f' %>;"><%= conteos[p] %></div>
+        <div class="stat-lbl">Sacos de <%= p %> kg</div>
+    </div>
+    <% }); %>
+    <div class="stat-box" style="background: #faf5ff;">
+        <div class="stat-num" style="font-size:26px; color:#9333ea;"><%= sobrantesDisp %></div>
+        <div class="stat-lbl">Sobrantes</div>
+    </div>
+</div>
+
+<!-- GRILLA PRINCIPAL -->
+<div class="pic-grid">
+
+    <!-- COL IZQUIERDA: Registrar nuevo lote -->
+    <div>
+        <div class="pic-card">
+            <h3>⚗️ Registrar Pesada (Lote Nuevo)</h3>
+            <form action="/registrar_lote_picadura" method="POST">
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
+                    <div>
+                        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Fecha de la Pesada:</label>
+                        <input type="date" name="fecha" value="<%= new Date().toISOString().slice(0,10) %>" required style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Picadura bruta entrada (kg):</label>
+                        <input type="number" name="kg_entrada" step="0.1" min="1" placeholder="Ej: 3000" required style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                    </div>
+                </div>
+
+                <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">¿Cuántos sacos de cada tamaño salieron de esta pesada?</p>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
+                    <% pesos.forEach(p => { %>
+                    <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                        <span class="saco-badge <%= colores[p] %>"><%= p %> kg</span>
+                        <input type="number" name="sacos_<%= p %>" class="inp-qty" min="0" value="0" placeholder="0">
+                    </div>
+                    <% }); %>
+                    <div style="display: flex; align-items: center; gap: 10px; background: #faf5ff; padding: 10px; border-radius: 8px; grid-column: span 2;">
+                        <span class="saco-badge saco-sob">Sobrante</span>
+                        <span style="font-size: 13px; color: #6b7280;">Cantidad:</span>
+                        <input type="number" name="sacos_sobrante_qty" class="inp-qty" min="0" value="0">
+                        <span style="font-size: 13px; color: #6b7280;">Peso (kg):</span>
+                        <input type="number" name="sacos_sobrante_kg" class="inp-qty" min="0" step="0.1" value="0" placeholder="Ej: 8.5">
+                    </div>
+                </div>
+
+                <!-- Resumen en vivo del calculado -->
+                <div id="resumen-calculo" style="background: #eff6ff; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom:10px; display:none;">
+                    📊 Salida total: <strong id="txt-kg-salida">0</strong> kg — 
+                    Diferencia por humedad: <strong id="txt-diferencia" style="color: #16a34a;">+0 kg</strong>
+                </div>
+
+                <div>
+                    <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Nota (opcional):</label>
+                    <input type="text" name="nota" placeholder="Ej: Lote con humedad alta" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                </div>
+                <button type="submit" class="btn-primary">💾 Registrar Pesada y Generar Sacos</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- COL DERECHA: Stock por lote + acción de entrega -->
+    <div>
+        <div class="pic-card">
+            <h3>📦 Sacos Disponibles por Lote</h3>
+            <% if (lotes.length === 0) { %>
+                <p style="color: #9ca3af; text-align: center; padding: 20px;">Sin lotes registrados aún.</p>
+            <% } else { %>
+                <% lotes.forEach(lote => { 
+                    const sacosLote = sacosDisponibles.filter(s => s.lote_id === lote.id);
+                    if (sacosLote.length === 0 && lote.estado === 'agotado') { 
+                %>
+                    <div class="lote-card agotado">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <strong>Pesada <%= lote.fecha %></strong>
+                            <span style="font-size:11px; background:#f3f4f6; padding:3px 8px; border-radius:10px; color:#6b7280;">✅ Agotada</span>
+                        </div>
+                        <div style="font-size:12px; color:#9ca3af; margin-top:4px;"><%= lote.kg_entrada %> kg entrada → <%= lote.kg_salida %> kg salida</div>
+                    </div>
+                <%  } else if (sacosLote.length > 0) { %>
+                    <div class="lote-card activo">
+                        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                            <div>
+                                <strong style="font-size:15px;">Pesada <%= lote.fecha %></strong>
+                                <div style="font-size:11px; color:#6b7280;"><%= lote.kg_entrada %> kg bruta → <%= lote.kg_salida %> kg procesada (+<%= (lote.kg_salida - lote.kg_entrada).toFixed(1) %> kg humedad)</div>
+                            </div>
+                            <span style="font-size:13px; font-weight:bold; color:#16a34a;"><%= sacosLote.length %> sacos</span>
+                        </div>
+                        <div class="saco-selector" id="sacos-lote-<%= lote.id %>">
+                            <% sacosLote.forEach(s => { %>
+                            <div class="saco-item" data-saco-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" data-lote="<%= lote.id %>" onclick="toggleSaco(this)">
+                                <strong>#<%= s.numero_saco %></strong>
+                                <span style="font-size:12px;"><%= s.peso_kg %> kg<%= s.tipo === 'sobrante' ? ' ⭐' : '' %></span>
+                            </div>
+                            <% }); %>
+                        </div>
+                        <div style="margin-top:8px; display:flex; gap:8px; align-items:center;">
+                            <button onclick="abrirEntrega(<%= lote.id %>)" style="background:#2563eb; color:white; border:none; padding:7px 16px; border-radius:6px; cursor:pointer; font-size:13px; font-weight:bold;">
+                                📤 Entregar Seleccionados
+                            </button>
+                            <span style="font-size:12px; color:#6b7280;" id="total-sel-<%= lote.id %>"></span>
+                        </div>
+                    </div>
+                <% } }); %>
+            <% } %>
+        </div>
+    </div>
+</div>
+
+<!-- HISTORIAL DE ENTREGAS RECIENTES -->
+<div class="pic-card" style="margin-bottom: 24px;">
+    <h3>📋 Entregas Recientes de Sacas</h3>
+    <% if (sacosEntregados.length === 0) { %>
+        <p style="color: #9ca3af;">Sin entregas registradas.</p>
+    <% } else { %>
+    <table>
+        <tr>
+            <th>Fecha</th>
+            <th>Fabriquín</th>
+            <th>Lote</th>
+            <th>Sacos Entregados</th>
+            <th>Total kg</th>
+        </tr>
+        <% 
+            // Agrupar por empleado + fecha
+            const entregasMapa = {};
+            sacosEntregados.forEach(s => {
+                const key = `${s.fecha_entrega}_${s.empleado_id}`;
+                if (!entregasMapa[key]) entregasMapa[key] = { fecha: s.fecha_entrega, empleado: s.empleados_fabriquines?.nombre || '?', sacos: [], kg: 0, lote_fecha: s.lotes_picadura?.fecha || '?' };
+                entregasMapa[key].sacos.push(`#${s.numero_saco}(${s.peso_kg}kg)`);
+                entregasMapa[key].kg += parseFloat(s.peso_kg);
+            });
+            const entregas = Object.values(entregasMapa).sort((a,b) => b.fecha > a.fecha ? 1:-1).slice(0,20);
+        %>
+        <% entregas.forEach(e => { %>
+        <tr>
+            <td><%= e.fecha %></td>
+            <td style="font-weight:bold; text-transform:capitalize;"><%= e.empleado %></td>
+            <td><small>Pesada <%= e.lote_fecha %></small></td>
+            <td><%= e.sacos.join(', ') %></td>
+            <td><strong><%= e.kg.toFixed(1) %> kg</strong></td>
+        </tr>
+        <% }); %>
+    </table>
+    <% } %>
+</div>
+
+<!-- MODAL ENTREGAR SACOS -->
+<div class="modal-overlay-pic" id="modal-entrega">
+    <div class="modal-box-pic">
+        <h3 style="margin:0 0 16px 0; color:#1e3a5f;">📤 Entregar Sacos al Fabriquín</h3>
+        
+        <div id="resumen-sacos-sel" style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px;"></div>
+        
+        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fabriquín:</label>
+        <select id="sel-empleado-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; font-size:14px;">
+            <option value="">-- Seleccionar --</option>
+            <% empleados.forEach(emp => { %>
+            <option value="<%= emp.id %>"><%= emp.nombre %></option>
+            <% }); %>
+        </select>
+
+        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fecha de entrega:</label>
+        <input type="date" id="fecha-entrega-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Nota (opcional):</label>
+        <input type="text" id="nota-entrega-pic" placeholder="Ej: Despacho semana del lunes" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:18px; box-sizing:border-box;">
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="confirmarEntrega()" style="flex:1; background:#16a34a; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px;">✅ Confirmar Entrega</button>
+            <button onclick="cerrarModalEntrega()" style="flex:1; background:#6b7280; color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-size:14px;">Cancelar</button>
+        </div>
+        <p id="pic-error" style="color:#ef4444; font-size:13px; margin-top:8px; display:none;"></p>
+    </div>
+</div>
+
+<script>
+// ─── Selección de sacos por lote ───
+let sacosSeleccionados = {}; // { lote_id: [saco_id, ...] }
+let loteActivo = null;
+
+function toggleSaco(el) {
+    const sacoId = el.getAttribute('data-saco-id');
+    const loteId = el.getAttribute('data-lote');
+    const kg     = parseFloat(el.getAttribute('data-kg'));
+    
+    if (!sacosSeleccionados[loteId]) sacosSeleccionados[loteId] = [];
+    const arr = sacosSeleccionados[loteId];
+    const idx = arr.findIndex(x => x.id == sacoId);
+    
+    if (idx >= 0) {
+        arr.splice(idx, 1);
+        el.classList.remove('seleccionado');
+    } else {
+        arr.push({ id: sacoId, kg });
+        el.classList.add('seleccionado');
+    }
+    
+    // Mostrar total seleccionado
+    const totalKg = arr.reduce((acc, x) => acc + x.kg, 0);
+    const totalEl = document.getElementById(`total-sel-${loteId}`);
+    if (totalEl) totalEl.textContent = arr.length > 0 ? `${arr.length} saco(s) = ${totalKg.toFixed(1)} kg seleccionados` : '';
+}
+
+function abrirEntrega(loteId) {
+    const arr = sacosSeleccionados[loteId] || [];
+    if (arr.length === 0) { alert('Selecciona al menos un saco primero.'); return; }
+    loteActivo = loteId;
+    
+    const totalKg = arr.reduce((acc, x) => acc + x.kg, 0);
+    document.getElementById('resumen-sacos-sel').innerHTML = 
+        `<strong>${arr.length} saco(s) seleccionados</strong> — Total: <strong>${totalKg.toFixed(1)} kg</strong>`;
+    
+    document.getElementById('fecha-entrega-pic').value = new Date().toISOString().slice(0,10);
+    document.getElementById('sel-empleado-pic').value  = '';
+    document.getElementById('nota-entrega-pic').value  = '';
+    document.getElementById('pic-error').style.display = 'none';
+    document.getElementById('modal-entrega').classList.add('activo');
+}
+
+function cerrarModalEntrega() {
+    document.getElementById('modal-entrega').classList.remove('activo');
+}
+
+async function confirmarEntrega() {
+    const empleado_id = document.getElementById('sel-empleado-pic').value;
+    const fecha       = document.getElementById('fecha-entrega-pic').value;
+    const nota        = document.getElementById('nota-entrega-pic').value;
+    const errEl       = document.getElementById('pic-error');
+    
+    if (!empleado_id) { errEl.textContent = 'Selecciona un fabriquín.'; errEl.style.display = 'block'; return; }
+    if (!fecha)       { errEl.textContent = 'Ingresa la fecha de entrega.'; errEl.style.display = 'block'; return; }
+    
+    const sacos_ids = (sacosSeleccionados[loteActivo] || []).map(x => x.id);
+    if (sacos_ids.length === 0) { errEl.textContent = 'Sin sacos seleccionados.'; errEl.style.display = 'block'; return; }
+    
+    errEl.style.display = 'none';
+    try {
+        const resp = await fetch('/entregar_sacos', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sacos_ids, empleado_id, fecha, nota })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            cerrarModalEntrega();
+            location.reload();
+        } else {
+            errEl.textContent = data.msg || 'Error al registrar.';
+            errEl.style.display = 'block';
+        }
+    } catch(e) {
+        errEl.textContent = 'Error de conexión.';
+        errEl.style.display = 'block';
+    }
+}
+
+// ─── Cálculo en vivo del formulario de nuevo lote ───
+(function() {
+    const pesos  = [35, 28, 21, 14, 7];
+    const inputs = pesos.map(p => document.querySelector(`[name="sacos_${p}"]`));
+    const inpSobQty = document.querySelector('[name="sacos_sobrante_qty"]');
+    const inpSobKg  = document.querySelector('[name="sacos_sobrante_kg"]');
+    const inpEntrada= document.querySelector('[name="kg_entrada"]');
+    const resumen   = document.getElementById('resumen-calculo');
+    const txtSalida = document.getElementById('txt-kg-salida');
+    const txtDif    = document.getElementById('txt-diferencia');
+    
+    function recalc() {
+        let salida = 0;
+        pesos.forEach((p, i) => { salida += (parseInt(inputs[i].value) || 0) * p; });
+        salida += (parseFloat(inpSobKg.value) || 0);
+        
+        const entrada = parseFloat(inpEntrada.value) || 0;
+        const dif = salida - entrada;
+        
+        if (salida > 0) {
+            resumen.style.display = 'block';
+            txtSalida.textContent = salida.toFixed(1);
+            txtDif.textContent = (dif >= 0 ? '+' : '') + dif.toFixed(1) + ' kg';
+            txtDif.style.color = dif >= 0 ? '#16a34a' : '#dc2626';
+        } else {
+            resumen.style.display = 'none';
+        }
+    }
+    
+    inputs.forEach(i => i.addEventListener('input', recalc));
+    inpSobQty.addEventListener('input', recalc);
+    inpSobKg.addEventListener('input', recalc);
+    inpEntrada.addEventListener('input', recalc);
+})();
+</script>
+
+<%- include('partials/footer') %>

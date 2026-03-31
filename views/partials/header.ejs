@@ -166,6 +166,7 @@
                 <a href="/despacho">📝 Asignar Despachos (Hojas)</a>
                 <a href="/recepcion_diaria">⚖️ Recepción Diaria (L-S)</a>
                 <a href="/entregas_historicas">🔎 Historial / Trazabilidad</a>
+                <a href="/picadura">🌿 Bodega Picadura Procesada</a>
             </div>
         </div>
 
@@ -248,7 +249,7 @@
         if (['/inventario', '/movimientos', '/nomina', '/analitica', '/empleados'].includes(path)) {
             let el = document.getElementById('submenu-admin'); if (el) el.style.display = 'block';
         }
-        if (['/despacho', '/recepcion_diaria', '/entregas_historicas'].includes(path)) {
+        if (['/despacho', '/recepcion_diaria', '/entregas_historicas', '/picadura'].includes(path)) {
             let el = document.getElementById('submenu-fabs'); if (el) el.style.display = 'block';
         }
         if (['/recepcion_empaque'].includes(path)) {

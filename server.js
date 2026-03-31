@@ -1168,6 +1168,157 @@ app.get('/maquina/:id/qr', async (req, res) => {
     }
 });
 
+// ==================== MÓDULO PICADURA PROCESADA (V2.7) ====================
+
+// --- VISTA PRINCIPAL DE PICADURA ---
+app.get('/picadura', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+
+    try {
+        // Lotes de procesado (más recientes primero)
+        const { data: lotes } = await supabase.from('lotes_picadura')
+            .select('*').order('fecha', { ascending: false }).limit(20);
+
+        // Sacos disponibles (con info del lote)
+        const { data: sacosDisp } = await supabase.from('sacos_picadura')
+            .select('*, lotes_picadura(fecha)')
+            .eq('estado', 'disponible')
+            .order('lote_id').order('numero_saco');
+
+        // Últimas 50 entregas (sacos entregados con info de empleado y lote)
+        const { data: sacosEnt } = await supabase.from('sacos_picadura')
+            .select('*, empleados_fabriquines(nombre), lotes_picadura(fecha)')
+            .eq('estado', 'entregado')
+            .order('fecha_entrega', { ascending: false })
+            .limit(50);
+
+        // Empleados activos para el modal de entrega
+        const { data: empleados } = await supabase.from('empleados_fabriquines')
+            .select('id, nombre').eq('activo', true).order('nombre');
+
+        res.render('picadura', {
+            lotes:           lotes           || [],
+            sacosDisponibles: sacosDisp      || [],
+            sacosEntregados: sacosEnt        || [],
+            empleados:       empleados       || []
+        });
+    } catch(e) {
+        console.error('Error /picadura:', e);
+        // Si las tablas no existen aún, renderizar vacío
+        res.render('picadura', { lotes: [], sacosDisponibles: [], sacosEntregados: [], empleados: [] });
+    }
+});
+
+// --- REGISTRAR NUEVO LOTE DE PROCESADO ---
+// Crea el lote y genera automáticamente los sacos numerados desde #1
+app.post('/registrar_lote_picadura', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+
+    const { fecha, kg_entrada, nota } = req.body;
+    const kgEnt = parseFloat(kg_entrada) || 0;
+
+    // Calcular kg de salida total desde los sacos indicados
+    const pesos = [35, 28, 21, 14, 7];
+    let kgSalida = 0;
+    let sacosACrear = []; // { numero, peso_kg, tipo }
+    let contador = 1;
+
+    pesos.forEach(p => {
+        const qty = parseInt(req.body[`sacos_${p}`]) || 0;
+        for (let i = 0; i < qty; i++) {
+            kgSalida += p;
+            sacosACrear.push({ numero_saco: contador++, peso_kg: p, tipo: 'estandar' });
+        }
+    });
+
+    // Sobrantes
+    const sobQty = parseInt(req.body.sacos_sobrante_qty) || 0;
+    const sobKg  = parseFloat(req.body.sacos_sobrante_kg) || 0;
+    if (sobQty > 0 && sobKg > 0) {
+        for (let i = 0; i < sobQty; i++) {
+            kgSalida += sobKg;
+            sacosACrear.push({ numero_saco: contador++, peso_kg: sobKg, tipo: 'sobrante' });
+        }
+    }
+
+    if (sacosACrear.length === 0) {
+        return res.redirect('/picadura?error=sin_sacos');
+    }
+
+    try {
+        // 1. Crear el lote
+        const { data: lote, error: errLote } = await supabase.from('lotes_picadura').insert([{
+            fecha, kg_entrada: kgEnt, kg_salida: parseFloat(kgSalida.toFixed(2)), nota: nota || null, estado: 'activo'
+        }]).select().single();
+
+        if (errLote) throw errLote;
+
+        // 2. Crear todos los sacos vinculados al lote
+        const sacosInsert = sacosACrear.map(s => ({
+            lote_id: lote.id,
+            numero_saco: s.numero_saco,
+            peso_kg: s.peso_kg,
+            tipo: s.tipo,
+            estado: 'disponible'
+        }));
+
+        await supabase.from('sacos_picadura').insert(sacosInsert);
+
+        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos, ${kgSalida.toFixed(1)} kg`);
+        res.redirect('/picadura?ok=lote_creado');
+    } catch(e) {
+        console.error('Error registrar lote:', e);
+        res.redirect('/picadura?error=db');
+    }
+});
+
+// --- ENTREGAR SACOS A FABRIQUÍN ---
+app.post('/entregar_sacos', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.json({ ok: false });
+
+    const { sacos_ids, empleado_id, fecha, nota } = req.body;
+
+    if (!sacos_ids || sacos_ids.length === 0 || !empleado_id || !fecha) {
+        return res.json({ ok: false, msg: 'Datos incompletos' });
+    }
+
+    try {
+        // Marcar cada saco como entregado
+        const { error } = await supabase.from('sacos_picadura')
+            .update({
+                estado: 'entregado',
+                empleado_id: parseInt(empleado_id),
+                fecha_entrega: fecha,
+                despacho_nota: nota || null
+            })
+            .in('id', sacos_ids);
+
+        if (error) throw error;
+
+        // Actualizar estado del lote si todos sus sacos están entregados
+        // (lo hacemos de forma asíncrona sin bloquear la respuesta)
+        supabase.from('sacos_picadura')
+            .select('lote_id')
+            .in('id', sacos_ids)
+            .then(({ data }) => {
+                const loteIds = [...new Set((data || []).map(x => x.lote_id))];
+                loteIds.forEach(async lid => {
+                    const { count } = await supabase.from('sacos_picadura')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('lote_id', lid).eq('estado', 'disponible');
+                    if (count === 0) {
+                        await supabase.from('lotes_picadura').update({ estado: 'agotado' }).eq('id', lid);
+                    }
+                });
+            });
+
+        return res.json({ ok: true, msg: `${sacos_ids.length} saco(s) entregados.` });
+    } catch(e) {
+        console.error('Error entregar sacos:', e);
+        return res.json({ ok: false, msg: e.message });
+    }
+});
+
 // ==================== FASE 5: NÓMINA Y FACTURACIÓN ====================
 
 // --- DASHBOARD ANALÍTICO Y FINANCIERO (V2.3) ---
