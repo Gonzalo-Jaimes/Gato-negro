@@ -52,7 +52,7 @@
     </tr>
 
     <% maquinas.forEach(function(m) { %>
-    <tr class="fila-maquina">
+    <tr class="fila-maquina" data-id="<%= m.id %>">
         <td><strong><%= m.codigo %></strong></td>
         <td style="text-transform: capitalize;">
             <a href="/ficha_maquina/<%= m.id %>" target="_blank"
@@ -162,16 +162,129 @@
     <% }); %>
 </table>
 
+<!-- MODAL FICHA TÉCNICA -->
+<div id="modal-ficha" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9000; align-items:center; justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:white; border-radius:14px; padding:0; max-width:720px; width:96%; box-shadow:0 24px 70px rgba(0,0,0,0.4); position:relative; max-height:92vh; overflow-y:auto;">
+        <!-- Cabecera -->
+        <div style="background:linear-gradient(135deg,#1e3a5f,#2563eb); padding:24px 28px; border-radius:14px 14px 0 0; position:relative;">
+            <button onclick="document.getElementById('modal-ficha').style.display='none'" style="position:absolute; top:14px; right:18px; background:rgba(255,255,255,0.2); border:none; color:white; font-size:20px; cursor:pointer; border-radius:50%; width:32px; height:32px; line-height:1;">✕</button>
+            <div style="font-size:11px; color:#93c5fd; text-transform:uppercase; letter-spacing:1px; margin-bottom:6px;">📋 FICHA TÉCNICA</div>
+            <h2 style="margin:0; color:white; font-size:24px;" id="ft-nombre">—</h2>
+            <span id="ft-codigo" style="font-size:13px; color:#bfdbfe;">—</span>
+        </div>
+
+        <div style="padding:24px 28px;">
+            <!-- Estado + salud -->
+            <div style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+                <div style="background:#f8fafc; padding:10px 16px; border-radius:8px; flex:1; min-width:130px;">
+                    <div style="font-size:10px; color:#888; text-transform:uppercase;">Estado</div>
+                    <div style="font-size:16px; font-weight:bold;" id="ft-estado">—</div>
+                </div>
+                <div style="background:#f8fafc; padding:10px 16px; border-radius:8px; flex:1; min-width:130px;">
+                    <div style="font-size:10px; color:#888; text-transform:uppercase;">Área</div>
+                    <div style="font-size:16px; font-weight:bold; color:#374151;" id="ft-area">—</div>
+                </div>
+                <div style="background:#f8fafc; padding:10px 16px; border-radius:8px; flex:1; min-width:130px;">
+                    <div style="font-size:10px; color:#888; text-transform:uppercase;">⏱️ Hrs/Día</div>
+                    <div style="font-size:16px; font-weight:bold; color:#374151;" id="ft-horas">—</div>
+                </div>
+                <div style="background:#f8fafc; padding:10px 16px; border-radius:8px; flex:1; min-width:130px;">
+                    <div style="font-size:10px; color:#888; text-transform:uppercase;">Alerta Mtto</div>
+                    <div style="font-size:14px; font-weight:bold;" id="ft-alerta">—</div>
+                </div>
+            </div>
+
+            <!-- Datos del equipo -->
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px; margin-bottom:20px;">
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px; border-radius:0 8px 8px 0;">
+                    <div style="font-size:10px; color:#1d4ed8; text-transform:uppercase; margin-bottom:4px;">Marca</div>
+                    <div style="font-size:16px; font-weight:bold; color:#1e3a5f;" id="ft-marca">—</div>
+                </div>
+                <div style="background:#eff6ff; border-left:4px solid #2563eb; padding:12px; border-radius:0 8px 8px 0;">
+                    <div style="font-size:10px; color:#1d4ed8; text-transform:uppercase; margin-bottom:4px;">Modelo</div>
+                    <div style="font-size:16px; font-weight:bold; color:#1e3a5f;" id="ft-modelo">—</div>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; padding:12px; border-radius:0 8px 8px 0;">
+                    <div style="font-size:10px; color:#15803d; text-transform:uppercase; margin-bottom:4px;">Fabricante</div>
+                    <div style="font-size:15px; font-weight:bold; color:#166534;" id="ft-fabricante">—</div>
+                </div>
+                <div style="background:#f0fdf4; border-left:4px solid #16a34a; padding:12px; border-radius:0 8px 8px 0;">
+                    <div style="font-size:10px; color:#15803d; text-transform:uppercase; margin-bottom:4px;">Frec. Mtto</div>
+                    <div style="font-size:15px; font-weight:bold; color:#166534;" id="ft-frec">—</div>
+                </div>
+            </div>
+
+            <!-- Observaciones -->
+            <div style="background:#fefce8; border-left:4px solid #ca8a04; padding:14px; border-radius:0 8px 8px 0;">
+                <div style="font-size:10px; color:#92400e; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">📝 Observaciones</div>
+                <div style="font-size:14px; color:#78350f; line-height:1.6;" id="ft-obs">—</div>
+            </div>
+
+            <div style="margin-top:18px; text-align:center;">
+                <a id="ft-link-full" href="#" target="_blank" style="background:#7c3aed; color:white; padding:10px 22px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-block;">
+                    📄 Ver Ficha Técnica Completa con Historial
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
 <script>
+    // Datos de máquinas para el modal
+    const MAQUINAS_DATA = <%- JSON.stringify(maquinas) %>;
+
+    function verFichaMaquina(id) {
+        const m = MAQUINAS_DATA.find(x => x.id === id);
+        if (!m) return;
+
+        document.getElementById('ft-nombre').textContent    = m.nombre;
+        document.getElementById('ft-codigo').textContent    = `Código: ${m.codigo}`;
+        document.getElementById('ft-area').textContent      = m.area || '—';
+        document.getElementById('ft-horas').textContent     = `${m.horas_dia} hrs`;
+        document.getElementById('ft-marca').textContent     = m.marca || '—';
+        document.getElementById('ft-modelo').textContent    = m.modelo || '—';
+        document.getElementById('ft-fabricante').textContent = m.fabricante || '—';
+        document.getElementById('ft-frec').textContent      = `Cada ${m.frecuencia_mtto_dias || 30} días`;
+        document.getElementById('ft-obs').textContent       = m.observaciones || 'Sin observaciones';
+        document.getElementById('ft-link-full').href        = `/ficha_maquina/${m.id}`;
+
+        // Estado con color
+        const estadoEl = document.getElementById('ft-estado');
+        const iconos = { 'Funcional':'🟢', 'Falla Menor':'🟡', 'No Funcional':'🔴', 'Guardada':'⚪' };
+        estadoEl.textContent = `${iconos[m.estado] || '⚪'} ${m.estado}`;
+
+        // Alerta de mantenimiento
+        const alertaEl = document.getElementById('ft-alerta');
+        const dias = m.dias_para_mtto;
+        if (dias === 'Sin Registro' || dias == null) {
+            alertaEl.textContent = 'Sin registro'; alertaEl.style.color = '#6b7280';
+        } else if (dias <= 0) {
+            alertaEl.textContent = `🚨 Atrasado ${Math.abs(dias)}d`; alertaEl.style.color = '#dc2626';
+        } else if (dias <= 7) {
+            alertaEl.textContent = `⚠️ Próximo: ${dias}d`; alertaEl.style.color = '#d97706';
+        } else {
+            alertaEl.textContent = `✅ Al día (${dias}d)`; alertaEl.style.color = '#16a34a';
+        }
+
+        document.getElementById('modal-ficha').style.display = 'flex';
+    }
+
+    // Doble-click en cualquier fila
+    document.querySelectorAll('.fila-maquina').forEach(fila => {
+        fila.style.cursor = 'pointer';
+        fila.title = 'Doble-click para ver ficha técnica';
+        fila.addEventListener('dblclick', function() {
+            const id = parseInt(this.getAttribute('data-id'));
+            verFichaMaquina(id);
+        });
+    });
+
     document.getElementById('inputBusqueda').addEventListener('keyup', function() {
         let textoBusqueda = this.value.toLowerCase();
-        let filas = document.querySelectorAll('.fila-maquina');
-        
-        filas.forEach(fila => {
-            let textoFila = fila.innerText.toLowerCase();
-            fila.style.display = textoFila.includes(textoBusqueda) ? '' : 'none';
+        document.querySelectorAll('.fila-maquina').forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(textoBusqueda) ? '' : 'none';
         });
     });
 </script>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %>

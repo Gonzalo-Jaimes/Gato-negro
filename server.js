@@ -1289,16 +1289,29 @@ app.get('/imprimir_nomina_v18/:id', async (req, res) => {
     const pago_extras = reg.extra_tabacos * VALOR_EXTRA;
     let total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
     
-    // Buscar si tuvo descuentos por préstamos o suministros en esta semana
+    // Buscar descuentos REALES de esta semana:
+    // SOLO se descuenta del sueldo si:
+    //   - tipo = 'abono' (el operario hizo un abono parcial)
+    //   - tipo = 'descuento_sueldo' (Gregorio decidió descontarlo del pago)
+    // Los préstamos dados (tipo='prestamo') NO se descuentan automáticamente del sueldo.
     let descuentos = 0;
+    let desglose_descuentos = [];
     try {
         const { data: abonos } = await supabase.from('abonos_prestamo')
-            .select('monto_abono')
+            .select('monto_abono, tipo, nota, fecha_abono')
             .eq('empleado_id', emp.id)
             .gte('fecha_abono', reg.semana_inicio);
             
         if (abonos) {
-            abonos.forEach(a => descuentos += parseFloat(a.monto_abono || 0));
+            abonos.forEach(a => {
+                const monto = parseFloat(a.monto_abono || 0);
+                const tipo  = a.tipo || 'abono';
+                // Solo suman como descuento si son abonos o descuentos_sueldo positivos
+                if (monto > 0 && (tipo === 'abono' || tipo === 'descuento_sueldo')) {
+                    descuentos += monto;
+                    desglose_descuentos.push({ tipo, monto, nota: a.nota, fecha: a.fecha_abono });
+                }
+            });
         }
     } catch(e) {}
 
@@ -1311,6 +1324,7 @@ app.get('/imprimir_nomina_v18/:id', async (req, res) => {
             pago_tabacos, pago_recorte, pago_vena, pago_extras, 
             total_bruto: total_ganado,
             descuentos: descuentos,
+            desglose_descuentos: desglose_descuentos,
             total_neto: total_neto,
             valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, 
             valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA 
