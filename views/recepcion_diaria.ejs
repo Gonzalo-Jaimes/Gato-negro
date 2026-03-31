@@ -10,6 +10,7 @@
     .btn-liquidar { background-color: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 4px; }
     .btn-prestamo { background-color: #f59e0b; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
     .btn-historial { background-color: #6b7280; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
+    .btn-extra    { background-color: #15803d; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
     .tabla-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
 
     /* Badge pendiente */
@@ -78,6 +79,39 @@
             <button onclick="cerrarModal()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
         <p id="modal-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
+    </div>
+</div>
+
+<!-- MODAL MATERIAL EXTRA ENTRE SEMANA -->
+<div class="modal-overlay" id="modal-extra">
+    <div class="modal-box">
+        <h3 style="margin:0 0 16px 0; color:#15803d;">🌿 Material Extra Entre Semana</h3>
+        <p id="modal-extra-emp" style="font-weight:bold; margin-bottom:12px; color:#333;"></p>
+        <p style="font-size:12px; color:#6b7280; margin-bottom:12px;">El material extra queda como deuda. Gregorío puede descontarlo completo o parcialmente en los siguientes despachos.</p>
+
+        <label style="font-size:13px; font-weight:bold;">Material:</label>
+        <select id="extra-material" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+            <option value="capa">🍃 Capa</option>
+            <option value="capote">🌿 Capote</option>
+            <option value="picadura">🪴 Picadura</option>
+        </select>
+
+        <label style="font-size:13px; font-weight:bold;">Cantidad (kg):</label>
+        <input type="number" id="extra-kg" placeholder="Ej: 2" min="0.01" step="0.01"
+               style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Fecha:</label>
+        <input type="date" id="extra-fecha" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Motivo (opcional):</label>
+        <input type="text" id="extra-nota" placeholder="Ej: Capa salió mala, necesitó reemplazo"
+               style="width:100%; padding:8px; margin-bottom:18px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="guardarMaterialExtra()" style="flex:1; background:#15803d; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
+            <button onclick="cerrarModalExtra()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
+        </div>
+        <p id="extra-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
     </div>
 </div>
 
@@ -172,12 +206,16 @@
                     </td>
 
                     <!-- ACCIONES -->
-                    <td style="min-width: 120px;">
+                    <td style="min-width: 130px;">
                         <button type="submit" class="btn-guardar" title="Guardar avance">💾 Guardar</button>
                         <% if(reg.id) { %>
                             <br>
                             <button type="button" class="btn-liquidar" onclick="liquidarSemana('<%= reg.id %>')" title="Cerrar semana y generar nómina">💰 Liquidar</button>
                         <% } %>
+                        <br>
+                        <button type="button" class="btn-extra"
+                                onclick="abrirModalExtra('<%= emp.id %>', '<%= emp.nombre %>')"
+                                title="Registrar material extra pedido entre semana">🌿 Extra</button>
                         <br>
                         <button type="button" class="btn-prestamo"
                                 onclick="abrirModalPrestamo('<%= emp.id %>', '<%= emp.nombre %>', '<%= prestamo ? prestamo.saldo_pendiente : 0 %>')"
@@ -192,6 +230,7 @@
                                style="display:inline-block; margin-top:4px; background:#7c3aed; color:white; padding:4px 8px; border-radius:4px; font-size:11px; text-decoration:none;">🖨️ Imprimir Orden</a>
                         <% } %>
                     </td>
+
                 </tr>
             </form>
 
@@ -356,6 +395,64 @@
     // Click fuera del modal para cerrar
     document.getElementById('modal-prestamo').addEventListener('click', function(e) {
         if (e.target === this) cerrarModal();
+    });
+
+    // ─────────────────────────────────────────────
+    //  MODAL MATERIAL EXTRA
+    // ─────────────────────────────────────────────
+    let extraEmpId = null;
+
+    function abrirModalExtra(empId, nombre) {
+        extraEmpId = empId;
+        document.getElementById('modal-extra-emp').textContent = nombre;
+        document.getElementById('extra-kg').value    = '';
+        document.getElementById('extra-nota').value  = '';
+        document.getElementById('extra-error').style.display = 'none';
+        document.getElementById('extra-fecha').value = new Date().toISOString().slice(0,10);
+        document.getElementById('modal-extra').classList.add('activo');
+    }
+
+    function cerrarModalExtra() {
+        document.getElementById('modal-extra').classList.remove('activo');
+        extraEmpId = null;
+    }
+
+    async function guardarMaterialExtra() {
+        const material = document.getElementById('extra-material').value;
+        const kg       = parseFloat(document.getElementById('extra-kg').value);
+        const fecha    = document.getElementById('extra-fecha').value;
+        const nota     = document.getElementById('extra-nota').value;
+        const errEl    = document.getElementById('extra-error');
+
+        if (!kg || kg <= 0) {
+            errEl.textContent = 'Ingresa una cantidad mayor a 0.';
+            errEl.style.display = 'block';
+            return;
+        }
+        errEl.style.display = 'none';
+
+        try {
+            const resp = await fetch('/registrar_material_extra', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ empleado_id: extraEmpId, material, kg, fecha, nota })
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                cerrarModalExtra();
+                alert(`✅ ${data.msg}`);
+            } else {
+                errEl.textContent = data.msg || 'Error al guardar.';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            errEl.textContent = 'Error de conexión.';
+            errEl.style.display = 'block';
+        }
+    }
+
+    document.getElementById('modal-extra').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalExtra();
     });
 
     // ─────────────────────────────────────────────

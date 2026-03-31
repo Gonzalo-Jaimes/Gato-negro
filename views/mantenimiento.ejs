@@ -104,7 +104,7 @@
     </tr>
 
     <% mantenimientos.forEach(function(mtto) { %>
-    <tr class="fila-mtto">
+    <tr class="fila-mtto" onclick="verDetalleMtto(<%= mtto.id %>)" style="cursor:pointer;" title="Click para ver detalle completo">
         <td><strong># <%= mtto.id %></strong></td>
         <td><%= mtto.fecha %><br><small><%= mtto.hora %></small></td>
         <td style="text-transform: capitalize;"><strong><%= mtto.maquina %></strong></td>
@@ -116,8 +116,7 @@
         <td style="text-transform: capitalize;"><%= mtto.hecho_por %></td>
         <td style="text-align: left; font-size: 14px;">
             ⏱️ <b>Tiempo:</b> <%= mtto.tiempo_min %> min <br>
-            👷 <b>M.O:</b> $<%= mtto.costo_mo.toLocaleString('es-CO') %> COP<br>
-            ⚙️ <b>Mat:</b> $<%= mtto.costo_mat.toLocaleString('es-CO') %> COP
+            💰 $<%= (mtto.costo_mo + mtto.costo_mat).toLocaleString('es-CO') %> COP total
         </td>
         <td>
             <% if (mtto.estado === 'REALIZADO') { %> 
@@ -130,24 +129,108 @@
     <% }); %>
 </table>
 
+<!-- MODAL DETALLE ORDEN DE TRABAJO -->
+<div id="modal-detalle-mtto" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9000; align-items:center; justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
+    <div style="background:white; border-radius:12px; padding:30px; max-width:650px; width:95%; box-shadow:0 20px 60px rgba(0,0,0,0.4); position:relative; max-height:90vh; overflow-y:auto;">
+        <button onclick="document.getElementById('modal-detalle-mtto').style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✖</button>
+        
+        <div style="border-bottom:3px solid #2563eb; margin-bottom:20px; padding-bottom:12px;">
+            <h2 style="margin:0; color:#111;" id="mtto-titulo">📋 Orden de Trabajo #</h2>
+            <span id="mtto-estado-badge" style="font-size:14px; font-weight:bold;"></span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Máquina / Equipo</div>
+                <div style="font-size:18px; font-weight:bold; color:#111;" id="mtto-maquina">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Tipo de Mantenimiento</div>
+                <div style="font-size:16px; font-weight:bold;" id="mtto-tipo">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Fecha y Hora</div>
+                <div style="font-size:16px; font-weight:bold; color:#374151;" id="mtto-fecha">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Responsable</div>
+                <div style="font-size:16px; font-weight:bold; color:#374151;" id="mtto-hecho-por">—</div>
+            </div>
+        </div>
+
+        <div style="background:#eff6ff; border-left:4px solid #2563eb; padding:14px; border-radius:0 8px 8px 0; margin-bottom:20px;">
+            <div style="font-size:11px; color:#1d4ed8; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">📝 Descripción del Trabajo</div>
+            <div style="font-size:15px; color:#1e3a5f; line-height:1.6;" id="mtto-descripcion">—</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+            <div style="background:#f0fdf4; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#15803d; text-transform:uppercase;">⏱️ Tiempo Parada</div>
+                <div style="font-size:22px; font-weight:bold; color:#166534;" id="mtto-tiempo">—</div>
+                <div style="font-size:11px; color:#6b7280;">minutos</div>
+            </div>
+            <div style="background:#fefce8; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#92400e; text-transform:uppercase;">👷 Costo M.O.</div>
+                <div style="font-size:18px; font-weight:bold; color:#78350f;" id="mtto-costo-mo">—</div>
+            </div>
+            <div style="background:#fef2f2; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#991b1b; text-transform:uppercase;">⚙️ Costo Materiales</div>
+                <div style="font-size:18px; font-weight:bold; color:#7f1d1d;" id="mtto-costo-mat">—</div>
+            </div>
+        </div>
+
+        <div style="margin-top:16px; text-align:right; padding-top:12px; border-top:1px solid #e5e7eb;">
+            <strong style="font-size:16px;">Total: <span id="mtto-costo-total" style="color:#111;">—</span></strong>
+        </div>
+    </div>
+</div>
+
+<!-- Datos JSON de todos los mantenimientos para el modal -->
 <script>
+    const MTTOS_DATA = <%- JSON.stringify(mantenimientos) %>;
+
+    function verDetalleMtto(id) {
+        const m = MTTOS_DATA.find(x => x.id === id);
+        if (!m) return;
+
+        document.getElementById('mtto-titulo').textContent = `📋 Orden de Trabajo #${m.id}`;
+        
+        const esRealizado = m.estado === 'REALIZADO';
+        const badge = document.getElementById('mtto-estado-badge');
+        badge.textContent = esRealizado ? '✔ REALIZADO' : '✖ PENDIENTE';
+        badge.style.color = esRealizado ? '#15803d' : '#dc2626';
+
+        document.getElementById('mtto-maquina').textContent   = m.maquina;
+        document.getElementById('mtto-tipo').textContent       = m.tipo === 'Preventivo' ? '🟢 Preventivo' : m.tipo === 'Correctivo' ? '🔴 Correctivo' : `🔵 ${m.tipo}`;
+        document.getElementById('mtto-fecha').textContent      = `${m.fecha} — ${m.hora}`;
+        document.getElementById('mtto-hecho-por').textContent  = m.hecho_por;
+        document.getElementById('mtto-descripcion').textContent = m.descripcion;
+        document.getElementById('mtto-tiempo').textContent     = m.tiempo_min;
+        document.getElementById('mtto-costo-mo').textContent   = `$${(m.costo_mo||0).toLocaleString('es-CO')}`;
+        document.getElementById('mtto-costo-mat').textContent  = `$${(m.costo_mat||0).toLocaleString('es-CO')}`;
+        const total = (m.costo_mo||0) + (m.costo_mat||0);
+        document.getElementById('mtto-costo-total').textContent = `$${total.toLocaleString('es-CO')} COP`;
+
+        const modal = document.getElementById('modal-detalle-mtto');
+        modal.style.display = 'flex';
+    }
+
     // Inicialización del Motor Inteligente de Búsqueda de Máquinas
     $(document).ready(function() {
         $('.select2-maquinas').select2({
             placeholder: "🔍 Escriba el nombre o código...",
             allowClear: true,
-            width: '100%' // Forzar acoplamiento con CSS heredado
+            width: '100%'
         });
     });
 
     document.getElementById('inputBusqueda').addEventListener('keyup', function() {
         let textoBusqueda = this.value.toLowerCase();
         let filas = document.querySelectorAll('.fila-mtto');
-        
         filas.forEach(fila => {
             fila.style.display = fila.innerText.toLowerCase().includes(textoBusqueda) ? '' : 'none';
         });
     });
 </script>
 
-<%- include('partials/footer') %>
+<%- include('partials/footer') %>

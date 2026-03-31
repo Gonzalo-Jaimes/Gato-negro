@@ -54,7 +54,13 @@
     <% maquinas.forEach(function(m) { %>
     <tr class="fila-maquina">
         <td><strong><%= m.codigo %></strong></td>
-        <td style="text-transform: capitalize;"><%= m.nombre %></td>
+        <td style="text-transform: capitalize;">
+            <a href="/ficha_maquina/<%= m.id %>" target="_blank"
+               style="color:#2563eb; font-weight:bold; text-decoration:none; font-size:15px;"
+               title="Click para ver Ficha Técnica completa">
+                <%= m.nombre %> 🔗
+            </a>
+        </td>
         <td><b>Área:</b> <%= m.area %><br><small>⏱️ <%= m.horas_dia %> hrs/día</small></td>
         <td><%= m.marca %> - <%= m.modelo %><br><small>(<%= m.fabricante %>)</small></td>
         <td>
@@ -76,6 +82,9 @@
             <% } %>
         </td>
         <td>
+            <a href="/ficha_maquina/<%= m.id %>" target="_blank" style="text-decoration:none;">
+                <button style="background:#7c3aed; padding:6px 10px; margin-bottom:5px; color:white; border-radius:4px; border:none; cursor:pointer; width:100%;">📋 Ver Ficha</button>
+            </a>
             <button onclick="document.getElementById('modal-editar-<%= m.id %>').style.display='block'" style="background: #3b82f6; padding: 6px 12px; margin-bottom: 5px; color:white; border-radius: 4px; border:none; cursor: pointer;">✏️ Editar</button>
             <br>
             <a href="/eliminar_maquina/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">

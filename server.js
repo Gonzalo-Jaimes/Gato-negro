@@ -656,6 +656,51 @@ app.post('/registrar_movimiento_prestamo', async (req, res) => {
     }
 });
 
+// --- REGISTRAR MATERIAL EXTRA ENTRE SEMANA ---
+// Cuando el fabriquín viene y pide material adicional (capa mala, faltante, etc.)
+// Se suma al saldo negativo que se descuenta gradualmente en próximos despachos.
+app.post('/registrar_material_extra', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.json({ ok: false, msg: 'Sin acceso' });
+
+    const { empleado_id, material, kg, fecha, nota } = req.body;
+    const kgNum = parseFloat(kg) || 0;
+
+    if (!empleado_id || !material || kgNum <= 0) {
+        return res.json({ ok: false, msg: 'Datos incompletos' });
+    }
+
+    try {
+        // 1. Traer el empleado para obtener saldo actual
+        const { data: emp } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleado_id).single();
+        if (!emp) return res.json({ ok: false, msg: 'Empleado no encontrado' });
+
+        // 2. Actualizar el saldo de material (restar kg extra → más negativo = más deuda)
+        const campo = material === 'capa' ? 'saldo_capa_kg' : material === 'capote' ? 'saldo_capote_kg' : 'saldo_picadura_kg';
+        const nuevoSaldo = parseFloat(((emp[campo] || 0) - kgNum).toFixed(2));
+
+        await supabase.from('empleados_fabriquines').update({ [campo]: nuevoSaldo }).eq('id', empleado_id);
+
+        // 3. Descontar del inventario maestro
+        try {
+            const nombreMat = material === 'capa' ? 'Capa' : material === 'capote' ? 'Capote' : 'Picadura';
+            const { data: invItem } = await supabase.from('inventario').select('*').ilike('nombre', `%${nombreMat}%`).single();
+            if (invItem) {
+                const nuevoStock = Math.max(0, (parseFloat(invItem.cantidad) - kgNum));
+                await supabase.from('inventario').update({ cantidad: nuevoStock }).eq('id', invItem.id);
+            }
+        } catch(e) { /* No falla si inventario no tiene esa categoría */ }
+
+        return res.json({
+            ok: true,
+            msg: `${kgNum} kg de ${material} registrado como deuda para ${emp.nombre}. Nuevo saldo: ${nuevoSaldo} kg.`
+        });
+
+    } catch(e) {
+        console.error('Error material extra:', e);
+        return res.json({ ok: false, msg: e.message });
+    }
+});
+
 // --- VER HISTORIAL DE PRÉSTAMOS POR EMPLEADO (JSON) ---
 app.get('/historial_prestamo/:empleado_id', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.json([]);
@@ -976,8 +1021,18 @@ app.post('/editar_maquina/:id', async (req, res) => {
     res.redirect('/maquinas');
 });
 
-// --- FICHA TÉCNICA DIGITAL (CV DE LA MÁQUINA) ---
+// --- FICHA TÉCNICA DIGITAL (CV DE LA MÁQUINA) --- alias por ID directo
+app.get('/ficha_maquina/:id', async (req, res) => {
+    req.params.id = req.params.id;
+    return fichaHandler(req, res);
+});
+
 app.get('/maquinas/ficha/:id', async (req, res) => {
+    return fichaHandler(req, res);
+});
+
+async function fichaHandler(req, res) {
+
     const maquinaId = req.params.id;
     
     const { data: maquina } = await supabase.from('maquinas').select('*').eq('id', maquinaId).single();
@@ -1011,7 +1066,7 @@ app.get('/maquinas/ficha/:id', async (req, res) => {
         maquina: maquina, 
         historial: mantenimientos || [] 
     });
-});
+}
 
 // --- PANEL CENTRAL DE QRs (VISTA ADMINISTRATIVA) ---
 app.get('/maquinas/qrs', async (req, res) => {
