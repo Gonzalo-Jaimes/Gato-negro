@@ -30,6 +30,35 @@
 .saco-item:hover    { border-color: #2563eb; background: #eff6ff; }
 .saco-item.seleccionado { background: #2563eb; color: white; border-color: #1d4ed8; }
 @media (max-width: 700px) { .pic-grid { grid-template-columns: 1fr; } }
+
+/* === DARK MODE: PICADURA === */
+html.dark-mode .pic-card             { background: #111 !important; border: 1px solid #2d2d2d !important; color: #e5e7eb !important; }
+html.dark-mode .pic-card h3          { border-bottom-color: #2d2d2d !important; color: #f3f4f6 !important; }
+html.dark-mode .lote-card            { background: #111 !important; border-color: #2d2d2d !important; color: #e5e7eb !important; }
+html.dark-mode .lote-card.activo     { border-left-color: #16a34a !important; }
+html.dark-mode .saco-item            { background: #1a1a1a !important; border-color: #333 !important; color: #e5e7eb !important; }
+html.dark-mode .saco-item:hover      { background: #1a2a4d !important; border-color: #2563eb !important; }
+html.dark-mode .saco-item.seleccionado { background: #1d4ed8 !important; color: white !important; }
+html.dark-mode .modal-box-pic        { background: #111 !important; color: #e5e7eb !important; border: 1px solid #2d2d2d !important; }
+/* Stat boxes — fondo dark según color */
+html.dark-mode .stat-box             { background: #1a1a1a !important; border: 1px solid #2d2d2d !important; }
+html.dark-mode .stat-lbl             { color: #6b7280 !important; }
+/* Stat boxes con background inline coloreado */
+html.dark-mode .stat-box[style*="background: #eff6ff"],
+html.dark-mode .stat-box[style*="background:#eff6ff"] { background: #0f1f3d !important; }
+html.dark-mode .stat-box[style*="background: #f0fdf4"],
+html.dark-mode .stat-box[style*="background:#f0fdf4"] { background: #071a0e !important; }
+html.dark-mode .stat-box[style*="background: #faf5ff"],
+html.dark-mode .stat-box[style*="background:#faf5ff"] { background: #160a2a !important; }
+/* Resumen de cálculo y modal de entrega */
+html.dark-mode #resumen-calculo       { background: #0f1f3d !important; color: #93c5fd !important; border-color: #1e3a6e !important; }
+html.dark-mode #resumen-sacos-sel     { background: #0f1f3d !important; color: #93c5fd !important; }
+/* Formulario de sacos por lote — cajas grises */
+html.dark-mode [style*="background: #f8fafc"],
+html.dark-mode [style*="background:#f8fafc"] { background: #1a1a1a !important; }
+html.dark-mode [style*="background: #faf5ff"],
+html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
+
 </style>
 
 <h1>🌿 Bodega de Picadura Procesada</h1>
