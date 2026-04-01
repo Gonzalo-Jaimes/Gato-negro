@@ -1349,11 +1349,18 @@ app.post('/entregar_sacos', async (req, res) => {
         const arrSacosIds = Array.isArray(sacos_ids) ? sacos_ids : (sacos_ids ? sacos_ids.split(',').filter(x => x) : []);
         if (arrSacosIds.length === 0) return res.json({ ok: false, msg: 'Debe seleccionar al menos un saco.' });
 
-        // 1. Obtener Factura Pendiente del Empleado
-        const { data: despacho } = await supabase.from('despachos_registro')
-            .select('*').eq('empleado_id', empleado_id).eq('estado', 'pendiente').single();
+        // 1. Obtener la Factura Pendiente más antigua del Empleado (V2.9.4)
+        const { data: facturas, error: errF } = await supabase.from('despachos_registro')
+            .select('*')
+            .eq('empleado_id', empleado_id)
+            .in('estado', ['pendiente', 'activo'])
+            .order('created_at', { ascending: true })
+            .limit(1);
         
-        if (!despacho) return res.json({ ok: false, msg: 'Este empleado no tiene una factura impresa pendiente de entrega.' });
+        if (errF) throw errF;
+        const despacho = facturas && facturas.length > 0 ? facturas[0] : null;
+        
+        if (!despacho) return res.json({ ok: false, msg: 'Este empleado no tiene una factura vigente (impresa) pendiente de entrega.' });
 
         // 2. Obtener Info del Empleado para saldos
         const { data: empleado } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleado_id).single();
