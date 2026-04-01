@@ -338,13 +338,44 @@ async function confirmarDivision() {
         
         <div id="resumen-sacos-sel" style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px;"></div>
         
-        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fabriquín:</label>
-        <select id="sel-empleado-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; font-size:14px;">
+        <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fabriquín (con factura pendiente):</label>
+        <select id="sel-empleado-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; font-size:14px;" onchange="actualizarMetasMaterial()">
             <option value="">-- Seleccionar --</option>
             <% empleados.forEach(emp => { %>
             <option value="<%= emp.id %>"><%= emp.nombre %></option>
             <% }); %>
         </select>
+
+        <!-- Bloque de Metas de Material (Unificación V2.9.2) -->
+        <div id="bloque-metas" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:15px; margin-bottom:20px;">
+            <p style="margin:0 0 10px 0; font-size:14px; font-weight:bold; color:#1e3a5f;">📋 Meta de Material (Factura):</p>
+            <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Picadura</div>
+                    <div style="font-size:16px; font-weight:bold; color:#16a34a;" id="meta-pica">0 kg</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Capa</div>
+                    <div style="font-size:16px; font-weight:bold; color:#7c3aed;" id="meta-capa">0 kg</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Capote</div>
+                    <div style="font-size:16px; font-weight:bold; color:#2563eb;" id="meta-capo">0 kg</div>
+                </div>
+            </div>
+            
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+                <div>
+                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:#475569;">PESO REAL CAPA (kg):</label>
+                    <input type="number" id="real-capa-pic" step="0.01" placeholder="Ej: 5.20" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
+                </div>
+                <div>
+                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:#475569;">PESO REAL CAPOTE (kg):</label>
+                    <input type="number" id="real-capote-pic" step="0.01" placeholder="Ej: 9.50" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
+                </div>
+            </div>
+            <div id="status-picadura" style="margin-top:12px; font-size:12px; font-weight:bold; text-align:center; padding:6px; border-radius:6px;"></div>
+        </div>
 
         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fecha de entrega:</label>
         <input type="date" id="fecha-entrega-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; box-sizing:border-box;">
@@ -386,6 +417,13 @@ function toggleSaco(el) {
     const totalKg = arr.reduce((acc, x) => acc + x.kg, 0);
     const totalEl = document.getElementById(`total-sel-${loteId}`);
     if (totalEl) totalEl.textContent = arr.length > 0 ? `${arr.length} saco(s) = ${totalKg.toFixed(1)} kg seleccionados` : '';
+
+    // Si el modal de entrega está abierto y hay un empleado seleccionado, actualizar status
+    const empId = document.getElementById('sel-empleado-pic') ? document.getElementById('sel-empleado-pic').value : null;
+    if (empId && typeof facturasPendientes !== 'undefined') {
+        const factura = facturasPendientes.find(f => f.empleado_id == empId);
+        if (factura) recalcStatusPicadura(factura.picadura_kg);
+    }
 }
 
 function abrirEntrega(loteId) {
@@ -408,10 +446,60 @@ function cerrarModalEntrega() {
     document.getElementById('modal-entrega').classList.remove('activo');
 }
 
+// Meta material data
+const facturasPendientes = <%- JSON.stringify(facturasPend) %>;
+
+function actualizarMetasMaterial() {
+    const empId = document.getElementById('sel-empleado-pic').value;
+    const bloque = document.getElementById('bloque-metas');
+    const factura = facturasPendientes.find(f => f.empleado_id == empId);
+
+    if (factura) {
+        bloque.style.display = 'block';
+        document.getElementById('meta-pica').textContent = `${factura.picadura_kg} kg`;
+        document.getElementById('meta-capa').textContent = `${factura.capa_kg} kg`;
+        document.getElementById('meta-capo').textContent = `${factura.capote_kg} kg`;
+        // Auto-poblar sugerencia
+        document.getElementById('real-capa-pic').value = factura.capa_kg;
+        document.getElementById('real-capote-pic').value = factura.capote_kg;
+        
+        recalcStatusPicadura(factura.picadura_kg);
+    } else {
+        bloque.style.display = 'none';
+    }
+}
+
+function recalcStatusPicadura(meta) {
+    const arr = sacosSeleccionados[loteActivo] || [];
+    const actual = arr.reduce((acc, x) => acc + x.kg, 0);
+    const statusEl = document.getElementById('status-picadura');
+    const diff = actual - meta;
+
+    if (actual === 0) {
+        statusEl.innerHTML = `⚠️ Selecciona los sacos para llegar a los ${meta} kg`;
+        statusEl.style.background = '#fff7ed';
+        statusEl.style.color = '#9a3412';
+    } else if (Math.abs(diff) < 0.1) {
+        statusEl.innerHTML = `✅ ¡Perfecto! Cubre exactamente la meta de ${meta} kg.`;
+        statusEl.style.background = '#f0fdf4';
+        statusEl.style.color = '#16a34a';
+    } else if (diff > 0) {
+        statusEl.innerHTML = `⚠️ Estás entregando ${diff.toFixed(1)} kg DE MÁS.`;
+        statusEl.style.background = '#fef2f2';
+        statusEl.style.color = '#dc2626';
+    } else {
+        statusEl.innerHTML = `⏳ Faltan ${Math.abs(diff).toFixed(1)} kg para la meta.`;
+        statusEl.style.background = '#eff6ff';
+        statusEl.style.color = '#1d4ed8';
+    }
+}
+
 async function confirmarEntrega() {
     const empleado_id = document.getElementById('sel-empleado-pic').value;
     const fecha       = document.getElementById('fecha-entrega-pic').value;
     const nota        = document.getElementById('nota-entrega-pic').value;
+    const capa_real_kg   = document.getElementById('real-capa-pic').value;
+    const capote_real_kg = document.getElementById('real-capote-pic').value;
     const errEl       = document.getElementById('pic-error');
     
     if (!empleado_id) { errEl.textContent = 'Selecciona un fabriquín.'; errEl.style.display = 'block'; return; }
@@ -421,11 +509,13 @@ async function confirmarEntrega() {
     if (sacos_ids.length === 0) { errEl.textContent = 'Sin sacos seleccionados.'; errEl.style.display = 'block'; return; }
     
     errEl.style.display = 'none';
+    if (!confirm('¿Confirmas que estás entregando este material? Esto cerrará la factura, descontará inventario y habilitará al fabriquin en recepción.')) return;
+
     try {
         const resp = await fetch('/entregar_sacos', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sacos_ids, empleado_id, fecha, nota })
+            body: JSON.stringify({ sacos_ids, empleado_id, fecha, nota, capa_real_kg, capote_real_kg })
         });
         const data = await resp.json();
         if (data.ok) {

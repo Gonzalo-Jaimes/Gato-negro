@@ -1243,16 +1243,21 @@ app.get('/picadura', async (req, res) => {
             empleados = empRes || [];
         }
 
+        // 4. Facturas pendientes de entrega (Unificación V2.9.2)
+        const { data: facturasPend } = await supabase.from('despachos_registro')
+                                             .select('id, meta_tabacos, capa_kg, capote_kg, picadura_kg, empleado_id')
+                                             .eq('estado', 'pendiente');
+
         res.render('picadura', {
             lotes:           lotes           || [],
             sacosDisponibles: sacosDisp      || [],
-            sacosEntregados: sacosEnt        || [],
-            empleados:       empleados       || []
+            sacosEntregados:  sacosEnt        || [],
+            empleados:       empleados       || [],
+            facturasPend:    facturasPend    || []
         });
     } catch(e) {
         console.error('Error /picadura:', e);
-        // Si las tablas no existen aún, renderizar vacío
-        res.render('picadura', { lotes: [], sacosDisponibles: [], sacosEntregados: [], empleados: [] });
+        res.render('picadura', { lotes: [], sacosDisponibles: [], sacosEntregados: [], empleados: [], facturasPend: [] });
     }
 });
 
@@ -1320,48 +1325,98 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 });
 
 // --- ENTREGAR SACOS A FABRIQUÍN ---
+// --- ENTREGAR SACOS A FABRIQUÍN (FLUJO UNIFICADO V2.9.2) ---
 app.post('/entregar_sacos', async (req, res) => {
-    if (!req.session.rol || req.session.rol !== 'admin') return res.json({ ok: false });
+    if (!req.session.rol || req.session.rol !== 'admin') return res.status(403).json({ ok: false, msg: 'No autorizado' });
 
-    const { sacos_ids, empleado_id, fecha, nota } = req.body;
-
-    if (!sacos_ids || sacos_ids.length === 0 || !empleado_id || !fecha) {
-        return res.json({ ok: false, msg: 'Datos incompletos' });
-    }
+    const { empleado_id, sacos_ids, capa_real_kg, capote_real_kg, nota, fecha } = req.body;
+    const tiempo = getDateTime();
+    const fechEntrega = fecha || tiempo.fecha;
 
     try {
-        // Marcar cada saco como entregado
-        const { error } = await supabase.from('sacos_picadura')
-            .update({
-                estado: 'entregado',
-                empleado_id: parseInt(empleado_id),
-                fecha_entrega: fecha,
-                despacho_nota: nota || null
-            })
-            .in('id', sacos_ids);
+        const arrSacosIds = Array.isArray(sacos_ids) ? sacos_ids : (sacos_ids ? sacos_ids.split(',').filter(x => x) : []);
+        if (arrSacosIds.length === 0) return res.json({ ok: false, msg: 'Debe seleccionar al menos un saco.' });
 
-        if (error) throw error;
+        // 1. Obtener Factura Pendiente del Empleado
+        const { data: despacho } = await supabase.from('despachos_registro')
+            .select('*').eq('empleado_id', empleado_id).eq('estado', 'pendiente').single();
+        
+        if (!despacho) return res.json({ ok: false, msg: 'Este empleado no tiene una factura impresa pendiente de entrega.' });
 
-        // Actualizar estado del lote si todos sus sacos están entregados
-        // (lo hacemos de forma asíncrona sin bloquear la respuesta)
-        supabase.from('sacos_picadura')
-            .select('lote_id')
-            .in('id', sacos_ids)
-            .then(({ data }) => {
-                const loteIds = [...new Set((data || []).map(x => x.lote_id))];
-                loteIds.forEach(async lid => {
-                    const { count } = await supabase.from('sacos_picadura')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('lote_id', lid).eq('estado', 'disponible');
-                    if (count === 0) {
-                        await supabase.from('lotes_picadura').update({ estado: 'agotado' }).eq('id', lid);
-                    }
-                });
-            });
+        // 2. Obtener Info del Empleado para saldos
+        const { data: empleado } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleado_id).single();
 
-        return res.json({ ok: true, msg: `${sacos_ids.length} saco(s) entregados.` });
+        // 3. Procesar Sacos y Calcular Peso Real Picadura
+        const { data: sacosInfo } = await supabase.from('sacos_picadura').select('peso_kg').in('id', arrSacosIds);
+        const totalPicaduraKg = (sacosInfo || []).reduce((acc, s) => acc + parseFloat(s.peso_kg || 0), 0);
+        
+        await supabase.from('sacos_picadura').update({ 
+            estado: 'entregado', empleado_id: empleado_id, fecha_entrega: fechEntrega, despacho_nota: nota || null
+        }).in('id', arrSacosIds);
+
+        // 4. Descontar Inventario Principal (Capa, Capote, Picadura, Cestas)
+        const capaKgReal   = parseFloat(capa_real_kg) || 0;
+        const capoteKgReal = parseFloat(capote_real_kg) || 0;
+        const { data: inv } = await supabase.from('inventario').select('*');
+        if (inv) {
+            let c = capaKgReal, cp = capoteKgReal, pi = totalPicaduraKg;
+            for (let item of inv) {
+                let m = item.material.toLowerCase();
+                if (m.includes('capa') && c > 0) {
+                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - c) }).eq('id', item.id); c = 0;
+                }
+                if (m.includes('capote') && cp > 0) {
+                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id); cp = 0;
+                }
+                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('prima') && pi > 0) {
+                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id); pi = 0;
+                }
+            }
+            if (despacho.cestas_cant > 0 && despacho.color_cesta) {
+                const iCesta = inv.find(i => i.material.toLowerCase() === despacho.color_cesta.toLowerCase());
+                if (iCesta) await supabase.from('inventario').update({ cantidad: Math.max(0, iCesta.cantidad - despacho.cestas_cant) }).eq('id', iCesta.id);
+            }
+        }
+
+        // 5. Finanzas: Préstamos y Suministros
+        const abono_p = despacho.abono_prestamo || 0;
+        const totalCargos = (despacho.nuevo_prestamo || 0) + ((despacho.goma_uds || 0) * 60000) + ((despacho.periodico_kg || 0) * 6000);
+
+        if (totalCargos > 0 || abono_p > 0) {
+            const { data: prest } = await supabase.from('prestamos_fabriquines').select('*').eq('empleado_id', empleado_id).eq('estado', 'activo').single();
+            if (prest) {
+                const nSaldo = Math.max(0, parseFloat(prest.saldo_pendiente) + totalCargos - abono_p);
+                await supabase.from('prestamos_fabriquines').update({ 
+                    saldo_pendiente: nSaldo, estado: nSaldo === 0 ? 'pagado' : 'activo', monto_total: parseFloat(prest.monto_total) + totalCargos
+                }).eq('id', prest.id);
+            } else if (totalCargos > 0) {
+                await supabase.from('prestamos_fabriquines').insert([{
+                    empleado_id: empleado_id, monto_total: totalCargos, saldo_pendiente: totalCargos - abono_p, concepto: `Cargos Despacho ${despacho.id}`, estado: 'activo'
+                }]);
+            }
+        }
+
+        // 6. Actualizar Saldos de Material del Empleado
+        const nSaldoCapa = (parseFloat(empleado.saldo_capa_kg) || 0) + (despacho.capa_kg || 0) - capaKgReal;
+        const nSaldoCapo = (parseFloat(empleado.saldo_capote_kg) || 0) + (despacho.capote_kg || 0) - capoteKgReal;
+        const nSaldoPica = (parseFloat(empleado.saldo_picadura_kg) || 0) + (despacho.picadura_kg || 0) - totalPicaduraKg;
+
+        await supabase.from('empleados_fabriquines').update({
+            deuda_tabacos: (parseInt(empleado.deuda_tabacos) || 0) + despacho.meta_tabacos,
+            saldo_capa_kg: nSaldoCapa.toFixed(2),
+            saldo_capote_kg: nSaldoCapo.toFixed(2),
+            saldo_picadura_kg: nSaldoPica.toFixed(2)
+        }).eq('id', empleado_id);
+
+        // 7. Activar Recepción Diaria y Cerrar Factura
+        await supabase.from('recepcion_diaria').insert([{ empleado_id, usuario: empleado.codigo, fecha_registro: tiempo.fecha, estado: 'pendiente' }]);
+        await supabase.from('despachos_registro').update({ 
+            estado: 'entregado', capa_kg: capaKgReal, capote_kg: capoteKgReal, picadura_kg: totalPicaduraKg 
+        }).eq('id', despacho.id);
+
+        return res.json({ ok: true, msg: 'Entrega unificada completada con éxito.' });
     } catch(e) {
-        console.error('Error entregar sacos:', e);
+        console.error('Error entregar_sacos:', e);
         return res.json({ ok: false, msg: e.message });
     }
 });
