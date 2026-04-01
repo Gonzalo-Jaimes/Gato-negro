@@ -502,21 +502,36 @@ app.post('/despachar_tarea', async (req, res) => {
     res.redirect(`/recepcion_diaria?ok=Tarea+asignada+a+${encodeURIComponent(empleado.nombre)}+—+${fisicoEntregado.toLocaleString()}+tabacos&despacho_id=${empleado.id}`);
 });
 
-// --- IMPRIMIR ORDEN DE DESPACHO (última guardada en sesión) ---
+// --- IMPRIMIR HOJA DE DESPACHO (nueva versión V2.8 con firmas) ---
 app.get('/imprimir_despacho/:empleado_id', (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     const d = req.session.ultimo_despacho;
     if (!d || d.empleado_id != req.params.empleado_id) {
         return res.send('<script>alert("No hay datos de despacho para este empleado. Haz el despacho primero."); window.close();</script>');
     }
-    res.render('formato_despacho', {
-        empleado: { id: d.empleado_id, nombre: d.empleado_nombre, codigo: d.empleado_codigo, cedula: d.empleado_cedula },
-        meta: d.meta,
-        saldo_casa: d.saldo_casa,
-        fecha_actual: d.fecha_actual,
-        params: d.params,
-        suministros: d.suministros,
-        prestamo: d.prestamo
+
+    // Construir objeto despacho compatible con hoja_despacho.ejs
+    const despacho = {
+        id:           d.empleado_id,
+        fecha_semana: d.fecha_actual,
+        meta_tabacos: d.meta,
+        color_cesta:  d.params?.color_cesta || '—',
+        cestas_cant:  d.params?.cestas || 0,
+        capa_kg:      d.params?.capa    || 0,
+        capote_kg:    d.params?.capote  || 0,
+        picadura_kg:  d.params?.picadura || 0,
+        deuda_anterior: d.saldo_casa || 0,
+        goma_uds:     d.suministros?.goma_uds  || 0,
+        goma_num:     d.suministros?.goma_num  || '',
+        periodico_kg: d.suministros?.periodico_kg || 0,
+        notas: null
+    };
+
+    // Renderizar nueva hoja con firmas
+    res.render('hoja_despacho', {
+        empleado: { id: d.empleado_id, nombre: d.empleado_nombre, codigo: d.empleado_codigo },
+        despacho,
+        sacos: [] // En próxima fase: sacos de picadura asignados al despacho
     });
 });
 
