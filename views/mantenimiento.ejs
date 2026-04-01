@@ -13,6 +13,55 @@
     html.dark-mode .select2-container--default .select2-results__option--selected { background-color: #444 !important; }
     html.dark-mode .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #3b82f6 !important; color: white !important; }
     html.dark-mode .select2-search--dropdown .select2-search__field { background-color: #111 !important; color: white !important; border: 1px solid #555 !important; }
+
+    /* === DARK MODE: MODAL DETALLE ORDEN DE TRABAJO === */
+    html.dark-mode #modal-detalle-mtto > div {
+        background: #111111 !important;
+        color: #e5e7eb !important;
+        border: 1px solid #333 !important;
+    }
+    /* Tarjetas info dentro del modal */
+    html.dark-mode #modal-detalle-mtto [style*="background:#f8fafc"],
+    html.dark-mode #modal-detalle-mtto [style*="background: #f8fafc"] {
+        background: #1a1a1a !important;
+        border: 1px solid #2d2d2d !important;
+    }
+    /* Descripción del trabajo (azul) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#eff6ff"],
+    html.dark-mode #modal-detalle-mtto [style*="background: #eff6ff"] {
+        background: #0f1f3d !important;
+        border-left-color: #3b82f6 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#1d4ed8"] { color: #60a5fa !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#1e3a5f"] { color: #93c5fd !important; }
+    /* Tiempo parada (verde) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#f0fdf4"] {
+        background: #0a2010 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#15803d"] { color: #4ade80 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#166534"] { color: #4ade80 !important; }
+    /* Costo MO (amarillo) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#fefce8"] {
+        background: #1e1600 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#92400e"] { color: #fcd34d !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#78350f"] { color: #fcd34d !important; }
+    /* Costo Materiales (rojo) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#fef2f2"] {
+        background: #1e0808 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#991b1b"] { color: #fca5a5 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#7f1d1d"] { color: #fca5a5 !important; }
+    /* Botón cerrar */
+    html.dark-mode #modal-detalle-mtto button[style*="color:#666"] { color: #aaa !important; }
+    html.dark-mode #modal-detalle-mtto button[style*="color:#666"]:hover { color: #fff !important; }
+    /* Total footer */
+    html.dark-mode #modal-detalle-mtto [style*="border-top:1px solid #e5e7eb"],
+    html.dark-mode #modal-detalle-mtto [style*="border-top: 1px solid #e5e7eb"] { border-color: #333 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#111"] { color: #f3f4f6 !important; }
+    /* Header del modal (línea azul) */
+    html.dark-mode #modal-detalle-mtto [style*="border-bottom:3px solid #2563eb"],
+    html.dark-mode #modal-detalle-mtto [style*="border-bottom: 3px solid #2563eb"] { border-color: #3b82f6 !important; }
 </style>
 <h1>🔧 Órdenes de Mantenimiento</h1>
 <hr>

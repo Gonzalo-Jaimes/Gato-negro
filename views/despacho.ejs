@@ -1,5 +1,52 @@
 <%- include('partials/header') %>
 
+<style>
+  .fab-deuda-badge { float: right; font-size: 13px; }
+  .deuda-roja  { color: #ef4444; }
+  .deuda-verde { color: #10b981; }
+
+  /* === DARK MODE: DESPACHO PAGE === */
+  /* Resultado del cálculo de pesaje */
+  html.dark-mode #resultado_calculo {
+      background: #111111 !important;
+      border-color: #333 !important;
+      color: #e5e7eb !important;
+  }
+  html.dark-mode #resultado_calculo h3 { color: #f3f4f6 !important; }
+  html.dark-mode #resultado_calculo p[style*="color: #ef4444"],
+  html.dark-mode #resultado_calculo p[style*="color:#ef4444"] { color: #f87171 !important; }
+  html.dark-mode #resultado_calculo p[style*="color: #10b981"],
+  html.dark-mode #resultado_calculo p[style*="color:#10b981"] { color: #34d399 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
+  html.dark-mode #resultado_calculo [style*="color:#6b7280"] { color: #9ca3af !important; }
+  html.dark-mode #resultado_calculo [style*="color: #1f2937"],
+  html.dark-mode #resultado_calculo [style*="color:#1f2937"] { color: #f3f4f6 !important; }
+  /* Sección material extra (rojo) dentro del resultado */
+  html.dark-mode #resultado_calculo [style*="background:#fef2f2"],
+  html.dark-mode #resultado_calculo [style*="background: #fef2f2"] {
+      background: #1e0808 !important;
+      border-color: #7f1d1d !important;
+  }
+  html.dark-mode #resultado_calculo [style*="color:#991b1b"] { color: #fca5a5 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #991b1b"] { color: #fca5a5 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
+  html.dark-mode #resultado_calculo span[style*="color:#6b7280"] { color: #9ca3af !important; }
+  /* Inputs editables dentro del resultado */
+  html.dark-mode #resultado_calculo input[type="number"] {
+      background: #222 !important;
+      color: #fff !important;
+      border-color: #555 !important;
+  }
+  /* Sección de préstamos/suministros (amarilla) */
+  html.dark-mode [style*="background: #fef9c3"] { background: #1c1500 !important; }
+  html.dark-mode [style*="color: #854d0e"],
+  html.dark-mode [style*="color:#854d0e"] { color: #fcd34d !important; }
+  html.dark-mode [style*="color: #b45309"],
+  html.dark-mode [style*="color:#b45309"] { color: #fbbf24 !important; }
+  html.dark-mode [style*="color: #713f12"],
+  html.dark-mode [style*="color:#713f12"] { color: #f59e0b !important; }
+</style>
+
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
     <div>
         <h1 style="margin: 0; color: #333;">📝 Despachar Tarea a Fabriquín</h1>
@@ -37,7 +84,7 @@
                  onclick="seleccionarFab(this)"
                  style="padding: 10px 14px; cursor: pointer; color: #eee; border-bottom: 1px solid #333; font-size: 15px;">
                 <strong><%= emp.codigo %></strong> &ndash; <%= emp.nombre %>
-                <span style="float:right; color: <%= emp.deuda_tabacos > 0 ? '#ef4444' : '#10b981' %>; font-size: 13px;">
+                <span class="fab-deuda-badge <%= emp.deuda_tabacos > 0 ? 'deuda-roja' : 'deuda-verde' %>">
                     <%= emp.deuda_tabacos > 0 ? '⚠️ Debe ' + emp.deuda_tabacos.toLocaleString('es-CO') + ' tabs' : '✔ Sin deuda' %>
                 </span>
             </div>

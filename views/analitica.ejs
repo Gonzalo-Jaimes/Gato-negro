@@ -63,14 +63,16 @@
 <span id="finanzasData" 
       data-ingresos="<%= finanzas.ingresos %>" 
       data-nomina="<%= finanzas.nomina %>" 
-      data-mantenimiento="<%= finanzas.mantenimiento %>" style="display:none;"></span>
+      data-mantenimiento="<%= finanzas.mantenimiento %>"
+      data-raw="<%- JSON.stringify(raw_movs || []).replace(/'/g, '&#39;') %>"
+      style="display:none;"></span>
 
 <!-- CDN de Chart.js -->
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
 <script>
     // 1. Cargar la Nube de Datos Crudos de Supabase que Express nos envió
-    const RAW_DB = <%- JSON.stringify(raw_movs || []) %>;
+    const RAW_DB = JSON.parse(document.getElementById('finanzasData').getAttribute('data-raw') || '[]');
     let mainChartInstance = null;
 
     function renderBiChart() {
