@@ -518,8 +518,27 @@ app.post('/despachar_tarea', async (req, res) => {
         prestamo: { saldo_anterior: saldoAntPrestamo, abono: abono_prestamo, nuevo_saldo: nuevoSaldoPrestamo, nuevos_cargos: total_nuevos_cargos }
     };
 
-    // Redirigir a recepción diaria con mensaje de éxito (el PDF se imprime manualmente si se necesita)
-    res.redirect(`/recepcion_diaria?ok=Tarea+asignada+a+${encodeURIComponent(empleado.nombre)}+—+${fisicoEntregado.toLocaleString()}+tabacos&despacho_id=${empleado.id}`);
+    // Renderizar la hoja de despacho directamente (el form usa target="_blank", sale en pestaña nueva)
+    // El fabriquín no puede entregar nada hasta recibir material → NO ir a recepcion_diaria
+    res.render('hoja_despacho', {
+        empleado: { id: empleado.id, nombre: empleado.nombre, codigo: empleado.codigo },
+        despacho: {
+            id:           empleado.id,
+            fecha_semana: `${tiempo.fecha} ${tiempo.hora}`,
+            meta_tabacos: nuevaMeta,
+            color_cesta:  colorCesta,
+            cestas_cant:  cestasCant,
+            capa_kg:      capaTotalEntregado,
+            capote_kg:    capoteTotalEntregado,
+            picadura_kg:  picaduraTotalEntregado,
+            deuda_anterior: saldoEnCasa,
+            goma_uds:     goma_uds  || 0,
+            goma_num:     goma_num  || '',
+            periodico_kg: periodico_kg || 0,
+            notas: null
+        },
+        sacos: []
+    });
 });
 
 // --- IMPRIMIR HOJA DE DESPACHO (nueva versión V2.8 con firmas) ---

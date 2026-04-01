@@ -54,21 +54,33 @@
     </div>
 </div>
 
-<hr style="margin-bottom: 20px;">
-
-<!-- ════ RESUMEN SEMANAL DE MATERIAL ════ -->
 <% 
-    const totalCapaSem     = (resumenSemanal?.capa_kg    || 0).toFixed(2);
-    const totalCapoteSem   = (resumenSemanal?.capote_kg  || 0).toFixed(2);
-    const totalPicaduraSem = (resumenSemanal?.picadura_kg || 0).toFixed(2);
-    const totalTareas      = resumenSemanal?.total_fabriquines || 0;
-    const totalTabacos     = (resumenSemanal?.total_tabacos || 0).toLocaleString('es-CO');
+    // Resumen semanal: usamos ratio estándar basado en tabacos en circulación
+    // para estimar el material total en la calle esta semana
+    // (1000 tabacos = 1kg capa + 1.8kg capote + 7kg picadura)
+    const fabActivos = (empleados || []).filter(e => parseFloat(e.deuda_tabacos || 0) > 0);
+    const totalTabsActivos = fabActivos.reduce((acc, e) => acc + parseFloat(e.deuda_tabacos || 0), 0);
+    // Material calculado desde los saldos reales (negativos = entregado pero no liquidado)
+    let capaSaldo = 0, capoteSaldo = 0, picSaldo = 0;
+    fabActivos.forEach(e => {
+        capaSaldo    += Math.abs(Math.min(0, parseFloat(e.saldo_capa_kg    || 0)));
+        capoteSaldo  += Math.abs(Math.min(0, parseFloat(e.saldo_capote_kg  || 0)));
+        picSaldo     += Math.abs(Math.min(0, parseFloat(e.saldo_picadura_kg|| 0)));
+    });
+    // Si los saldos están en 0 (datos históricos), usar ratio teórico
+    const usarTeórico = capaSaldo + capoteSaldo + picSaldo < 0.5 && totalTabsActivos > 0;
+    const totalCapaSem     = usarTeórico ? parseFloat((totalTabsActivos / 1000 * 1.0).toFixed(2))  : parseFloat(capaSaldo.toFixed(2));
+    const totalCapoteSem   = usarTeórico ? parseFloat((totalTabsActivos / 1000 * 1.8).toFixed(2))  : parseFloat(capoteSaldo.toFixed(2));
+    const totalPicaduraSem = usarTeórico ? parseFloat((totalTabsActivos / 1000 * 7.0).toFixed(2))  : parseFloat(picSaldo.toFixed(2));
+    const totalFabs        = fabActivos.length;
+    const totalTabacos     = totalTabsActivos.toLocaleString('es-CO');
+    const esTeorico        = usarTeórico;
 %>
 <div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8); border-radius:12px; padding:18px 22px; margin-bottom:24px; color:white;">
     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
         <div>
             <h3 style="margin:0; font-size:16px; color:white;">📦 Resumen de Material — Semana Actual</h3>
-            <p style="margin:2px 0 0 0; font-size:12px; opacity:0.75;"><%= totalTareas %> fabriquin(es) con tarea activa • <%= totalTabacos %> tabacos en circulación</p>
+            <p style="margin:2px 0 0 0; font-size:12px; opacity:0.75;"><%= totalFabs %> fabriquin(es) con tarea activa • <%= totalTabacos %> tabacos en circulación<%= esTeorico ? ' — estimado por ratio teórico' : '' %></p>
         </div>
         <a href="/despacho" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:5px 12px; border-radius:6px; font-size:12px; text-decoration:none;">↺ Actualizar</a>
     </div>
@@ -87,20 +99,19 @@
         </div>
         <div style="background:rgba(255,255,255,0.15); border-radius:8px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.3);">
             <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">📊 Total a Sacar</div>
-            <div style="font-size:16px; font-weight:900;"><%= (parseFloat(totalCapaSem)+parseFloat(totalCapoteSem)+parseFloat(totalPicaduraSem)).toFixed(1) %> kg</div>
-            <div style="font-size:10px; opacity:0.65; margin-top:2px;">entre capa + capote + picadura</div>
+            <div style="font-size:18px; font-weight:900;"><%= (totalCapaSem+totalCapoteSem+totalPicaduraSem).toFixed(1) %> kg</div>
+            <div style="font-size:10px; opacity:0.65; margin-top:2px;">capa + capote + picadura</div>
         </div>
     </div>
-    <% if (totalTareas === 0) { %>
-    <p style="text-align:center; opacity:0.7; margin:8px 0 0 0; font-size:13px;">Sin tareas activas aún. A medida que despachas, aquí se acumula el total.</p>
+    <% if (totalFabs === 0) { %>
+    <p style="text-align:center; opacity:0.7; margin:8px 0 0 0; font-size:13px;">Sin tareas activas. A medida que despachas, aquí se acumula el total.</p>
     <% } %>
 </div>
-
 <div style="display:flex; justify-content:center;">
 <div class="card" style="max-width: 680px; width: 100%; border-top: 4px solid #f59e0b;">
     <h2 style="margin-top: 0;">Parámetros del Despacho</h2>
     
-    <form action="/despachar_tarea" method="POST" target="_blank" onsubmit="setTimeout(()=> window.location.reload(), 1500)">
+    <form action="/despachar_tarea" method="POST" target="_blank" onsubmit="setTimeout(()=> window.location.href='/despacho', 2000)">
         
         <!-- 1. SELECCIÓN DE FABRIQUÍN -->
         <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Fabriquín:</label>
