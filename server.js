@@ -1319,14 +1319,16 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 
         await supabase.from('sacos_picadura').insert(sacosInsert);
 
-        // 3. ACTUALIZAR INVENTARIO GENERAL (LOGICA BATCH V2.13)
+        // 3. ACTUALIZAR INVENTARIO EN PARALELO (TURBO V2.15)
         const { data: inv } = await supabase.from('inventario').select('*');
         if (inv) {
+            const promesas = [];
+
             // A. Descontar Picadura Bruta
             const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('saca') && !i.material.toLowerCase().includes('saco') && !i.material.toLowerCase().includes('procesada'));
-            if (raw) await supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id);
+            if (raw) promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id));
 
-            // B. Agrupar Sacos por Tipo/Peso (Batching V2.13)
+            // B. Incrementar Sacos (Batching + Parallel)
             const conteo = {};
             for (let s of sacosACrear) {
                 const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
@@ -1336,14 +1338,16 @@ app.post('/registrar_lote_picadura', async (req, res) => {
             for (let [nombre, cant] of Object.entries(conteo)) {
                 const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
                 if (itemSaca) {
-                    await supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + cant }).eq('id', itemSaca.id);
+                    promesas.push(supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + cant }).eq('id', itemSaca.id));
                 } else {
-                    await supabase.from('inventario').insert([{ material: nombre, cantidad: cant, unidad: 'unid' }]);
+                    promesas.push(supabase.from('inventario').insert([{ material: nombre, cantidad: cant }]));
                 }
             }
+
+            await Promise.all(promesas);
         }
 
-        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos. Inventario sincronizado.`);
+        console.log(`🚀 Lote #${lote.id} finalizado en paralelo. Sincronismo total.`);
         res.redirect('/picadura?ok=lote_creado');
     } catch(e) {
         console.error('Error registrar lote:', e);
@@ -1367,66 +1371,67 @@ app.post('/entregar_sacos', async (req, res) => {
         const arrSacosIds = Array.isArray(sacos_ids) ? sacos_ids : (sacos_ids ? sacos_ids.split(',').filter(x => x) : []);
         if (arrSacosIds.length === 0) return res.json({ ok: false, msg: 'Debe seleccionar al menos un saco.' });
 
-        // 1. Obtener la Factura Pendiente más antigua del Empleado (V2.9.4)
-        const { data: facturas, error: errF } = await supabase.from('despachos_registro')
-            .select('*')
-            .eq('empleado_id', empleado_id)
-            .in('estado', ['pendiente', 'activo'])
-            .order('created_at', { ascending: true })
-            .limit(1);
+        // 2. Información en paralelo para ganar velocidad (V2.15)
+        const [resFactura, resEmpleado, resSacos, resInv] = await Promise.all([
+            supabase.from('despachos_registro').select('*').eq('empleado_id', empleado_id).in('estado', ['pendiente', 'activo']).order('created_at', { ascending: true }).limit(1),
+            supabase.from('empleados_fabriquines').select('*').eq('id', empleado_id).single(),
+            supabase.from('sacos_picadura').select('peso_kg, tipo').in('id', arrSacosIds),
+            supabase.from('inventario').select('*')
+        ]);
         
-        if (errF) throw errF;
-        const despacho = facturas && facturas.length > 0 ? facturas[0] : null;
+        const despacho = resFactura.data && resFactura.data.length > 0 ? resFactura.data[0] : null;
+        if (!despacho) return res.json({ ok: false, msg: 'No se encontró una factura vigente para despachar.' });
         
-        if (!despacho) return res.json({ ok: false, msg: 'Este empleado no tiene una factura vigente (impresa) pendiente de entrega.' });
+        const sacosInfo = resSacos.data || [];
+        const totalPicaduraKg = sacosInfo.reduce((acc, s) => acc + parseFloat(s.peso_kg || 0), 0);
+        const inv = resInv.data || [];
 
-        // 2. Obtener Info del Empleado para saldos
-        const { data: empleado } = await supabase.from('empleados_fabriquines').select('*').eq('id', empleado_id).single();
+        // 3. ACTUALIZACIÓN DE INVENTARIO Y SACOS EN PARALELO (TURBO V2.15)
+        const promesas = [];
 
-        // 3. Procesar Sacos y Calcular Peso Real Picadura
-        const { data: sacosInfo } = await supabase.from('sacos_picadura').select('peso_kg').in('id', arrSacosIds);
-        const totalPicaduraKg = (sacosInfo || []).reduce((acc, s) => acc + parseFloat(s.peso_kg || 0), 0);
-        
-        await supabase.from('sacos_picadura').update({ 
+        // A. Actualizar estado de los sacos
+        promesas.push(supabase.from('sacos_picadura').update({ 
             estado: 'entregado', empleado_id: empleado_id, fecha_entrega: fechEntrega, despacho_nota: nota || null
-        }).in('id', arrSacosIds);
+        }).in('id', arrSacosIds));
 
-        // 4. Descontar Inventario Principal (Capa, Capote, Picadura, Cestas)
+        // B. Descontar Inventario Principal (Capa, Capote, Picadura)
         const capaKgReal   = parseFloat(capa_real_kg) || 0;
         const capoteKgReal = parseFloat(capote_real_kg) || 0;
-        const { data: inv } = await supabase.from('inventario').select('*');
-        if (inv) {
-            let c = capaKgReal, cp = capoteKgReal, pi = totalPicaduraKg;
-            for (let item of inv) {
-                let m = item.material.toLowerCase();
-                if (m.includes('capa') && c > 0) {
-                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - c) }).eq('id', item.id); c = 0;
-                }
-                if (m.includes('capote') && cp > 0) {
-                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id); cp = 0;
-                }
-                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('saco') && !m.includes('prima') && pi > 0) {
-                    await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id); pi = 0;
-                }
+        let c = capaKgReal, cp = capoteKgReal, pi = totalPicaduraKg;
+
+        for (let item of inv) {
+            let m = item.material.toLowerCase();
+            if (m.includes('capa') && c > 0) {
+                promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - c) }).eq('id', item.id)); c = 0;
             }
-            // Descuento masivo de Sacas (Batching v2.13)
-            const { data: sInfo } = await supabase.from('sacos_picadura').select('peso_kg, tipo').in('id', arrSacosIds);
-            const conteo = {};
-            for (let s of (sInfo || [])) {
-                const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
-                conteo[nombre] = (conteo[nombre] || 0) + 1;
+            if (m.includes('capote') && cp > 0) {
+                promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id)); cp = 0;
             }
-            for (let [nombre, cant] of Object.entries(conteo)) {
-                const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
-                if (itemSaca) await supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - cant) }).eq('id', itemSaca.id);
-            }
-            if (despacho.cestas_cant > 0 && despacho.color_cesta) {
-                const iCesta = inv.find(i => i.material.toLowerCase() === despacho.color_cesta.toLowerCase());
-                if (iCesta) await supabase.from('inventario').update({ cantidad: Math.max(0, iCesta.cantidad - despacho.cestas_cant) }).eq('id', iCesta.id);
+            if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('saco') && !m.includes('prima') && pi > 0) {
+                promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id)); pi = 0;
             }
         }
 
-        // 5. Finanzas: Préstamos y Suministros
+        // C. Descontar Sacas Específicas
+        const conteoSacas = {};
+        for (let s of sacosInfo) {
+            const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
+            conteoSacas[nombre] = (conteoSacas[nombre] || 0) + 1;
+        }
+        for (let [nombre, cant] of Object.entries(conteoSacas)) {
+            const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
+            if (itemSaca) promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - cant) }).eq('id', itemSaca.id));
+        }
+
+        // D. Cestas
+        if (despacho.cestas_cant > 0 && despacho.color_cesta) {
+            const iCesta = inv.find(i => i.material.toLowerCase() === despacho.color_cesta.toLowerCase());
+            if (iCesta) promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, iCesta.cantidad - despacho.cestas_cant) }).eq('id', iCesta.id));
+        }
+
+        await Promise.all(promesas);
+
+        // 4. Finanzas: Préstamos y Suministros
         const abono_p = despacho.abono_prestamo || 0;
         const totalCargos = (despacho.nuevo_prestamo || 0) + ((despacho.goma_uds || 0) * 60000) + ((despacho.periodico_kg || 0) * 6000);
 
