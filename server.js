@@ -1221,8 +1221,8 @@ app.post('/dividir_saco', async (req, res) => {
     }
 });
 
-// --- VISTA PRINCIPAL DE PICADURA ---
-app.get('/picadura', async (req, res) => {
+// --- BODEGA CENTRAL DE MATERIAL (V2.9.5: Alias /bodega) ---
+app.get(['/picadura', '/bodega'], async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
 
     try {
@@ -1243,10 +1243,12 @@ app.get('/picadura', async (req, res) => {
             .order('fecha_entrega', { ascending: false })
             .limit(50);
 
-        // Solo traer empleados que tengan facturas pendientes de entrega (Bodega Filtro V2.9.1)
-        const { data: idPendientes } = await supabase.from('despachos_registro')
-            .select('empleado_id').eq('estado', 'pendiente');
-        const ids = (idPendientes || []).map(p => p.empleado_id);
+        // Solo traer empleados que tengan facturas pendientes o activas (Bodega Filtro V2.9.5)
+        const { data: idRecords } = await supabase.from('despachos_registro')
+            .select('empleado_id')
+            .in('estado', ['pendiente', 'activo']);
+        
+        const ids = [...new Set((idRecords || []).map(p => p.empleado_id).filter(id => id))];
         
         let empleados = [];
         if (ids.length > 0) {
@@ -1255,10 +1257,10 @@ app.get('/picadura', async (req, res) => {
             empleados = empRes || [];
         }
 
-        // 4. Facturas pendientes de entrega (Unificación V2.9.2)
+        // 4. Facturas pendientes o activas de entrega (Unificación V2.9.5)
         const { data: facturasPend } = await supabase.from('despachos_registro')
                                              .select('id, meta_tabacos, capa_kg, capote_kg, picadura_kg, empleado_id')
-                                             .eq('estado', 'pendiente');
+                                             .in('estado', ['pendiente', 'activo']);
 
         res.render('picadura', {
             lotes:           lotes           || [],

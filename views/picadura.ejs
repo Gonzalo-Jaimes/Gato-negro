@@ -61,12 +61,47 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
 
 </style>
 
-<h1>🌿 Bodega de Picadura Procesada</h1>
+<h1>📦 Bodega Central de Material</h1>
 <hr>
 
+<!-- ⚡ RESUMEN DE STOCK ACTUAL (RESTAURADO V2.9.5) -->
+<div class="pic-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 14px; margin-bottom: 28px;">
+    <% 
+        const _pesosStock = [35, 28, 21, 14, 7];
+        const _coloresStock = { 35: 'saco-35', 28: 'saco-28', 21: 'saco-21', 14: 'saco-14', 7: 'saco-7' };
+        const _conteosStock = {};
+        _pesosStock.forEach(p => { _conteosStock[p] = sacosDisponibles.filter(s => s.peso_kg == p).length; });
+        const _sobrantesStock = sacosDisponibles.filter(s => s.tipo === 'sobrante').length;
+        const _totalStock = sacosDisponibles.length;
+        const _kgStock = sacosDisponibles.reduce((acc, s) => acc + parseFloat(s.peso_kg), 0);
+    %>
+    <div class="stat-box" style="background: #eff6ff;">
+        <div class="stat-num" style="color:#2563eb;"><%= _totalStock %></div>
+        <div class="stat-lbl">Total Sacos</div>
+    </div>
+    <div class="stat-box" style="background: #f0fdf4;">
+        <div class="stat-num" style="color:#16a34a;"><%= _kgStock.toFixed(0) %> kg</div>
+        <div class="stat-lbl">Kg en Bodega</div>
+    </div>
+    <% _pesosStock.forEach(p => { 
+        let _colorVal = '#4d7c0f';
+        if (p == 35) _colorVal = '#1e40af';
+        else if (p == 28) _colorVal = '#0369a1';
+        else if (p == 21) _colorVal = '#0e7490';
+        else if (p == 14) _colorVal = '#065f46';
+    %>
+    <div class="stat-box">
+        <div class="stat-num" style="font-size:26px; color: <%= _colorVal %>;"><%= _conteosStock[p] %></div>
+        <div class="stat-lbl"><%= p %> kg</div>
+    </div>
+    <% }); %>
+    <div class="stat-box" style="background: #faf5ff;">
+        <div class="stat-num" style="font-size:26px; color:#9333ea;"><%= _sobrantesStock %></div>
+        <div class="stat-lbl">Sobrantes</div>
+    </div>
 </div>
 
-<!-- ⚡ PANEL DE DESPACHO ACTIVO (NUEVO V2.9.4) -->
+<!-- ⚡ PANEL DE DESPACHO ACTIVO (STICKY) -->
 <div class="pic-card" style="position: sticky; top: 10px; z-index: 1000; border: 2px solid #2563eb; background: #f0f9ff; margin-bottom: 28px;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
         <span style="font-size: 24px;">📥</span>
@@ -215,7 +250,7 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
                             <div class="saco-item" data-saco-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" data-lote="<%= lote.id %>" onclick="toggleSaco(this)">
                                 <strong>#<%= s.numero_saco %></strong>
                                 <span style="font-size:12px;"><%= s.peso_kg %> kg<%= s.tipo === 'sobrante' ? ' ⭐' : '' %></span>
-                                <span onclick="event.stopPropagation(); abrirDivision('<%= s.id %>','<%= s.numero_saco %>',<%= s.peso_kg %>)" 
+                                <span onclick="event.stopPropagation(); abrirDivision('<%= s.id %>','<%= s.numero_saco %>', <%= s.peso_kg || 0 %>)" 
                                       title="Dividir en sacos menores"
                                       style="font-size:11px; color:#9ca3af; cursor:pointer; padding:1px 4px; border-radius:4px;">✂️</span>
                             </div>
