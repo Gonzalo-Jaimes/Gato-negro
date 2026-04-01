@@ -456,7 +456,8 @@ async function confirmarDivision() {
 </div>
 
 <script>
-// ─── Selección GLOBAL de sacos (V2.9.4) ───
+// Datos globales cargados desde el servidor (V2.9.7)
+const facturasPendientes = <%- JSON.stringify((typeof facturasPend !== 'undefined' && facturasPend) ? facturasPend : []) %>;
 let sacosSeleccionadosGlobal = []; // Array de { id, kg }
 
 function toggleSaco(el) {
@@ -483,19 +484,19 @@ function actualizarPanelDespacho() {
     document.getElementById('resumen-sacos-sel').textContent = `${count} bultos = ${totalKg.toFixed(1)} kg seleccionados`;
 
     const empId = document.getElementById('sel-empleado-pic').value;
-    if (empId) {
+    if (empId && Array.isArray(facturasPendientes)) {
         const factura = facturasPendientes.find(f => f.empleado_id == empId);
         if (factura) recalcStatusPicadura(factura.picadura_kg);
     }
 }
 
-// Meta material data
-const facturasPendientes = <%- JSON.stringify(facturasPend) %>;
+// Meta material data (Movido al inicio en V2.9.7)
 
 function actualizarMetasMaterial() {
     const empId = document.getElementById('sel-empleado-pic').value;
     const bloque = document.getElementById('bloque-metas');
     const statusEl = document.getElementById('status-picadura');
+    if (!Array.isArray(facturasPendientes)) return;
     const factura = facturasPendientes.find(f => f.empleado_id == empId);
 
     if (factura) {
