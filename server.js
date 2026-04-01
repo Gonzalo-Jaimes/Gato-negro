@@ -1319,21 +1319,26 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 
         await supabase.from('sacos_picadura').insert(sacosInsert);
 
-        // 3. ACTUALIZAR INVENTARIO GENERAL (SACAS Y MATERIA PRIMA V2.12)
+        // 3. ACTUALIZAR INVENTARIO GENERAL (LOGICA BATCH V2.13)
         const { data: inv } = await supabase.from('inventario').select('*');
         if (inv) {
             // A. Descontar Picadura Bruta
             const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('saca') && !i.material.toLowerCase().includes('saco') && !i.material.toLowerCase().includes('procesada'));
             if (raw) await supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id);
 
-            // B. Incrementar Contadores de Sacas Específicos
+            // B. Agrupar Sacos por Tipo/Peso (Batching V2.13)
+            const conteo = {};
             for (let s of sacosACrear) {
-                const nombreSaca = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
-                const itemSaca = inv.find(i => i.material.toLowerCase() === nombreSaca.toLowerCase());
+                const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
+                conteo[nombre] = (conteo[nombre] || 0) + 1;
+            }
+
+            for (let [nombre, cant] of Object.entries(conteo)) {
+                const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
                 if (itemSaca) {
-                    await supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + 1 }).eq('id', itemSaca.id);
+                    await supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + cant }).eq('id', itemSaca.id);
                 } else {
-                    await supabase.from('inventario').insert([{ material: nombreSaca, cantidad: 1, unidad: 'unid' }]);
+                    await supabase.from('inventario').insert([{ material: nombre, cantidad: cant, unidad: 'unid' }]);
                 }
             }
         }
@@ -1400,16 +1405,20 @@ app.post('/entregar_sacos', async (req, res) => {
                 if (m.includes('capote') && cp > 0) {
                     await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id); cp = 0;
                 }
-                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('prima') && pi > 0) {
+                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('saco') && !m.includes('prima') && pi > 0) {
                     await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id); pi = 0;
                 }
             }
-            // Descuento automático de Sacas (v2.12)
+            // Descuento masivo de Sacas (Batching v2.13)
             const { data: sInfo } = await supabase.from('sacos_picadura').select('peso_kg, tipo').in('id', arrSacosIds);
+            const conteo = {};
             for (let s of (sInfo || [])) {
-                const nombreSaca = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
-                const itemSaca = inv.find(i => i.material.toLowerCase() === nombreSaca.toLowerCase());
-                if (itemSaca) await supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - 1) }).eq('id', itemSaca.id);
+                const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
+                conteo[nombre] = (conteo[nombre] || 0) + 1;
+            }
+            for (let [nombre, cant] of Object.entries(conteo)) {
+                const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
+                if (itemSaca) await supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - cant) }).eq('id', itemSaca.id);
             }
             if (despacho.cestas_cant > 0 && despacho.color_cesta) {
                 const iCesta = inv.find(i => i.material.toLowerCase() === despacho.color_cesta.toLowerCase());

@@ -583,10 +583,15 @@ async function confirmarEntrega() {
     
     if (!empleado_id) { errEl.textContent = 'Selecciona un fabriquín.'; errEl.style.display = 'block'; return; }
     
+    const btn = document.querySelector('button[onclick="confirmarEntrega()"]');
+    const oldText = btn.innerHTML;
     const sacos_ids = sacosSeleccionadosGlobal.map(x => x.id);
+
     if (sacos_ids.length === 0) { errEl.textContent = 'Sin sacos seleccionados.'; errEl.style.display = 'block'; return; }
     
     errEl.style.display = 'none';
+    btn.innerHTML = '⏳ DESPACHANDO...';
+    btn.disabled = true;
 
     try {
         const resp = await fetch('/entregar_sacos', {
@@ -596,15 +601,19 @@ async function confirmarEntrega() {
         });
         const data = await resp.json();
         if (data.ok) {
-            cerrarModalEntrega();
-            location.reload();
+            btn.innerHTML = '✅ DESPACHO FINALIZADO';
+            setTimeout(() => { location.reload(); }, 1000);
         } else {
-            errEl.textContent = data.msg || 'Error al registrar.';
+            errEl.textContent = data.msg || 'Error al procesar.';
             errEl.style.display = 'block';
+            btn.innerHTML = oldText;
+            btn.disabled = false;
         }
     } catch(e) {
-        errEl.textContent = 'Error de conexión.';
+        errEl.textContent = 'Fallo de conexión. Por favor reintenta.';
         errEl.style.display = 'block';
+        btn.innerHTML = oldText;
+        btn.disabled = false;
     }
 }
 
