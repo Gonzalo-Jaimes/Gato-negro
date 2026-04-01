@@ -518,12 +518,33 @@ app.post('/despachar_tarea', async (req, res) => {
         prestamo: { saldo_anterior: saldoAntPrestamo, abono: abono_prestamo, nuevo_saldo: nuevoSaldoPrestamo, nuevos_cargos: total_nuevos_cargos }
     };
 
+    // 5b. Guardar despacho en DB para historial e impresión posterior
+    let despachoId = null;
+    try {
+        const { data: dReg } = await supabase.from('despachos_registro').insert([{
+            empleado_id:   empleado.id,
+            fecha:         tiempo.fecha,
+            meta_tabacos:  nuevaMeta,
+            deuda_anterior: saldoEnCasa,
+            capa_kg:       capaTotalEntregado,
+            capote_kg:     capoteTotalEntregado,
+            picadura_kg:   picaduraTotalEntregado,
+            color_cesta:   colorCesta,
+            cestas_cant:   cestasCant,
+            goma_uds:      parseFloat(goma_uds  || 0),
+            goma_num:      goma_num  || null,
+            periodico_kg:  parseFloat(periodico_kg || 0),
+            estado:        'activo'
+        }]).select().single();
+        if (dReg) despachoId = dReg.id;
+    } catch(e) { console.log('Despacho no guardado en DB:', e.message); }
+
     // Renderizar la hoja de despacho directamente (el form usa target="_blank", sale en pestaña nueva)
     // El fabriquín no puede entregar nada hasta recibir material → NO ir a recepcion_diaria
     res.render('hoja_despacho', {
         empleado: { id: empleado.id, nombre: empleado.nombre, codigo: empleado.codigo },
         despacho: {
-            id:           empleado.id,
+            id:           despachoId || empleado.id,
             fecha_semana: `${tiempo.fecha} ${tiempo.hora}`,
             meta_tabacos: nuevaMeta,
             color_cesta:  colorCesta,
@@ -1583,6 +1604,60 @@ app.get('/nomina', async (req, res) => {
 });
 
 // --- V2.0 DESACOPLE PDF ---
+// ==================== FACTURAS VIGENTES (V2.8.5) ====================
+
+// --- LISTA DE FACTURAS ACTIVAS ---
+app.get('/facturas', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    try {
+        const { data: despachos } = await supabase
+            .from('despachos_registro')
+            .select('*, empleados_fabriquines(nombre, codigo)')
+            .eq('estado', 'activo')
+            .order('created_at', { ascending: false });
+        res.render('facturas', { despachos: despachos || [] });
+    } catch(e) {
+        console.error('Error /facturas:', e);
+        res.render('facturas', { despachos: [] });
+    }
+});
+
+// --- REIMPRIMIR FACTURA INDIVIDUAL ---
+app.get('/reimprimir_factura/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    try {
+        const { data: d } = await supabase
+            .from('despachos_registro')
+            .select('*, empleados_fabriquines(nombre, codigo)')
+            .eq('id', req.params.id)
+            .single();
+        if (!d) return res.send('<script>alert("Factura no encontrada."); window.close();</script>');
+        const emp = d.empleados_fabriquines || {};
+        res.render('hoja_despacho', {
+            empleado: { id: d.empleado_id, nombre: emp.nombre || '—', codigo: emp.codigo || '—' },
+            despacho: {
+                id:           d.id,
+                fecha_semana: d.fecha,
+                meta_tabacos: d.meta_tabacos,
+                color_cesta:  d.color_cesta,
+                cestas_cant:  d.cestas_cant,
+                capa_kg:      d.capa_kg,
+                capote_kg:    d.capote_kg,
+                picadura_kg:  d.picadura_kg,
+                deuda_anterior: d.deuda_anterior,
+                goma_uds:     d.goma_uds,
+                goma_num:     d.goma_num,
+                periodico_kg: d.periodico_kg,
+                notas: null
+            },
+            sacos: []
+        });
+    } catch(e) {
+        console.error('Error reimprimir:', e);
+        res.send('<script>alert("Error al cargar la factura."); window.close();</script>');
+    }
+});
+
 app.get('/imprimir_nomina_v18/:id', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     const regId = req.params.id;
