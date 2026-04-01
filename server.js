@@ -1221,24 +1221,42 @@ app.post('/dividir_saco', async (req, res) => {
     }
 });
 
-// --- BODEGA CENTRAL DE MATERIAL (V2.9.8: Safe Mode) ---
+// --- BODEGA CENTRAL DE MATERIAL (V2.9.9: Restoration) ---
 app.get(['/picadura', '/bodega'], async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     try {
-        const { data: L } = await supabase.from('lotes_picadura').select('*').order('fecha',{ascending:false}).limit(10);
-        const { data: S } = await supabase.from('sacos_picadura').select('*').eq('estado','disponible').limit(200);
-        const { data: E } = await supabase.from('sacos_picadura').select('*, empleados_fabriquines(nombre)').eq('estado','entregado').limit(20);
+        // 1. Lotes
+        const { data: L } = await supabase.from('lotes_picadura').select('*').order('fecha',{ascending:false}).limit(15);
+        
+        // 2. Sacos disponibles
+        const { data: S } = await supabase.from('sacos_picadura').select('*, lotes_picadura(fecha)').eq('estado','disponible').order('id', {ascending:false});
+        
+        // 3. Entregas recientes (con info de empleado y lote)
+        const { data: E } = await supabase.from('sacos_picadura')
+            .select('*, empleados_fabriquines(nombre), lotes_picadura(fecha)')
+            .eq('estado','entregado').order('fecha_entrega',{ascending:false}).limit(40);
+        
+        // 4. Facturas vigentes para el despachador
         const { data: F } = await supabase.from('despachos_registro').select('*').in('estado',['pendiente','activo']);
+        
+        // 5. Filtrar empleados que tienen esas facturas
+        const empIds = [...new Set((F || []).map(f => f.empleado_id).filter(id => id))];
+        let empleados = [];
+        if (empIds.length > 0) {
+            const { data: eR } = await supabase.from('empleados_fabriquines').select('id, nombre').in('id', empIds).order('nombre');
+            empleados = eR || [];
+        }
 
         res.render('picadura', {
             lotes:           L || [],
             sacosDisponibles: S || [],
             sacosEntregados:  E || [],
-            empleados:       [], // No necesarios para el panel de metas ya que las facturas tienen el empleado_id
+            empleados:       empleados,
             facturasPend:    F || []
         });
     } catch(err) {
-        res.status(500).send("Error críptico en Bodega: " + err.message);
+        console.error("CRASH BODEGA:", err);
+        res.status(500).send("Error en Bodega: " + err.message);
     }
 });
 
