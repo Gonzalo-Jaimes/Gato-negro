@@ -1221,57 +1221,56 @@ app.post('/dividir_saco', async (req, res) => {
     }
 });
 
-// --- BODEGA CENTRAL DE MATERIAL (V2.9.5: Alias /bodega) ---
+// --- BODEGA CENTRAL DE MATERIAL (V2.9.6: Debug Pulse) ---
 app.get(['/picadura', '/bodega'], async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
 
     try {
-        // Lotes de procesado (más recientes primero)
+        // 1. Lotes de procesado
         const { data: lotes } = await supabase.from('lotes_picadura')
             .select('*').order('fecha', { ascending: false }).limit(20);
 
-        // Sacos disponibles (con info del lote)
+        // 2. Sacos disponibles
         const { data: sacosDisp } = await supabase.from('sacos_picadura')
             .select('*, lotes_picadura(fecha)')
             .eq('estado', 'disponible')
-            .order('lote_id').order('numero_saco');
+            .order('numero_saco');
 
-        // Últimas 50 entregas (sacos entregados con info de empleado y lote)
+        // 3. Entregas recientes
         const { data: sacosEnt } = await supabase.from('sacos_picadura')
             .select('*, empleados_fabriquines(nombre), lotes_picadura(fecha)')
             .eq('estado', 'entregado')
             .order('fecha_entrega', { ascending: false })
             .limit(50);
 
-        // Solo traer empleados que tengan facturas pendientes o activas (Bodega Filtro V2.9.5)
-        const { data: idRecords } = await supabase.from('despachos_registro')
-            .select('empleado_id')
-            .in('estado', ['pendiente', 'activo']);
+        // 4. Empleados con facturas pendientes (V2.9.6)
+        const { data: idRecs, error: errI } = await supabase.from('despachos_registro')
+            .select('empleado_id').in('estado', ['pendiente', 'activo']);
         
-        const ids = [...new Set((idRecords || []).map(p => p.empleado_id).filter(id => id))];
+        const ids = [...new Set((idRecs || []).map(p => p.empleado_id).filter(id => id))];
         
         let empleados = [];
         if (ids.length > 0) {
-            const { data: empRes } = await supabase.from('empleados_fabriquines')
-                .select('id, nombre').in('id', ids).order('nombre');
-            empleados = empRes || [];
+            const { data: eR } = await supabase.from('empleados_fabriquines').select('id, nombre').in('id', ids).order('nombre');
+            empleados = eR || [];
         }
 
-        // 4. Facturas pendientes o activas de entrega (Unificación V2.9.5)
-        const { data: facturasPend } = await supabase.from('despachos_registro')
-                                             .select('id, meta_tabacos, capa_kg, capote_kg, picadura_kg, empleado_id')
-                                             .in('estado', ['pendiente', 'activo']);
+        // 5. Facturas pendientes (V2.9.6)
+        const { data: fP, error: errF } = await supabase.from('despachos_registro')
+            .select('*').in('estado', ['pendiente', 'activo']);
+
+        if (errF) throw errF;
 
         res.render('picadura', {
             lotes:           lotes           || [],
             sacosDisponibles: sacosDisp      || [],
             sacosEntregados:  sacosEnt        || [],
             empleados:       empleados       || [],
-            facturasPend:    facturasPend    || []
+            facturasPend:    fP              || []
         });
     } catch(e) {
-        console.error('Error /picadura:', e);
-        res.render('picadura', { lotes: [], sacosDisponibles: [], sacosEntregados: [], empleados: [], facturasPend: [] });
+        console.error('CRASH BODEGA:', e);
+        res.status(500).send(`<h1>Error en Bodega Central</h1><p>${e.message}</p><pre>${e.stack}</pre>`);
     }
 });
 
