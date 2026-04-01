@@ -318,25 +318,22 @@ app.get('/despacho', async (req, res) => {
         prestamosActivos = p || [];
     } catch(e) {}
 
-    // ── RESUMEN SEMANAL: suma de material entre todos los fabriquines con tarea activa ──
-    // "Tarea activa" = deuda_tabacos > 0 (tienen material en casa que aún no han entregado)
+    // ── RESUMEN DE MATERIAL PENDIENTE POR ENTREGAR (Facturas 'pendiente' V2.9.1) ──
     let resumenSemanal = { capa_kg: 0, capote_kg: 0, picadura_kg: 0, total_fabriquines: 0, total_tabacos: 0 };
     try {
-        const activos = (empleados || []).filter(e => parseFloat(e.deuda_tabacos || 0) > 0);
-        resumenSemanal.total_fabriquines = activos.length;
-        activos.forEach(e => {
-            // saldo_capa_kg negativo = le entregaron más de lo que ya pagó = material "en la calle"
-            // saldo positivo = tiene material guardado (saldo a favor)
-            // Para el resumen de qué sacar, sumamos los saldos negativos como material entregado
-            const capaEnt    = Math.max(0, -(parseFloat(e.saldo_capa_kg    || 0)));
-            const capoteEnt  = Math.max(0, -(parseFloat(e.saldo_capote_kg  || 0)));
-            const picEnt     = Math.max(0, -(parseFloat(e.saldo_picadura_kg|| 0)));
-            resumenSemanal.capa_kg    += capaEnt;
-            resumenSemanal.capote_kg  += capoteEnt;
-            resumenSemanal.picadura_kg+= picEnt;
-            resumenSemanal.total_tabacos += parseFloat(e.deuda_tabacos || 0);
-        });
-    } catch(e) {}
+        const { data: facturasPend } = await supabase.from('despachos_registro')
+            .select('*').eq('estado', 'pendiente');
+        
+        if (facturasPend) {
+            resumenSemanal.total_fabriquines = facturasPend.length;
+            facturasPend.forEach(f => {
+                resumenSemanal.capa_kg     += parseFloat(f.capa_kg || 0);
+                resumenSemanal.capote_kg   += parseFloat(f.capote_kg || 0);
+                resumenSemanal.picadura_kg += parseFloat(f.picadura_kg || 0);
+                resumenSemanal.total_tabacos += parseInt(f.meta_tabacos || 0);
+            });
+        }
+    } catch(e) { console.error('Error resumenSemanal:', e); }
 
     res.render('despacho', { empleados: empleados || [], prestamos: prestamosActivos, resumenSemanal });
 });
@@ -1234,9 +1231,17 @@ app.get('/picadura', async (req, res) => {
             .order('fecha_entrega', { ascending: false })
             .limit(50);
 
-        // Empleados activos para el modal de entrega
-        const { data: empleados } = await supabase.from('empleados_fabriquines')
-            .select('id, nombre').order('nombre');
+        // Solo traer empleados que tengan facturas pendientes de entrega (Bodega Filtro V2.9.1)
+        const { data: idPendientes } = await supabase.from('despachos_registro')
+            .select('empleado_id').eq('estado', 'pendiente');
+        const ids = (idPendientes || []).map(p => p.empleado_id);
+        
+        let empleados = [];
+        if (ids.length > 0) {
+            const { data: empRes } = await supabase.from('empleados_fabriquines')
+                .select('id, nombre').in('id', ids).order('nombre');
+            empleados = empRes || [];
+        }
 
         res.render('picadura', {
             lotes:           lotes           || [],
