@@ -1168,7 +1168,119 @@ app.get('/maquina/:id/qr', async (req, res) => {
     }
 });
 
+// ==================== MÓDULO MERMAS Y COMPRAS (V2.8) ====================
+
+// --- VISTA PRINCIPAL DE MERMAS ---
+app.get('/mermas', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    try {
+        const { data: compras } = await supabase.from('compras_materia_prima')
+            .select('*').order('fecha', { ascending: false }).limit(50);
+        const { data: mermas } = await supabase.from('mermas_material')
+            .select('*').order('fecha', { ascending: false }).limit(50);
+        res.render('mermas', { compras: compras || [], mermas: mermas || [] });
+    } catch(e) {
+        console.error('Error /mermas:', e);
+        res.render('mermas', { compras: [], mermas: [] });
+    }
+});
+
+// --- REGISTRAR COMPRA DE MATERIAL ---
+app.post('/registrar_compra_material', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const { fecha, tipo, kg_comprado, kg_pesado, proveedor, precio_kg, nota } = req.body;
+    try {
+        await supabase.from('compras_materia_prima').insert([{
+            fecha,
+            tipo,
+            kg_comprado: parseFloat(kg_comprado),
+            kg_pesado:   kg_pesado   ? parseFloat(kg_pesado)   : null,
+            proveedor:   proveedor   || null,
+            precio_kg:   precio_kg   ? parseFloat(precio_kg)   : null,
+            nota:        nota        || null
+        }]);
+        res.redirect('/mermas?ok=compra');
+    } catch(e) {
+        console.error('Error registrar compra:', e);
+        res.redirect('/mermas?error=compra');
+    }
+});
+
+// --- REGISTRAR MERMA ---
+app.post('/registrar_merma', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    const { fecha, tipo_origen, kg_entrada, kg_util, kg_degradado, tipo_destino, nota } = req.body;
+    try {
+        await supabase.from('mermas_material').insert([{
+            fecha,
+            tipo_origen,
+            kg_entrada:   parseFloat(kg_entrada),
+            kg_util:      parseFloat(kg_util),
+            kg_degradado: kg_degradado ? parseFloat(kg_degradado) : 0,
+            tipo_destino: tipo_destino || null,
+            nota:         nota         || null
+        }]);
+        res.redirect('/mermas?ok=merma');
+    } catch(e) {
+        console.error('Error registrar merma:', e);
+        res.redirect('/mermas?error=merma');
+    }
+});
+
 // ==================== MÓDULO PICADURA PROCESADA (V2.7) ====================
+
+// --- DIVIDIR SACO EN MENORES ---
+// Toma un saco disponible, lo reemplaza por sacos de menor tamaño
+app.post('/dividir_saco', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.json({ ok: false });
+    const { saco_id, distribuciones } = req.body;
+    // distribuciones: [{ peso_kg: 7, cantidad: 4 }, { peso_kg: 14, cantidad: 1 }]
+    if (!saco_id || !distribuciones || distribuciones.length === 0) {
+        return res.json({ ok: false, msg: 'Datos incompletos' });
+    }
+    try {
+        // 1. Obtener el saco original
+        const { data: saco, error: errSaco } = await supabase.from('sacos_picadura')
+            .select('*').eq('id', saco_id).eq('estado', 'disponible').single();
+        if (errSaco || !saco) return res.json({ ok: false, msg: 'Saco no encontrado o no disponible' });
+
+        // 2. Calcular total de kg solicitados
+        const totalNuevo = distribuciones.reduce((acc, d) => acc + (parseFloat(d.peso_kg) * parseInt(d.cantidad)), 0);
+        if (totalNuevo > parseFloat(saco.peso_kg) + 0.01) {
+            return res.json({ ok: false, msg: `Total de nuevos sacos (${totalNuevo}kg) excede el saco original (${saco.peso_kg}kg)` });
+        }
+
+        // 3. Obtener el número más alto actual de ese lote para continuar numeración
+        const { data: ultimos } = await supabase.from('sacos_picadura')
+            .select('numero_saco').eq('lote_id', saco.lote_id)
+            .order('numero_saco', { ascending: false }).limit(1);
+        let contador = (ultimos?.[0]?.numero_saco || 0) + 1;
+
+        // 4. Crear los sacos nuevos
+        const nuevos = [];
+        distribuciones.forEach(d => {
+            for (let i = 0; i < parseInt(d.cantidad); i++) {
+                nuevos.push({ lote_id: saco.lote_id, numero_saco: contador++, peso_kg: parseFloat(d.peso_kg), tipo: 'estandar', estado: 'disponible' });
+            }
+        });
+
+        // Sobrante si no se distribuyó todo el peso
+        const sobrante = parseFloat((parseFloat(saco.peso_kg) - totalNuevo).toFixed(2));
+        if (sobrante > 0.1) {
+            nuevos.push({ lote_id: saco.lote_id, numero_saco: contador++, peso_kg: sobrante, tipo: 'sobrante', estado: 'disponible' });
+        }
+
+        await supabase.from('sacos_picadura').insert(nuevos);
+
+        // 5. Eliminar el saco original (cambiar a estado especial)
+        await supabase.from('sacos_picadura').update({ estado: 'dividido' }).eq('id', saco_id);
+
+        return res.json({ ok: true, msg: `Saco #${saco.numero_saco} dividido en ${nuevos.length} sacos.`, nuevos_count: nuevos.length });
+    } catch(e) {
+        console.error('Error dividir saco:', e);
+        return res.json({ ok: false, msg: e.message });
+    }
+});
 
 // --- VISTA PRINCIPAL DE PICADURA ---
 app.get('/picadura', async (req, res) => {

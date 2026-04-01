@@ -180,6 +180,9 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
                             <div class="saco-item" data-saco-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" data-lote="<%= lote.id %>" onclick="toggleSaco(this)">
                                 <strong>#<%= s.numero_saco %></strong>
                                 <span style="font-size:12px;"><%= s.peso_kg %> kg<%= s.tipo === 'sobrante' ? ' ⭐' : '' %></span>
+                                <span onclick="event.stopPropagation(); abrirDivision('<%= s.id %>','<%= s.numero_saco %>',<%= s.peso_kg %>)" 
+                                      title="Dividir en sacos menores"
+                                      style="font-size:11px; color:#9ca3af; cursor:pointer; padding:1px 4px; border-radius:4px;">✂️</span>
                             </div>
                             <% }); %>
                         </div>
@@ -234,7 +237,101 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
     <% } %>
 </div>
 
-<!-- MODAL ENTREGAR SACOS -->
+<!-- MODAL DIVIDIR SACO -->
+<div class="modal-overlay-pic" id="modal-division">
+  <div class="modal-box-pic">
+    <h3 style="margin:0 0 4px 0; color:#1e3a5f;">✂️ Dividir Saco en Menores</h3>
+    <p id="txt-saco-origen" style="font-size:13px; color:#6b7280; margin-bottom:16px;"></p>
+    <p style="font-size:13px; margin-bottom:10px; font-weight:bold;">¿Cuántos sacos de cada tamaño crear?</p>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
+        <% [35,28,21,14,7].forEach(p => { %>
+        <div style="display:flex; align-items:center; gap:10px; background:#f8fafc; padding:9px; border-radius:8px;">
+            <span class="saco-badge saco-<%= p %>"><%= p %> kg</span>
+            <input type="number" id="div-qty-<%= p %>" min="0" value="0" 
+                   style="width:60px; padding:5px; border:1px solid #d1d5db; border-radius:5px; text-align:center;"
+                   oninput="recalcDivision()">
+        </div>
+        <% }); %>
+    </div>
+    <div id="div-preview" style="display:none; padding:10px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
+    <div style="display:flex; gap:10px;">
+        <button onclick="confirmarDivision()" style="flex:1; background:#1d4ed8; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer;">✂️ Dividir</button>
+        <button onclick="document.getElementById('modal-division').classList.remove('activo')" style="flex:1; background:#6b7280; color:white; border:none; padding:11px; border-radius:8px; cursor:pointer;">Cancelar</button>
+    </div>
+    <p id="div-error" style="color:#ef4444; font-size:13px; margin-top:8px; display:none;"></p>
+  </div>
+</div>
+
+<script>
+// ─── División de sacos ───
+let sacoEnDivision = null; // { id, numero, peso_kg }
+
+function abrirDivision(id, numero, pesoKg) {
+    sacoEnDivision = { id, numero, peso_kg: parseFloat(pesoKg) };
+    document.getElementById('txt-saco-origen').textContent = `Saco #${numero} — ${pesoKg} kg disponibles para redistribuir`;
+    [35,28,21,14,7].forEach(p => { document.getElementById(`div-qty-${p}`).value = 0; });
+    document.getElementById('div-preview').style.display = 'none';
+    document.getElementById('div-error').style.display = 'none';
+    document.getElementById('modal-division').classList.add('activo');
+}
+
+function recalcDivision() {
+    if (!sacoEnDivision) return;
+    const pesos = [35,28,21,14,7];
+    let total = 0;
+    pesos.forEach(p => { total += (parseInt(document.getElementById(`div-qty-${p}`).value) || 0) * p; });
+    const sobrante = parseFloat((sacoEnDivision.peso_kg - total).toFixed(2));
+    const prev = document.getElementById('div-preview');
+    if (total > 0) {
+        prev.style.display = 'block';
+        prev.style.background = total > sacoEnDivision.peso_kg ? '#fef2f2' : '#eff6ff';
+        prev.innerHTML = `Total distribuido: <strong>${total} kg</strong> / ${sacoEnDivision.peso_kg} kg${sobrante > 0.1 ? ` — Sobrante: <strong>${sobrante} kg</strong> (se guarda)` : ''}${total > sacoEnDivision.peso_kg ? ' ⚠️ <span style="color:#dc2626">Excede el peso original</span>' : ''}`;
+    } else {
+        prev.style.display = 'none';
+    }
+}
+
+async function confirmarDivision() {
+    if (!sacoEnDivision) return;
+    const pesos = [35,28,21,14,7];
+    const distribuciones = [];
+    pesos.forEach(p => {
+        const qty = parseInt(document.getElementById(`div-qty-${p}`).value) || 0;
+        if (qty > 0) distribuciones.push({ peso_kg: p, cantidad: qty });
+    });
+    if (distribuciones.length === 0) {
+        document.getElementById('div-error').textContent = 'Ingresa al menos una cantidad.';
+        document.getElementById('div-error').style.display = 'block';
+        return;
+    }
+    const total = distribuciones.reduce((a, d) => a + d.peso_kg * d.cantidad, 0);
+    if (total > sacoEnDivision.peso_kg + 0.01) {
+        document.getElementById('div-error').textContent = `Total (${total}kg) excede el saco de ${sacoEnDivision.peso_kg}kg.`;
+        document.getElementById('div-error').style.display = 'block';
+        return;
+    }
+    document.getElementById('div-error').style.display = 'none';
+    try {
+        const resp = await fetch('/dividir_saco', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ saco_id: sacoEnDivision.id, distribuciones })
+        });
+        const data = await resp.json();
+        if (data.ok) {
+            document.getElementById('modal-division').classList.remove('activo');
+            location.reload();
+        } else {
+            document.getElementById('div-error').textContent = data.msg || 'Error al dividir.';
+            document.getElementById('div-error').style.display = 'block';
+        }
+    } catch(e) {
+        document.getElementById('div-error').textContent = 'Error de conexión.';
+        document.getElementById('div-error').style.display = 'block';
+    }
+}
+</script>
+
 <div class="modal-overlay-pic" id="modal-entrega">
     <div class="modal-box-pic">
         <h3 style="margin:0 0 16px 0; color:#1e3a5f;">📤 Entregar Sacos al Fabriquín</h3>
