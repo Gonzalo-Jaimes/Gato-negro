@@ -1228,8 +1228,8 @@ app.get(['/picadura', '/bodega'], async (req, res) => {
         // 1. Lotes
         const { data: L } = await supabase.from('lotes_picadura').select('*').order('fecha',{ascending:false}).limit(15);
         
-        // 2. Sacos disponibles
-        const { data: S } = await supabase.from('sacos_picadura').select('*, lotes_picadura(fecha)').eq('estado','disponible').order('id', {ascending:false});
+        // 2. Sacos disponibles (Orden ASC por número para Gregorio V2.11)
+        const { data: S } = await supabase.from('sacos_picadura').select('*, lotes_picadura(fecha)').eq('estado','disponible').order('numero_saco', {ascending:true});
         
         // 3. Entregas recientes (con info de empleado y lote)
         const { data: E } = await supabase.from('sacos_picadura')
@@ -1319,16 +1319,26 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 
         await supabase.from('sacos_picadura').insert(sacosInsert);
 
-        // 3. DESCONTAR PICADURA BRUTA DEL INVENTARIO GENERAL (V2.10.1)
+        // 3. ACTUALIZAR INVENTARIO GENERAL (SACAS Y MATERIA PRIMA V2.12)
         const { data: inv } = await supabase.from('inventario').select('*');
         if (inv) {
-            const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('procesada') && !i.material.toLowerCase().includes('prima'));
-            if (raw) {
-                await supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id);
+            // A. Descontar Picadura Bruta
+            const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('saca') && !i.material.toLowerCase().includes('saco') && !i.material.toLowerCase().includes('procesada'));
+            if (raw) await supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id);
+
+            // B. Incrementar Contadores de Sacas Específicos
+            for (let s of sacosACrear) {
+                const nombreSaca = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
+                const itemSaca = inv.find(i => i.material.toLowerCase() === nombreSaca.toLowerCase());
+                if (itemSaca) {
+                    await supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + 1 }).eq('id', itemSaca.id);
+                } else {
+                    await supabase.from('inventario').insert([{ material: nombreSaca, cantidad: 1, unidad: 'unid' }]);
+                }
             }
         }
 
-        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos, ${kgSalida.toFixed(1)} kg. Descontados ${kgEnt} kg de materia prima.`);
+        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos. Inventario sincronizado.`);
         res.redirect('/picadura?ok=lote_creado');
     } catch(e) {
         console.error('Error registrar lote:', e);
@@ -1337,11 +1347,11 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 });
 
 // --- ENTREGAR SACOS A FABRIQUÍN ---
-// --- ENTREGAR SACOS A FABRIQUÍN (FLUJO UNIFICADO V2.10.1) ---
+// --- ENTREGAR SACOS A FABRIQUÍN (FLUJO UNIFICADO V2.11) ---
 app.post('/entregar_sacos', async (req, res) => {
-    // Verificación de sesión más robusta (V2.10.1)
-    if (!req.session.usuario || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) {
-        return res.status(401).json({ ok: false, msg: 'Sesión expirada o no autorizada. Por favor, recarga la página.' });
+    // Verificación de sesión flexible para evitar "error de conexión" (V2.11)
+    if (!req.session.usuario) {
+        return res.status(401).json({ ok: false, msg: 'Sesión expirada. Por favor reloguea.' });
     }
 
     const { empleado_id, sacos_ids, capa_real_kg, capote_real_kg, nota, fecha } = req.body;
@@ -1390,9 +1400,16 @@ app.post('/entregar_sacos', async (req, res) => {
                 if (m.includes('capote') && cp > 0) {
                     await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id); cp = 0;
                 }
-                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('prima') && pi > 0) {
+                if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('prima') && pi > 0) {
                     await supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id); pi = 0;
                 }
+            }
+            // Descuento automático de Sacas (v2.12)
+            const { data: sInfo } = await supabase.from('sacos_picadura').select('peso_kg, tipo').in('id', arrSacosIds);
+            for (let s of (sInfo || [])) {
+                const nombreSaca = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
+                const itemSaca = inv.find(i => i.material.toLowerCase() === nombreSaca.toLowerCase());
+                if (itemSaca) await supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - 1) }).eq('id', itemSaca.id);
             }
             if (despacho.cestas_cant > 0 && despacho.color_cesta) {
                 const iCesta = inv.find(i => i.material.toLowerCase() === despacho.color_cesta.toLowerCase());

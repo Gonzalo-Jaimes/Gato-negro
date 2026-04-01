@@ -587,7 +587,6 @@ async function confirmarEntrega() {
     if (sacos_ids.length === 0) { errEl.textContent = 'Sin sacos seleccionados.'; errEl.style.display = 'block'; return; }
     
     errEl.style.display = 'none';
-    if (!confirm('¿Confirmas este despacho? Se descontará inventario y el fabriquin pasará a recepción.')) return;
 
     try {
         const resp = await fetch('/entregar_sacos', {
