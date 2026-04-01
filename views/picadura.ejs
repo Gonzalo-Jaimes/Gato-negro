@@ -106,6 +106,33 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
     </div>
 </div>
 
+<!-- ⚡ MATERIA PRIMA EN ALMACÉN (CONEXIÓN CON INVENTARIO V2.10.1) -->
+<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 28px;">
+    <h4 style="margin: 0 0 12px 0; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
+        🧱 Materia Prima Disponible (Almacén General)
+    </h4>
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
+        <% 
+            const getInv = (mat) => {
+                const item = inventario.find(i => i.material.toLowerCase().includes(mat.toLowerCase()) && !i.material.toLowerCase().includes('procesada') && !i.material.toLowerCase().includes('reserva'));
+                return item ? parseFloat(item.cantidad).toFixed(1) : '0.0';
+            };
+        %>
+        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #7c3aed;">
+            <div style="font-size: 11px; color: #64748b; font-weight: bold;">CAPA (KG)</div>
+            <div style="font-size: 20px; font-weight: 900; color: #7c3aed;"><%= getInv('capa') %> <small style="font-size: 12px;">kg</small></div>
+        </div>
+        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #2563eb;">
+            <div style="font-size: 11px; color: #64748b; font-weight: bold;">CAPOTE (KG)</div>
+            <div style="font-size: 20px; font-weight: 900; color: #2563eb;"><%= getInv('capote') %> <small style="font-size: 12px;">kg</small></div>
+        </div>
+        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #16a34a;">
+            <div style="font-size: 11px; color: #64748b; font-weight: bold;">PICADURA BRUTA (KG)</div>
+            <div style="font-size: 20px; font-weight: 900; color: #16a34a;"><%= getInv('picadura') %> <small style="font-size: 12px;">kg</small></div>
+        </div>
+    </div>
+</div>
+
 <!-- ⚡ PANEL DE DESPACHO ACTIVO (STICKY) -->
 <div class="pic-card" style="position: sticky; top: 10px; z-index: 1000; border: 2px solid #2563eb; background: #f0f9ff; margin-bottom: 28px;">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">

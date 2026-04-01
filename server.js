@@ -1239,7 +1239,10 @@ app.get(['/picadura', '/bodega'], async (req, res) => {
         // 4. Facturas vigentes para el despachador
         const { data: F } = await supabase.from('despachos_registro').select('*').in('estado',['pendiente','activo']);
         
-        // 5. Filtrar empleados que tienen esas facturas
+        // 5. Inventario General (Materia Prima para Resumen) (V2.10.1)
+        const { data: inv } = await supabase.from('inventario').select('*');
+
+        // 6. Filtrar empleados que tienen esas facturas
         const empIds = [...new Set((F || []).map(f => f.empleado_id).filter(id => id))];
         let empleados = [];
         if (empIds.length > 0) {
@@ -1252,7 +1255,8 @@ app.get(['/picadura', '/bodega'], async (req, res) => {
             sacosDisponibles: S || [],
             sacosEntregados:  E || [],
             empleados:       empleados,
-            facturasPend:    F || []
+            facturasPend:    F || [],
+            inventario:      inv || []
         });
     } catch(err) {
         console.error("CRASH BODEGA:", err);
@@ -1315,7 +1319,16 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 
         await supabase.from('sacos_picadura').insert(sacosInsert);
 
-        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos, ${kgSalida.toFixed(1)} kg`);
+        // 3. DESCONTAR PICADURA BRUTA DEL INVENTARIO GENERAL (V2.10.1)
+        const { data: inv } = await supabase.from('inventario').select('*');
+        if (inv) {
+            const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('procesada') && !i.material.toLowerCase().includes('prima'));
+            if (raw) {
+                await supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id);
+            }
+        }
+
+        console.log(`✅ Lote #${lote.id} creado: ${sacosACrear.length} sacos, ${kgSalida.toFixed(1)} kg. Descontados ${kgEnt} kg de materia prima.`);
         res.redirect('/picadura?ok=lote_creado');
     } catch(e) {
         console.error('Error registrar lote:', e);
@@ -1324,9 +1337,12 @@ app.post('/registrar_lote_picadura', async (req, res) => {
 });
 
 // --- ENTREGAR SACOS A FABRIQUÍN ---
-// --- ENTREGAR SACOS A FABRIQUÍN (FLUJO UNIFICADO V2.9.2) ---
+// --- ENTREGAR SACOS A FABRIQUÍN (FLUJO UNIFICADO V2.10.1) ---
 app.post('/entregar_sacos', async (req, res) => {
-    if (!req.session.rol || req.session.rol !== 'admin') return res.status(403).json({ ok: false, msg: 'No autorizado' });
+    // Verificación de sesión más robusta (V2.10.1)
+    if (!req.session.usuario || (req.session.rol !== 'admin' && req.session.rol !== 'mantenimiento')) {
+        return res.status(401).json({ ok: false, msg: 'Sesión expirada o no autorizada. Por favor, recarga la página.' });
+    }
 
     const { empleado_id, sacos_ids, capa_real_kg, capote_real_kg, nota, fecha } = req.body;
     const tiempo = getDateTime();
