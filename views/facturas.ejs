@@ -14,19 +14,34 @@
 .pill-capote { background: #dbeafe; color: #0369a1; }
 .pill-pic    { background: #dcfce7; color: #15803d; }
 .pill-fecha  { background: #f3f4f6; color: #4b5563; }
+.pill-estado-pen { background: #fee2e2; color: #ef4444; }
+.pill-estado-ok  { background: #dcfce7; color: #16a34a; }
+
+.btn-row { display: flex; gap: 10px; flex-shrink: 0; }
 .btn-imp     { background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; white-space: nowrap; }
+.btn-bodega  { background: #10b981; color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: bold; font-size: 13px; cursor: pointer; white-space: nowrap; }
 .btn-imp:hover { background: #1d4ed8; }
-/* Dark mode */
+.btn-bodega:hover { background: #059669; }
+
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 20px; }
+.modal-overlay.activo { display: flex; }
+.modal-box { background: white; width: 100%; max-width: 700px; border-radius: 12px; padding: 30px; max-height: 90vh; overflow-y: auto; }
+.saco-selector { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px; margin-top: 10px; max-height: 250px; overflow-y: auto; padding: 10px; background: #f9fafb; border: 1px solid #e5e7eb; border-radius: 8px; }
+.saco-item { padding: 10px; border: 1px solid #d1d5db; border-radius: 8px; cursor: pointer; text-align: center; background: white; transition: 0.2s; }
+.saco-item.selected { background: #dbeafe; border-color: #2563eb; box-shadow: 0 0 0 2px #2563eb; }
+
 html.dark-mode .fact-card  { background: #111 !important; border-color: #2563eb !important; }
 html.dark-mode .fact-nombre { color: #f3f4f6 !important; }
-html.dark-mode .pill-fecha { background: #1a1a1a !important; color: #9ca3af !important; }
-html.dark-mode .pill-tab   { background: #0f1f3d !important; color: #60a5fa !important; }
+html.dark-mode .modal-box { background: #1a1a1a; color: white; }
+html.dark-mode .saco-selector { background: #222; border-color: #444; }
+html.dark-mode .saco-item { background: #333; color: white; border-color: #555; }
+html.dark-mode .saco-item.selected { background: #1e3a5f; }
 </style>
 
 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:12px;">
     <div>
-        <h1 style="margin:0;">🖨️ Facturas Vigentes</h1>
-        <p style="color:#6b7280; margin:4px 0 0 0; font-size:14px;">Hojas de despacho activas — pendientes de entrega de material o liquidación.</p>
+        <h1 style="margin:0;">📦 Facturas / Entregas en Bodega</h1>
+        <p style="color:#6b7280; margin:4px 0 0 0; font-size:14px;">Gestiona las facturas de despacho y entrega física en bodega.</p>
     </div>
     <a href="/despacho" style="background:#f59e0b; color:#111; padding:10px 20px; border-radius:8px; font-weight:bold; text-decoration:none; font-size:14px;">+ Nuevo Despacho</a>
 </div>
@@ -36,38 +51,146 @@ html.dark-mode .pill-tab   { background: #0f1f3d !important; color: #60a5fa !imp
 <div style="text-align:center; padding:60px 20px; color:#9ca3af;">
     <div style="font-size:48px; margin-bottom:12px;">📋</div>
     <div style="font-size:18px; font-weight:bold; margin-bottom:6px;">Sin facturas activas</div>
-    <div style="font-size:14px;">Cuando hagas un despacho, la hoja aparecerá aquí para que puedas reimprimirla.</div>
+    <div style="font-size:14px;">Cuando realices un despacho en oficina, aparecerá aquí para entregar el material.</div>
 </div>
 <% } else { %>
-
-<p style="font-size:13px; color:#6b7280; margin-bottom:16px;"><strong><%= despachos.length %></strong> factura(s) activa(s) — Haz clic en <strong>🖨️ Imprimir</strong> para abrir la hoja y reimprimir.</p>
 
 <% despachos.forEach(d => {
     const emp = d.empleados_fabriquines || {};
     const inicial = (emp.nombre || '?').charAt(0).toUpperCase();
-    const capaKg     = parseFloat(d.capa_kg    || 0);
-    const capoteKg   = parseFloat(d.capote_kg  || 0);
-    const picaduraKg = parseFloat(d.picadura_kg|| 0);
+    const esPendiente = (d.estado === 'pendiente');
+    const borderCol = esPendiente ? '#2563eb' : '#16a34a';
+    const opacity = esPendiente ? '1' : '0.7';
 %>
-<div class="fact-card">
+<div class="fact-card" style="border-left-color: <%= borderCol %>; opacity: <%= opacity %>;">
     <div class="fact-avatar"><%= inicial %></div>
     <div class="fact-info">
         <div class="fact-nombre"><%= emp.nombre || 'N/A' %></div>
-        <div class="fact-codigo"><%= emp.codigo || '' %> — Factura HD-<%= String(d.id).padStart(6,'0') %></div>
+        <div class="fact-codigo">
+            <%= emp.codigo || '' %> — HD-<%= String(d.id).padStart(6,'0') %>
+            <span class="pill <%= esPendiente ? 'pill-estado-pen' : 'pill-estado-ok' %>">
+                <%= esPendiente ? '🟠 Pendiente Entrega' : '✅ Entregado' %>
+            </span>
+        </div>
         <div class="fact-pills">
             <span class="pill pill-fecha">📅 <%= d.fecha %></span>
-            <span class="pill pill-tab">🎟️ <%= parseInt(d.meta_tabacos).toLocaleString('es-CO') %> tabs</span>
-            <% if (capaKg > 0) { %><span class="pill pill-capa">🟣 Capa: <%= capaKg.toFixed(2) %> kg</span><% } %>
-            <% if (capoteKg > 0) { %><span class="pill pill-capote">🔵 Capote: <%= capoteKg.toFixed(2) %> kg</span><% } %>
-            <% if (picaduraKg > 0) { %><span class="pill pill-pic">🟢 Picadura: <%= picaduraKg.toFixed(2) %> kg</span><% } %>
-            <% if (!capaKg && !capoteKg && !picaduraKg) { %>
-            <span class="pill" style="background:#fef2f2; color:#dc2626;">⚠️ Sin material registrado</span>
-            <% } %>
+            <span class="pill pill-tab">🎟️ <%= parseInt(d.meta_tabacos).toLocaleString() %> tabs</span>
+            <span class="pill pill-capa">🟣 Capa: <%= parseFloat(d.capa_kg).toFixed(2) %> kg</span>
+            <span class="pill pill-capote">🔵 Capote: <%= parseFloat(d.capote_kg).toFixed(2) %> kg</span>
+            <span class="pill pill-pic">🟢 Picadura: <%= parseFloat(d.picadura_kg).toFixed(2) %> kg</span>
         </div>
     </div>
-    <button class="btn-imp" onclick="window.open('/reimprimir_factura/<%= d.id %>', '_blank')">🖨️ Imprimir</button>
+    <div class="btn-row">
+        <% if (esPendiente) { %>
+        <button class="btn-bodega" 
+                data-despacho='<%= JSON.stringify(d).replace(/'/g, "&apos;") %>'
+                onclick="abrirModalBodega(JSON.parse(this.getAttribute('data-despacho')))">
+            📦 Confirmar Entrega
+        </button>
+        <% } %>
+        <button class="btn-imp" onclick="window.open('/reimprimir_factura/<%= d.id %>', '_blank')">🖨️ Imprimir</button>
+    </div>
 </div>
 <% }); %>
 <% } %>
+
+<div class="modal-overlay" id="modal-bodega">
+    <div class="modal-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+            <h2 style="margin:0;">Confirmar Entrega Física</h2>
+            <button onclick="cerrarModal()" style="background:none; border:none; font-size:24px; cursor:pointer;">&times;</button>
+        </div>
+
+        <form id="form-confirmar-bodega" action="/confirmar_entrega_bodega" method="POST">
+            <input type="hidden" name="despacho_id" id="modal-despacho-id">
+            <input type="hidden" name="empleado_id" id="modal-empleado-id">
+            <input type="hidden" name="sacos_seleccionados" id="sacos-input">
+
+            <div style="background:#f3f4f6; padding:15px; border-radius:8px; margin-bottom:20px;">
+                <p style="margin:0;"><strong>Fabriquín:</strong> <span id="modal-emp-nombre"></span></p>
+                <p style="margin:0;"><strong>Meta Nueva:</strong> <span id="modal-tabs"></span> tabacos</p>
+            </div>
+
+            <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:20px;">
+                <div>
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">⚖️ Peso Capa Real (kg):</label>
+                    <input type="number" name="capa_real_kg" id="modal-capa" step="0.01" style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db;" required>
+                    <span style="font-size:11px; color:#6b7280;">Teórico: <span id="val-capa-t"></span>kg</span>
+                </div>
+                <div>
+                    <label style="font-weight:bold; display:block; margin-bottom:5px;">⚖️ Peso Capote Real (kg):</label>
+                    <input type="number" name="capote_real_kg" id="modal-capote" step="0.01" style="width:100%; padding:10px; border-radius:6px; border:1px solid #d1d5db;" required>
+                    <span style="font-size:11px; color:#6b7280;">Teórico: <span id="val-capote-t"></span>kg</span>
+                </div>
+            </div>
+
+            <div>
+                <label style="font-weight:bold; display:block; margin-bottom:5px;">🌿 Entregar Bultos de Picadura:</label>
+                <div class="saco-selector">
+                    <% sacosDisponibles.forEach(s => { %>
+                    <div class="saco-item" data-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" onclick="toggleSacoInModal(this)">
+                        <div style="font-size:14px; font-weight:bold;">#<%= s.numero_saco %></div>
+                        <div style="font-size:12px; color:#6b7280;"><%= s.peso_kg %> kg</div>
+                    </div>
+                    <% }); %>
+                </div>
+                <p id="picadura-sum" style="margin-top:10px; font-weight:bold; color:#1e40af;">Seleccionado: 0.0 kg / Teórico: <span id="val-pic-t"></span>kg</p>
+            </div>
+
+            <hr style="margin:25px 0;">
+            <button type="submit" style="width:100%; background:#10b981; color:white; padding:15px; border-radius:10px; border:none; font-size:16px; font-weight:bold; cursor:pointer;">
+                ✅ Confirmar Entrega y Activar en Recepción
+            </button>
+        </form>
+    </div>
+</div>
+
+<script>
+    let sacosSeleccionadosLinks = [];
+
+    function abrirModalBodega(despacho) {
+        document.getElementById('modal-despacho-id').value = despacho.id;
+        document.getElementById('modal-empleado-id').value = despacho.empleado_id;
+        document.getElementById('modal-emp-nombre').innerText = despacho.empleados_fabriquines.nombre;
+        document.getElementById('modal-tabs').innerText = parseInt(despacho.meta_tabacos).toLocaleString();
+        
+        document.getElementById('modal-capa').value = parseFloat(despacho.capa_kg);
+        document.getElementById('modal-capote').value = parseFloat(despacho.capote_kg);
+        
+        document.getElementById('val-capa-t').innerText = parseFloat(despacho.capa_kg).toFixed(2);
+        document.getElementById('val-capote-t').innerText = parseFloat(despacho.capote_kg).toFixed(2);
+        document.getElementById('val-pic-t').innerText = parseFloat(despacho.picadura_kg).toFixed(2);
+
+        sacosSeleccionadosLinks = [];
+        actualizarSeleccionModalUI();
+        document.getElementById('modal-bodega').classList.add('activo');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-bodega').classList.remove('activo');
+    }
+
+    function toggleSacoInModal(div) {
+        const id = div.getAttribute('data-id');
+        const idx = sacosSeleccionadosLinks.indexOf(id);
+        if (idx > -1) sacosSeleccionadosLinks.splice(idx, 1);
+        else sacosSeleccionadosLinks.push(id);
+        actualizarSeleccionModalUI();
+    }
+
+    function actualizarSeleccionModalUI() {
+        let total = 0;
+        document.querySelectorAll('.saco-item').forEach(item => {
+            if (sacosSeleccionadosLinks.includes(item.getAttribute('data-id'))) {
+                item.classList.add('selected');
+                total += parseFloat(item.getAttribute('data-kg'));
+            } else {
+                item.classList.remove('selected');
+            }
+        });
+        document.getElementById('picadura-sum').innerHTML = `Seleccionado: <strong>${total.toFixed(1)} kg</strong> / Teórico: ${document.getElementById('val-pic-t').innerText}kg`;
+        document.getElementById('sacos-input').value = sacosSeleccionadosLinks.join(',');
+    }
+</script>
 
 <%- include('partials/footer') %>
