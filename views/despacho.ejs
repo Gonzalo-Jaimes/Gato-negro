@@ -54,7 +54,47 @@
     </div>
 </div>
 
-<hr style="margin-bottom: 30px;">
+<hr style="margin-bottom: 20px;">
+
+<!-- ════ RESUMEN SEMANAL DE MATERIAL ════ -->
+<% 
+    const totalCapaSem     = (resumenSemanal?.capa_kg    || 0).toFixed(2);
+    const totalCapoteSem   = (resumenSemanal?.capote_kg  || 0).toFixed(2);
+    const totalPicaduraSem = (resumenSemanal?.picadura_kg || 0).toFixed(2);
+    const totalTareas      = resumenSemanal?.total_fabriquines || 0;
+    const totalTabacos     = (resumenSemanal?.total_tabacos || 0).toLocaleString('es-CO');
+%>
+<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8); border-radius:12px; padding:18px 22px; margin-bottom:24px; color:white;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+            <h3 style="margin:0; font-size:16px; color:white;">📦 Resumen de Material — Semana Actual</h3>
+            <p style="margin:2px 0 0 0; font-size:12px; opacity:0.75;"><%= totalTareas %> fabriquin(es) con tarea activa • <%= totalTabacos %> tabacos en circulación</p>
+        </div>
+        <a href="/despacho" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:5px 12px; border-radius:6px; font-size:12px; text-decoration:none;">↺ Actualizar</a>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px;">
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🟣 Capa Total</div>
+            <div style="font-size:24px; font-weight:900;"><%= totalCapaSem %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🔵 Capote Total</div>
+            <div style="font-size:24px; font-weight:900;"><%= totalCapoteSem %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🟢 Picadura Total</div>
+            <div style="font-size:24px; font-weight:900;"><%= totalPicaduraSem %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.15); border-radius:8px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.3);">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">📊 Total a Sacar</div>
+            <div style="font-size:16px; font-weight:900;"><%= (parseFloat(totalCapaSem)+parseFloat(totalCapoteSem)+parseFloat(totalPicaduraSem)).toFixed(1) %> kg</div>
+            <div style="font-size:10px; opacity:0.65; margin-top:2px;">entre capa + capote + picadura</div>
+        </div>
+    </div>
+    <% if (totalTareas === 0) { %>
+    <p style="text-align:center; opacity:0.7; margin:8px 0 0 0; font-size:13px;">Sin tareas activas aún. A medida que despachas, aquí se acumula el total.</p>
+    <% } %>
+</div>
 
 <div style="display:flex; justify-content:center;">
 <div class="card" style="max-width: 680px; width: 100%; border-top: 4px solid #f59e0b;">

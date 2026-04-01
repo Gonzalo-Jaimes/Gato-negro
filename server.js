@@ -308,17 +308,37 @@ app.post('/registrar_venta', async (req, res) => {
 app.get('/despacho', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    // Obtener fabriquines y sus deudas reales (ahora unificado en empleados_fabriquines)
+    // Obtener fabriquines y sus deudas reales
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
     
-    // Traer préstamos activos para mostrarlos en el modal de despacho
+    // Traer préstamos activos
     let prestamosActivos = [];
     try {
         const { data: p } = await supabase.from('prestamos_fabriquines').select('*').eq('estado', 'activo');
         prestamosActivos = p || [];
     } catch(e) {}
 
-    res.render('despacho', { empleados: empleados || [], prestamos: prestamosActivos });
+    // ── RESUMEN SEMANAL: suma de material entre todos los fabriquines con tarea activa ──
+    // "Tarea activa" = deuda_tabacos > 0 (tienen material en casa que aún no han entregado)
+    let resumenSemanal = { capa_kg: 0, capote_kg: 0, picadura_kg: 0, total_fabriquines: 0, total_tabacos: 0 };
+    try {
+        const activos = (empleados || []).filter(e => parseFloat(e.deuda_tabacos || 0) > 0);
+        resumenSemanal.total_fabriquines = activos.length;
+        activos.forEach(e => {
+            // saldo_capa_kg negativo = le entregaron más de lo que ya pagó = material "en la calle"
+            // saldo positivo = tiene material guardado (saldo a favor)
+            // Para el resumen de qué sacar, sumamos los saldos negativos como material entregado
+            const capaEnt    = Math.max(0, -(parseFloat(e.saldo_capa_kg    || 0)));
+            const capoteEnt  = Math.max(0, -(parseFloat(e.saldo_capote_kg  || 0)));
+            const picEnt     = Math.max(0, -(parseFloat(e.saldo_picadura_kg|| 0)));
+            resumenSemanal.capa_kg    += capaEnt;
+            resumenSemanal.capote_kg  += capoteEnt;
+            resumenSemanal.picadura_kg+= picEnt;
+            resumenSemanal.total_tabacos += parseFloat(e.deuda_tabacos || 0);
+        });
+    } catch(e) {}
+
+    res.render('despacho', { empleados: empleados || [], prestamos: prestamosActivos, resumenSemanal });
 });
 
 app.post('/despachar_tarea', async (req, res) => {

@@ -204,7 +204,7 @@
                 <div class="firma-linea"></div>
                 <div class="firma-nombre">Gregorio / Administrador</div>
                 <div class="firma-cargo">Cédula: ____________________</div>
-                <div class="firma-cargo" style="margin-top:4px;">Autoriza la salida del material</div>
+                <div class="firma-cargo" style="margin-top:4px;">Entrega el material y autoriza</div>
             </div>
             <div class="firma-box">
                 <div class="firma-linea"></div>
@@ -213,12 +213,13 @@
                 <div class="firma-cargo" style="margin-top:4px;">Recibe material conforme</div>
             </div>
         </div>
-        <div style="text-align:center; margin-top:20px; border: 1px solid #d1d5db; border-radius:6px; padding:10px;">
-            <div style="font-size:11px; color:#6b7280; margin-bottom:4px;">BODEGUERO QUE ENTREGA</div>
-            <div style="border-bottom: 1.5px solid #374151; width:60%; margin:0 auto; height:40px;"></div>
-            <div style="font-size:11px; font-weight:bold; margin-top:4px; text-transform:uppercase;">Nombre y Firma</div>
+        <div style="margin-top:16px; border:1px dashed #9ca3af; border-radius:6px; padding:10px; background:#f9fafb; font-size:11px; color:#374151; text-align:center;">
+            📌 <strong>COMPROBANTE DE PAGO:</strong> Esta hoja, debidamente firmada, acredita la entrega del material. 
+            Al completar la tarea de <strong><%= parseInt(despacho.meta_tabacos || 0).toLocaleString('es-CO') %> tabacos</strong>, 
+            el fabriquín presenta este documento para reclamar su pago.
         </div>
     </div>
+
 
     <!-- ═══ PIE ═══ -->
     <div class="footer-doc">
