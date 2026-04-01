@@ -77,10 +77,16 @@
             <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🟢 Picadura por Cargar</div>
             <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.picadura_kg.toFixed(2) %> kg</div>
         </div>
-        <div style="background:rgba(255,255,255,0.15); border-radius:8px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.3);">
-            <div style="font-size:11px; opacity:0.85; text-transform:uppercase; margin-bottom:4px;">📊 Total Sugerido</div>
-            <div style="font-size:24px; font-weight:900;"><%= (resumenSemanal.capa_kg + resumenSemanal.capote_kg + resumenSemanal.picadura_kg).toFixed(1) %> kg</div>
-            <div style="font-size:10px; opacity:0.65; margin-top:2px;">Kg brutos teóricos</div>
+        <div style="background:rgba(255,255,255,0.18); border-radius:8px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.3);">
+            <div style="font-size:11px; opacity:0.95; text-transform:uppercase; margin-bottom:4px; font-weight:bold;">🧺 Cestas Sugeridas</div>
+            <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.total_cestas %> uds</div>
+            <div style="font-size:10px; margin-top:4px; display:flex; flex-wrap:wrap; justify-content:center; gap:4px;">
+                <% Object.entries(resumenSemanal.cestas_por_color).forEach(([color, cant]) => { %>
+                    <span style="background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; text-transform:capitalize;">
+                        <%= color %>: <%= cant %>
+                    </span>
+                <% }) %>
+            </div>
         </div>
     </div>
     <% if (resumenSemanal.total_fabriquines === 0) { %>

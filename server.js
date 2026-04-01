@@ -318,8 +318,12 @@ app.get('/despacho', async (req, res) => {
         prestamosActivos = p || [];
     } catch(e) {}
 
-    // ── RESUMEN DE MATERIAL PENDIENTE POR ENTREGAR (Facturas 'pendiente' V2.9.1) ──
-    let resumenSemanal = { capa_kg: 0, capote_kg: 0, picadura_kg: 0, total_fabriquines: 0, total_tabacos: 0 };
+    // ── RESUMEN DE MATERIAL PENDIENTE POR ENTREGAR (Facturas 'pendiente' V2.9.3) ──
+    let resumenSemanal = { 
+        capa_kg: 0, capote_kg: 0, picadura_kg: 0, 
+        total_fabriquines: 0, total_tabacos: 0,
+        total_cestas: 0, cestas_por_color: {} 
+    };
     try {
         const { data: facturasPend } = await supabase.from('despachos_registro')
             .select('*').eq('estado', 'pendiente');
@@ -331,6 +335,14 @@ app.get('/despacho', async (req, res) => {
                 resumenSemanal.capote_kg   += parseFloat(f.capote_kg || 0);
                 resumenSemanal.picadura_kg += parseFloat(f.picadura_kg || 0);
                 resumenSemanal.total_tabacos += parseInt(f.meta_tabacos || 0);
+                
+                // Conteo de cestas (Unificación V2.9.3)
+                const cant = parseInt(f.cestas_cant || 0);
+                if (cant > 0) {
+                    resumenSemanal.total_cestas += cant;
+                    const color = (f.color_cesta || 'Sin Color').toLowerCase();
+                    resumenSemanal.cestas_por_color[color] = (resumenSemanal.cestas_por_color[color] || 0) + cant;
+                }
             });
         }
     } catch(e) { console.error('Error resumenSemanal:', e); }
