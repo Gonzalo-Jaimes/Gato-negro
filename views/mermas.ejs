@@ -12,10 +12,10 @@
 .kpi-row      { display: flex; gap: 14px; margin-bottom: 24px; flex-wrap: wrap; }
 .kpi-box      { flex: 1; min-width: 120px; background: white; border-radius: 10px; padding: 16px; text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.06); border-top: 3px solid #2563eb; }
 .kpi-num      { font-size: 26px; font-weight: 900; }
-.kpi-lbl      { font-size: 11px; text-transform: uppercase; color: #6b7280; margin-top: 4px; }
-.merma-pos    { color: #dc2626; }
-.merma-neg    { color: #16a34a; }
-.merma-cero   { color: #6b7280; }
+.kpi-lbl      { font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-top: 4px; }
+.merma-pos    { color: #ef4444; }
+.merma-neg    { color: #10b981; }
+.merma-cero   { color: var(--text-muted); }
 .btn-sm       { padding: 6px 14px; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: bold; }
 /* Dark mode */
 html.dark-mode .merma-card  { background: #111 !important; border: 1px solid #2d2d2d !important; color: #e5e7eb !important; }
@@ -163,7 +163,7 @@ html.dark-mode .kpi-lbl     { color: #6b7280 !important; }
                     <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Nota:</label>
                     <input type="text" name="nota" placeholder="Ej: Capa vieja, mucho daño" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
                 </div>
-                <button type="submit" style="background:#dc2626; color:white; border:none; padding:11px; width:100%; border-radius:8px; font-weight:bold; font-size:14px; cursor:pointer;">⚠️ Registrar Merma</button>
+                <button type="submit" class="premium-btn" style="background:#dc2626; color:white; border:none; padding:11px; width:100%; font-weight:bold; font-size:14px;">⚠️ Registrar Merma</button>
             </form>
         </div>
 

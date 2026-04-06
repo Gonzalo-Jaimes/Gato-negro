@@ -2,9 +2,9 @@
 
 <style>
     .tabla-grid { width: 100%; border-collapse: collapse; min-width: 1600px; }
-    .tabla-grid th, .tabla-grid td { border: 1px solid #d1d5db; padding: 4px; text-align: center; font-size: 13px; }
-    .tabla-grid th { background-color: #f3f4f6; color: #111; position: sticky; top: 0; z-index: 10; }
-    .tabla-grid td input[type=number] { width: 45px; text-align: center; border: 1px solid #ccc; padding: 4px; font-size: 14px; border-radius: 4px; }
+    .tabla-grid th, .tabla-grid td { border: 1px solid var(--border-color); padding: 4px; text-align: center; font-size: 13px; }
+    .tabla-grid th { background-color: var(--bg-card); color: var(--text-main); position: sticky; top: 0; z-index: 10; }
+    .tabla-grid td input[type=number] { width: 45px; text-align: center; background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 4px; font-size: 14px; border-radius: 4px; }
     .tabla-grid td input[type=number]:focus { outline: 2px solid #3b82f6; }
     .btn-guardar  { background-color: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
     .btn-liquidar { background-color: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 4px; }
@@ -12,11 +12,11 @@
     .btn-historial { background-color: #6b7280; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
     .btn-extra    { background-color: #15803d; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
     .tabla-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
-    /* Celdas de color por categoría */
-    .td-recorte { background: #fef3c7; }
-    .td-vena    { background: #e0e7ff; }
-    .td-extra   { background: #dcfce3; }
-    .td-prestamo-cell { background: #fef9c3; min-width: 120px; }
+    /* Celdas de color por categoría — Adaptativas */
+    .td-recorte   { background: rgba(245, 158, 11, 0.05); }
+    .td-vena      { background: rgba(59, 130, 246, 0.05); }
+    .td-extra     { background: rgba(16, 185, 129, 0.05); }
+    .td-prestamo-cell { background: rgba(245, 158, 11, 0.1); min-width: 120px; }
 
     /* Badge pendiente */
     .badge-pendiente { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-top: 3px; }
@@ -28,9 +28,9 @@
     #toast-exito a { color: #6ee7b7; font-weight: bold; text-decoration: underline; }
 
     /* Modal de préstamo */
-    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 8000; align-items: center; justify-content: center; }
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal-overlay.activo { display: flex; }
-    .modal-box { background: white; border-radius: 12px; padding: 24px; width: 400px; max-width: 95vw; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+    .modal-box { background: var(--bg-card); border-radius: 16px; padding: 30px; width: 450px; max-width: 95vw; border: 1px solid var(--border-color); }
 
     /* Historial expandible */
     .fila-historial { display: none; }
@@ -139,8 +139,8 @@
 </div>
 
 <div style="margin-bottom: 20px;">
-    <h1 style="margin: 0; color: #333;">📅 Recepción Diaria de Fabriquines</h1>
-    <p style="color: gray; margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Al liquidar se generará la nómina de la semana y el pago por vena/recorte.</p>
+    <h1 style="margin: 0; color: var(--text-main);">📅 Recepción Diaria de Fabriquines</h1>
+    <p style="color: var(--text-muted); margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Al liquidar se generará la nómina de la semana y el pago por vena/recorte.</p>
 </div>
 
 <div class="tabla-container">

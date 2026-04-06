@@ -3,304 +3,329 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gato Negro - Sistema</title>
-    <style>
-        body { margin:0; font-family:Arial; background:#f4f6f9; }
-        .topbar { background:#111; color:white; padding:15px; font-size:20px; font-weight: bold; }
-        .container { display:flex; min-height: 100vh; }
-        
-        /* SIDEBAR ESTÉTICO */
-        .sidebar { 
-            width: 230px; background: #222; color: white; padding: 20px; 
-            flex-shrink: 0; 
-            transition: width 0.3s ease, padding 0.3s ease; 
-            overflow: hidden; 
-            white-space: nowrap;
-        }
-        .sidebar.collapsed { 
-            width: 0; 
-            padding-left: 0; 
-            padding-right: 0; 
-            border: none; 
-        }
-        .sidebar h2 { margin-top:0; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .sidebar a { display:block; color:#aaa; text-decoration:none; padding:10px; margin-bottom:10px; border-radius:5px; transition: 0.2s; font-weight: bold; }
-        .sidebar a:hover { background: rgba(255, 255, 255, 0.1); color: #f59e0b; padding-left: 15px; box-shadow: inset 3px 0 0 #f59e0b; }
-        
-        /* El content ocupa todo el espacio libre, se expande al colapsar el sidebar */
-        .content { flex:1; padding:30px; overflow-y: auto; min-width: 0; transition: all 0.3s ease; }
-        .cards { display:flex; gap:20px; margin-bottom:30px; flex-wrap: wrap; }
-        .card { background:white; padding:20px; flex:1; border-radius:10px; box-shadow:0 4px 10px rgba(0,0,0,0.1); }
-        
-        /* TABLAS Y FORMULARIOS */
-        table { width:100%; border-collapse:collapse; background:white; color: black; transition: background 0.3s; }
-        th, td { padding:10px; border:1px solid #ddd; text-align:center; }
-        th { background:#333; color:white; }
-        tr:nth-child(even) { background-color: #f9fafb; }
-        tr:hover { background-color: #e0f2fe; transition: background-color 0.2s; }
-        
-        /* MODO OSCURO (DARK MODE) GLOBAL PERSISTENTE */
-        html.dark-mode body { background: #000000; color: #e5e7eb; }
-        html.dark-mode .topbar { background: #000000; border-bottom: 1px solid #333; }
-        html.dark-mode .sidebar { background: #0a0a0a; border-right: 1px solid #333; }
-        html.dark-mode .card { background: #111111; box-shadow: 0 4px 10px rgba(0,0,0,0.8); }
-        html.dark-mode table { background: #111111; border-color: #333; color: #e5e7eb; }
-        html.dark-mode th { background: #1a1a1a; color: white; border-color: #333; }
-        html.dark-mode td { border-color: #333; }
-        html.dark-mode tr:nth-child(even) { background-color: #0a0a0a; }
-        html.dark-mode tr:hover { background-color: #1a1a1a; }
-        html.dark-mode h1, html.dark-mode h2, html.dark-mode h3 { color: #f3f4f6; }
-        
-        /* OVERRIDES NUCLEARES MODO OSCURO (V1.7.4.2) */
-        html.dark-mode input, html.dark-mode select, html.dark-mode textarea { 
-            background: #222 !important; 
-            color: #fff !important; 
-            border-color: #444 !important; 
-        }
-
-        html.dark-mode [style*="background: white"],
-        html.dark-mode [style*="background:white"],
-        html.dark-mode [style*="background-color: white"],
-        html.dark-mode [style*="background-color:#white"],
-        html.dark-mode [style*="background-color: #f0fdf4"],
-        html.dark-mode [style*="background: #fff"],
-        html.dark-mode [style*="background:#fff"],
-        html.dark-mode [style*="background: #f8fafc"],
-        html.dark-mode [style*="background:#f8fafc"],
-        html.dark-mode [style*="background: #fef9c3"],
-        html.dark-mode [style*="background: #f3f4f6"],
-        html.dark-mode [style*="background: #ffedd5"],
-        html.dark-mode [style*="background: #ecfccb"],
-        html.dark-mode [style*="background: #f5f3ff"],
-        html.dark-mode [style*="background: #f9fafb"],
-        html.dark-mode [style*="background: #fefce8"],
-        html.dark-mode [style*="background: #fffbeb"],
-        html.dark-mode [style*="background: #f7fee7"],
-        html.dark-mode [style*="background: #ecfdf5"],
-        html.dark-mode [style*="background: #eff6ff"],
-        html.dark-mode [style*="background: #f0fdf4"],
-        html.dark-mode [style*="background: #fef2f2"],
-        html.dark-mode [style*="background:#eff6ff"],
-        html.dark-mode [style*="background:#f0fdf4"],
-        html.dark-mode [style*="background:#fef2f2"],
-        html.dark-mode [style*="background:#faf5ff"],
-        html.dark-mode [style*="background: #faf5ff"],
-        html.dark-mode [class*="card"],
-        html.dark-mode .stat-box,
-        html.dark-mode .tarjeta-material {
-            background-color: #111111 !important;
-            background: #111111 !important;
-            color: #e5e7eb !important;
-            border-color: #333 !important;
-        }
-
-        /* Forzar tipografía clara si está codificada como negra/oscura */
-        html.dark-mode [style*="color: #444"],
-        html.dark-mode [style*="color: #333"],
-        html.dark-mode [style*="color: #222"],
-        html.dark-mode [style*="color: #111"],
-        html.dark-mode [style*="color:#111"],
-        html.dark-mode [style*="color: #1f2937"],
-        html.dark-mode [style*="color: #374151"],
-        html.dark-mode [style*="color: #1e3a5f"],
-        html.dark-mode [style*="color: gray"],
-        html.dark-mode h1[style], html.dark-mode h2[style], html.dark-mode h3[style] {
-            color: #f3f4f6 !important;
-        }
-
-        html.dark-mode [style*="border: 1px solid #e5e7eb"],
-        html.dark-mode [style*="border-bottom: 1px solid #f3f4f6"] {
-            border-color: #333 !important;
-        }
-        
-        /* Ajuste de brillo para topografías inyectadas (Deudas/Ganancias) */
-        html.dark-mode td[style*="color: #059669"], html.dark-mode span[style*="color: #059669"] { color: #34d399 !important; }
-        html.dark-mode td[style*="color: #ef4444"], html.dark-mode span[style*="color: #ef4444"] { color: #f87171 !important; }
-        html.dark-mode td[style*="color: #1d4ed8"], html.dark-mode span[style*="color: #1d4ed8"] { color: #60a5fa !important; }
-        html.dark-mode div[style*="color: #059669"], html.dark-mode strong[style*="color: #10b981"] { color: #34d399 !important; }
-        html.dark-mode div[style*="color: #ef4444"], html.dark-mode strong[style*="color: #ef4444"] { color: #f87171 !important; }
-        html.dark-mode td[style*="color: black"], html.dark-mode span[style*="color: black"] { color: #fff !important; }
-
-        form { margin-bottom:20px; }
-        input, select { padding:8px; margin-right:10px; border: 1px solid #ccc; border-radius: 4px;}
-        button { padding:8px 15px; background:#111; color:white; border:none; border-radius:5px; cursor:pointer; }
-        button:hover { background:#333; }
-        
-        /* RESPONSIVIDAD MÓVIL (Magia para Celulares) */
-        /* RESPONSIVIDAD MÓVIL OPTIMIZADA (Magia Overlay V2.9.1) */
-        @media (max-width: 768px) {
-            .container { flex-direction: column; position: relative; }
-            .sidebar { 
-                position: fixed; 
-                top: 56px; 
-                left: -250px; 
-                height: calc(100vh - 56px); 
-                width: 250px; 
-                z-index: 1001; 
-                display: block !important; 
-                transition: left 0.3s ease, width 0.3s ease;
-                box-shadow: 5px 0 15px rgba(0,0,0,0.5);
-                padding: 20px;
-                background: #0a0a0a;
-            }
-            .sidebar.mobile-open { left: 0; }
-            .sidebar.collapsed { left: -250px; }
-            .content { padding: 15px; width: 100%; }
-        }
-
-    </style>
+    <title>Gato Negro | RPM v3.1.0</title>
+    
     <script>
-        /* Recuperar Preferencia Visual */
+        /* Aplicar dark mode ANTES de pintar para evitar el flash blanco */
         if (localStorage.getItem('gato-dark-mode') === 'true') {
             document.documentElement.classList.add('dark-mode');
         }
+    </script>
+    
+    <!-- Sistema de Diseño v3.0 -->
+    <link rel="stylesheet" href="/css/theme.css">
+    
+    <style>
+        /* --- ESTILOS DE LAYOUT V3.0 --- */
+        :root {
+            --sidebar-width: 260px;
+            --topbar-height: 64px;
+        }
 
+        body { 
+            background: var(--bg-main); 
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+
+        /* HEADER GLASSMORPHIC */
+        .topbar { 
+            height: var(--topbar-height);
+            background: rgba(var(--bg-card), 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+        .topbar-brand {
+            font-family: var(--font-head);
+            font-size: 1.25rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-main);
+        }
+
+        .container { display: flex; min-height: calc(100vh - var(--topbar-height)); }
+
+        /* SIDEBAR MODERNO */
+        .sidebar { 
+            width: var(--sidebar-width); 
+            background: var(--bg-card);
+            border-right: 1px solid var(--border-color);
+            padding: 24px 16px;
+            flex-shrink: 0;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            overflow-y: auto;
+            position: sticky;
+            top: var(--topbar-height);
+            height: calc(100vh - var(--topbar-height));
+        }
+
+        .sidebar.collapsed { 
+            width: 0; 
+            padding: 24px 0;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .sidebar-section { margin-bottom: 24px; }
+        .sidebar-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+            padding-left: 12px;
+            font-weight: 600;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--text-main);
+            text-decoration: none;
+            padding: 10px 12px;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .nav-item:hover {
+            background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1);
+            color: var(--primary);
+            padding-left: 16px;
+        }
+        .nav-item.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+        }
+
+        .submenu {
+            margin-left: 12px;
+            border-left: 1px solid var(--border-color);
+            margin-bottom: 12px;
+            display: none;
+        }
+        .submenu a {
+            display: block;
+            padding: 8px 16px;
+            color: var(--text-muted);
+            text-decoration: none;
+            font-size: 0.9rem;
+            border-radius: 0 8px 8px 0;
+            transition: all 0.2s;
+        }
+        .submenu a:hover { color: var(--primary); background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.05); }
+
+        /* CONTENT AREA */
+        .content { 
+            flex: 1; 
+            padding: 32px; 
+            min-width: 0; 
+            animation: fadeIn 0.4s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* COMPONENTES GLOBALES REFINADOS */
+        .card { 
+            background: var(--bg-card); 
+            border-radius: var(--radius); 
+            border: 1px solid var(--border-color);
+            box-shadow: var(--shadow-sm);
+            padding: 24px;
+            transition: box-shadow 0.3s;
+        }
+        .card:hover { box-shadow: var(--shadow-md); }
+        
+        /* FORMULARIO PREMIUM GLOBAL */
+        input, select, textarea {
+            background: var(--bg-card);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 12px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+        }
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.15);
+        }
+        label { color: var(--text-muted); font-weight: 500; font-size: 0.9rem; margin-bottom: 6px; display: block; }
+
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0;
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+        th { 
+            background: rgba(var(--text-muted), 0.05); 
+            padding: 14px; 
+            text-align: left; 
+            font-weight: 600; 
+            color: var(--text-main);
+            border-bottom: 2px solid var(--border-color);
+        }
+        td { padding: 14px; border-bottom: 1px solid var(--border-color); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.02); }
+
+        /* BOTONES TOPBAR */
+        .btn-icon {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: transparent;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            color: var(--text-main);
+            transition: all 0.2s;
+        }
+        .btn-icon:hover { background: rgba(var(--text-muted), 0.1); transform: translateY(-1px); }
+
+        /* RESPONSIVIDAD OVERLAY V3 */
+        @media (max-width: 1024px) {
+            .sidebar {
+                position: fixed;
+                left: -100%;
+                z-index: 1100;
+                box-shadow: 20px 0 50px rgba(0,0,0,0.2);
+            }
+            .sidebar.mobile-open { left: 0; }
+            .content { padding: 20px; }
+        }
+    </style>
+
+    <script>
         function toggleDarkMode() {
             document.documentElement.classList.toggle('dark-mode');
             localStorage.setItem('gato-dark-mode', document.documentElement.classList.contains('dark-mode'));
         }
         function toggleNav() {
             const sb = document.getElementById('main-sidebar');
-            if (window.innerWidth <= 768) {
+            if (window.innerWidth <= 1024) {
                 sb.classList.toggle('mobile-open');
             } else {
                 sb.classList.toggle('collapsed');
             }
         }
+        function toggleSub(id) {
+            const el = document.getElementById(id);
+            const isOpen = el.style.display === 'block';
+            el.style.display = isOpen ? 'none' : 'block';
+            
+            // Guardar estado en session/local si se desea, pero la detección por URL es mejor
+        }
+
+        /* AUTO-ACTIVACIÓN DE MENÚ POR URL */
+        window.addEventListener('DOMContentLoaded', () => {
+            const path = window.location.pathname;
+            const links = document.querySelectorAll('.sidebar a');
+            
+            links.forEach(link => {
+                if (link.getAttribute('href') === path) {
+                    link.classList.add('active');
+                    
+                    // Si está en un submenú, abrir el padre
+                    const parentSub = link.closest('.submenu');
+                    if (parentSub) {
+                        parentSub.style.display = 'block';
+                    }
+                }
+            });
+        });
     </script>
 </head>
 <body>
 
-<div class="topbar" style="display: flex; justify-content: space-between; align-items: center;">
-    <span>🐈‍⬛ Gato Negro - Sistema</span>
-    <div>
-        <button onclick="toggleDarkMode()" style="background: transparent; color: white; font-size: 20px; border: none; cursor: pointer; padding: 0 10px;" title="Modo Oscuro">🌙</button>
-        <button onclick="toggleNav()" style="background: transparent; color: white; font-size: 24px; border: none; cursor: pointer; padding: 0 10px;">☰</button>
+<header class="topbar">
+    <div class="topbar-brand">
+        <img src="/img/logo.png" alt="Logo" style="height: 32px; width: auto;">
+        <span>Gato Negro <small style="font-weight: 400; opacity: 0.6; font-size: 0.8rem;">RPM v3.1.0</small></span>
     </div>
-</div>
+
+    <div style="display: flex; gap: 8px;">
+        <button class="btn-icon" onclick="toggleDarkMode()" title="Cambiar Tema">🌓</button>
+        <button class="btn-icon" onclick="toggleNav()" title="Menú">☰</button>
+    </div>
+</header>
+
 <div class="container">
 
-<div class="sidebar" id="main-sidebar">
-    <h2>Menú</h2>
+<aside class="sidebar" id="main-sidebar">
     
     <% if (session.rol === "admin") { %>
-        <!-- 🏢 ADMINISTRACIÓN GLOBAL -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-admin').style.display = document.getElementById('submenu-admin').style.display === 'none' ? 'block' : 'none';">
-                🏢 Central de Negocios ▾
-            </a>
-            <div id="submenu-admin" style="display: none; background-color: #2a2a2a; border-left: 3px solid #64748b; margin-left: 10px;">
+        <!-- 🏢 ADMINISTRACIÓN -->
+        <div class="sidebar-section">
+            <div class="sidebar-label">Administración</div>
+            <a href="#" class="nav-item" onclick="toggleSub('submenu-admin')">🏢 Central de Negocios</a>
+            <div id="submenu-admin" class="submenu">
                 <a href="/inventario">📦 Inventario Global</a>
-                <a href="/movimientos">🔄 Movimientos / Kardex</a>
-                <a href="/nomina">💰 Nómina y Pagos</a>
-                <a href="/analitica">📈 Dashboard Analítico BI</a>
-                <a href="/empleados">👨‍🏭 Plantilla Empleados</a>
-                <a href="/mermas">⚠️ Mermas y Compras</a>
+                <a href="/movimientos">🔄 Kardex</a>
+                <a href="/nomina">💰 Nómina</a>
+                <a href="/analitica">📈 Analítica BI</a>
+                <a href="/empleados">👥 Empleados</a>
             </div>
         </div>
 
-        <!-- 🏭 ÁREA FABRIQUINES -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-fabs').style.display = document.getElementById('submenu-fabs').style.display === 'none' ? 'block' : 'none';">
-                🏭 Área Fabriquines ▾
-            </a>
-            <div id="submenu-fabs" style="display: none; background-color: #2a2a2a; border-left: 3px solid #f59e0b; margin-left: 10px;">
-                <a href="/despacho">📝 Asignar Despachos (Hojas)</a>
-                <a href="/facturas">🖨️ Facturas Vigentes</a>
-                <a href="/recepcion_diaria">⚖️ Recepción Diaria (L-S)</a>
+        <!-- 🏭 PRODUCCIÓN -->
+        <div class="sidebar-section">
+            <div class="sidebar-label">Producción</div>
+            <a href="#" class="nav-item" onclick="toggleSub('submenu-fabs')">🏭 Fabriquines</a>
+            <div id="submenu-fabs" class="submenu">
+                <a href="/despacho">📝 Asignar Hojas</a>
+                <a href="/facturas">🖨️ Facturas</a>
+                <a href="/recepcion_diaria">⚖️ Recepción</a>
                 <a href="/bodega">📦 Bodega Central</a>
             </div>
+            
+            <a href="/envolvedoras" class="nav-item">🌯 Envolvedoras</a>
+            <a href="/recepcion_empaque" class="nav-item">📦 Empacado</a>
         </div>
 
-        <!-- 💍 ÁREA ANILLADORES -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-anilla').style.display = document.getElementById('submenu-anilla').style.display === 'none' ? 'block' : 'none';">
-                💍 Área Anilladores ▾
-            </a>
-            <div id="submenu-anilla" style="display: none; background-color: #2a2a2a; border-left: 3px solid #8b5cf6; margin-left: 10px;">
-                <a href="#" style="pointer-events: none; opacity: 0.5;">🔜 Despachar Crudos...</a>
-                <a href="#" style="pointer-events: none; opacity: 0.5;">🔜 Recibir Anillados...</a>
+        <!-- ⚙️ TÉCNICO -->
+        <div class="sidebar-section">
+            <div class="sidebar-label">Técnico</div>
+            <a href="#" class="nav-item" onclick="toggleSub('submenu-maint')">⚙️ Mantenimiento</a>
+            <div id="submenu-maint" class="submenu">
+                <a href="/maquinas">⚙️ Equipos</a>
+                <a href="/mantenimiento">🔧 Órdenes</a>
+                <a href="/maquinas/qrs">🖨️ Etiquetas QR</a>
             </div>
-        </div>
-
-        <!-- 🌯 ÁREA ENVOLVEDORAS -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-envolt').style.display = document.getElementById('submenu-envolt').style.display === 'none' ? 'block' : 'none';">
-                🌯 Área Envolvedoras ▾
-            </a>
-            <div id="submenu-envolt" style="display: none; background-color: #2a2a2a; border-left: 3px solid #10b981; margin-left: 10px;">
-                <a href="/envolvedoras">🌯 Control Semanal</a>
-                <a href="#" style="pointer-events: none; opacity: 0.5;">🔜 Historial Envolvedoras...</a>
-            </div>
-        </div>
-
-        <!-- 📦 ÁREA EMPACADO -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-empaque').style.display = document.getElementById('submenu-empaque').style.display === 'none' ? 'block' : 'none';">
-                📦 Área Empacado ▾
-            </a>
-            <div id="submenu-empaque" style="display: none; background-color: #2a2a2a; border-left: 3px solid #ec4899; margin-left: 10px;">
-                <a href="/recepcion_empaque">📦 Recepción (Empaque Físico)</a>
-            </div>
-        </div>
-
-        <!-- ⚙️ MANTENIMIENTO -->
-        <div style="margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-maint').style.display = document.getElementById('submenu-maint').style.display === 'none' ? 'block' : 'none';">
-                ⚙️ Mantenimiento ▾
-            </a>
-            <div id="submenu-maint" style="display: none; background-color: #2a2a2a; border-left: 3px solid #3b82f6; margin-left: 10px;">
-                <a href="/maquinas">⚙️ Inventario Máquinas</a>
-                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
-                <a href="/maquinas/qrs">🖨️ Etiquetas QR / Fichas</a>
-            </div>
-        </div>
-
-        <!-- 🔐 SISTEMA -->
-        <div style="margin-bottom: 5px;">
-            <a href="/usuarios">👥 Accesos y Usuarios</a>
+            <a href="/usuarios" class="nav-item">👤 Accesos</a>
         </div>
         
-    <% } else if (session.rol === "fabricacion" || session.rol === "fabriquin" || session.rol === "envolvedor") { %>
-        <a href="/pedidos">📋 Pedidos</a>
-        
-        <div style="margin-top: 15px; margin-bottom: 5px;">
-            <a href="/cierre_diario">💵 Mi Producción</a>
-        </div>
-        
-    <% } else if (session.rol === "mantenimiento") { %>
-        <div style="margin-top: 10px; margin-bottom: 5px;">
-            <a href="#" onclick="document.getElementById('submenu-maq-mtto').style.display = document.getElementById('submenu-maq-mtto').style.display === 'none' ? 'block' : 'none';">
-                ⚙️ Equipos y Mtto ▾
-            </a>
-            <div id="submenu-maq-mtto" style="display: block; background-color: #2a2a2a; border-left: 3px solid #ef4444; margin-left: 10px;">
-                <a href="/maquinas">⚙️ Inventario Máquinas</a>
-                <a href="/mantenimiento">🔧 Órdenes de Trabajo</a>
-                <a href="/maquinas/qrs">🖨️ Códigos QR y Fichas</a>
-            </div>
-        </div>
+    <% } else { %>
+        <!-- MENU OPERATIVO -->
+        <a href="/pedidos" class="nav-item">📋 Pedidos</a>
+        <a href="/cierre_diario" class="nav-item">💵 Mi Producción</a>
     <% } %>
     
-    <hr style="border-color: #444; margin: 20px 0;">
-    <a href="/logout" style="background: #333; text-align: center; border: 1px solid #444;">🚪 Cerrar sesión</a>
-</div>
+    <div style="margin-top: 40px; padding: 0 12px;">
+        <a href="/logout" class="premium-btn" style="display: block; text-align: center; text-decoration: none; padding: 12px; font-size: 0.9rem; background: rgba(220, 38, 38, 0.1); color: #ef4444;">SALIR DEL SISTEMA</a>
+    </div>
+</aside>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const path = window.location.pathname;
-        if (['/inventario', '/movimientos', '/nomina', '/analitica', '/empleados'].includes(path)) {
-            let el = document.getElementById('submenu-admin'); if (el) el.style.display = 'block';
-        }
-        if (['/despacho', '/recepcion_diaria', '/entregas_historicas', '/picadura', '/bodega'].includes(path)) {
-            let el = document.getElementById('submenu-fabs'); if (el) el.style.display = 'block';
-        }
-        if (['/recepcion_empaque'].includes(path)) {
-            let el = document.getElementById('submenu-empaque'); if (el) el.style.display = 'block';
-        }
-        if (['/maquinas', '/mantenimiento', '/maquinas/qrs'].includes(path)) {
-            let el = document.getElementById('submenu-maint'); if (el) el.style.display = 'block';
-        }
-    });
-</script>
-
-<div class="content">
+<main class="content">

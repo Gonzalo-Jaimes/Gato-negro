@@ -15,29 +15,29 @@
 
     <% if (locals.pedidos && locals.pedidos.length > 0) { %>
         <% locals.pedidos.forEach(function(p) { %>
-        <tr style="background: white;">
+        <tr>
             <td><strong># <%= p.id %></strong><br><small><%= p.fecha %></small></td>
             <td style="text-transform: capitalize; font-size: 16px;"><strong><%= p.usuario %></strong></td>
-            <td style="color: #2563eb; font-size: 18px;"><strong><%= p.cantidad %></strong> tabacos</td>
+            <td style="color: var(--primary); font-size: 18px;"><strong><%= p.cantidad %></strong> tabacos</td>
             
-            <td style="padding: 15px; background: #f8fafc; border-left: 3px solid #3b82f6;">
+            <td style="padding: 15px; background: rgba(var(--text-muted), 0.05); border-left: 3px solid var(--primary);">
                 <form action="/recibir_tarea/<%= p.id %>" method="POST" style="margin: 0; display: flex; gap: 10px; align-items: center;">
                     
                     <div>
-                        <label style="font-size: 12px; font-weight: bold;">Entregados:</label><br>
-                        <input type="number" name="entregado" id="entrega_<%= p.id %>" required placeholder="Ej: <%= p.cantidad %>" style="width: 100px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;" data-id="<%= p.id %>" data-cant="<%= p.cantidad %>" oninput="calcularRezago(this.dataset.id, this.dataset.cant)">
+                        <label>Entregados:</label><br>
+                        <input type="number" name="entregado" id="entrega_<%= p.id %>" required placeholder="Ej: <%= p.cantidad %>" style="width: 100px;" data-id="<%= p.id %>" data-cant="<%= p.cantidad %>" oninput="calcularRezago(this.dataset.id, this.dataset.cant)">
                     </div>
 
                     <div>
-                        <label style="font-size: 12px; font-weight: bold;">Cestas:</label><br>
-                        <input type="number" name="cestas_devueltas" value="0" style="width: 80px; padding: 6px; border: 1px solid #ccc; border-radius: 4px;">
+                        <label>Cestas:</label><br>
+                        <input type="number" name="cestas_devueltas" value="0" style="width: 80px;">
                     </div>
 
                     <div style="flex: 1; text-align: center;">
                         <span id="rezago_<%= p.id %>" style="font-weight: bold; color: gray;">-</span>
                     </div>
 
-                    <button type="submit" style="background: #3b82f6; color: white; border: none; padding: 10px 15px; border-radius: 5px; cursor: pointer; font-weight: bold;">📥 Recibir</button>
+                    <button type="submit" class="premium-btn" style="padding: 10px 15px; background: var(--primary); color: black;">📥 Recibir</button>
                 </form>
             </td>
         </tr>
@@ -52,8 +52,8 @@
 </table>
 
 <br><br>
-<h2 style="color: #111; border-bottom: 2px solid #ccc; padding-bottom: 10px; margin-top: 30px;">📊 Estado de Cuentas (Rezagos Acumulados)</h2>
-<p style="color: #555;">Resumen total de los fabriquines que deben tabacos o que han entregado excedentes en días anteriores.</p>
+<h2 style="color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 10px; margin-top: 30px;">📊 Estado de Cuentas (Rezagos Acumulados)</h2>
+<p style="color: var(--text-muted);">Resumen total de los fabriquines que deben tabacos o que han entregado excedentes en días anteriores.</p>
 
 <table style="width: 100%; max-width: 600px;">
     <tr>
@@ -63,33 +63,33 @@
 
     <% if (locals.listaRezagos && locals.listaRezagos.length > 0) { %>
         <% locals.listaRezagos.forEach(function(r) { %>
-        <tr style="background: white;">
-            <td style="text-transform: capitalize; font-size: 16px;"><strong><%= r.usuario %></strong></td>
+        <tr>
+            <td style="text-transform: capitalize; font-size: 16px; color: var(--text-main);"><strong><%= r.usuario %></strong></td>
             
-            <td style="display: flex; gap: 10px; align-items: center;">
+            <td style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <% if (r.total > 0) { %>
-                    <span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 5px 10px; border-radius: 20px;">⚠️ Debe: <%= r.total %> tabacos</span>
+                    <span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(239, 68, 68, 0.2);">⚠️ Debe: <%= r.total %> tabacos</span>
                 <% } else if (r.total < 0) { %>
-                    <span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 5px 10px; border-radius: 20px;">✅ Excedente: +<%= Math.abs(r.total) %> tabacos</span>
+                    <span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(16, 185, 129, 0.2);">✅ Excedente: +<%= Math.abs(r.total) %> tabacos</span>
                 <% } %>
                 
                 <% if (r.faltan_cestas > 0) { %>
-                    <span style="color: #ea580c; font-weight: bold; background: #ffedd5; padding: 5px 10px; border-radius: 20px;">🧺 Debe: <%= r.faltan_cestas %> cesta(s)</span>
+                    <span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(245, 158, 11, 0.2);">🧺 Debe: <%= r.faltan_cestas %> cesta(s)</span>
                 <% } %>
                 
                 <% if (r.total > 0 || r.faltan_cestas > 0) { %>
-                    <form action="/abonar_rezago" method="POST" style="margin: 0; display: flex; gap: 5px; align-items: center; border-left: 2px solid #ccc; padding-left: 10px;">
+                    <form action="/abonar_rezago" method="POST" style="margin: 0; display: flex; gap: 8px; align-items: center; border-left: 2px solid var(--border-color); padding-left: 10px;">
                         <input type="hidden" name="usuario" value="<%= r.usuario %>">
                         
                         <% if (r.total > 0) { %>
-                            <input type="number" name="cantidad_tabacos" max="<%= r.total %>" placeholder="<%= r.total %> tab" style="width: 80px; padding: 4px; border: 1px solid #ccc; border-radius: 4px;">
+                            <input type="number" name="cantidad_tabacos" max="<%= r.total %>" placeholder="<%= r.total %> tab" style="width: 85px;">
                         <% } %>
-
+ 
                         <% if (r.faltan_cestas > 0) { %>
-                            <input type="number" name="cantidad_cestas" max="<%= r.faltan_cestas %>" placeholder="<%= r.faltan_cestas %> cest" style="width: 70px; padding: 4px; border: 1px solid #ea580c; border-radius: 4px;">
+                            <input type="number" name="cantidad_cestas" max="<%= r.faltan_cestas %>" placeholder="<%= r.faltan_cestas %> cest" style="width: 85px; border-color: #f59e0b;">
                         <% } %>
-
-                        <button type="submit" style="background: #16a34a; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-weight: bold;">Saldar</button>
+ 
+                        <button type="submit" class="premium-btn" style="padding: 5px 12px; background: var(--primary); color: black;">Pagar</button>
                     </form>
                 <% } %>
             </td>

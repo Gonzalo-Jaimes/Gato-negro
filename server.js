@@ -61,6 +61,18 @@ function obtenerHoraColombia() {
     return { fecha, hora };
 }
 
+// 🕵️ FUNCIÓN HELPER DE AUDITORÍA (No bloqueante)
+async function registrarAuditoria(req, modulo, accion, detalles = {}) {
+    try {
+        const usuario = req.session ? (req.session.usuario || 'Desconocido') : 'SISTEMA';
+        await supabase.from('auditoria_logs').insert([{ 
+            usuario, modulo, accion, detalles 
+        }]);
+    } catch (e) {
+        console.error('⚠️ Error silencioso al registrar auditoría (¿Falta tabla?):', e.message);
+    }
+}
+
 // ---------------- LOGIN / LOGOUT ----------------
 app.get('/', (req, res) => res.render('login'));
 
@@ -1324,11 +1336,15 @@ app.post('/registrar_lote_picadura', async (req, res) => {
         if (inv) {
             const promesas = [];
 
-            // A. Descontar Picadura Bruta
-            const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('saca') && !i.material.toLowerCase().includes('saco') && !i.material.toLowerCase().includes('procesada'));
-            if (raw) promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, raw.cantidad - kgEnt) }).eq('id', raw.id));
+            // A. Descontar Picadura Bruta (Buscamos nombre exacto "Picadura (Materia Prima)")
+            const raw = inv.find(i => i.material.toLowerCase().includes('picadura') && !i.material.toLowerCase().includes('procesada') && !i.material.toLowerCase().includes('saca'));
+            if (raw) {
+                const nuevoBruto = Math.max(0, parseFloat(raw.cantidad) - kgEnt);
+                promesas.push(supabase.from('inventario').update({ cantidad: nuevoBruto }).eq('id', raw.id));
+                console.log(`✅ Descontado ${kgEnt}kg de Picadura Bruta (${raw.material}).`);
+            }
 
-            // B. Incrementar Sacos (Batching + Parallel)
+            // B. Incrementar Sacos (Batching + Parallel) - NORMALIZADO V3.3
             const conteo = {};
             for (let s of sacosACrear) {
                 const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
@@ -1336,11 +1352,12 @@ app.post('/registrar_lote_picadura', async (req, res) => {
             }
 
             for (let [nombre, cant] of Object.entries(conteo)) {
-                const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
+                // Buscamos ignorando espacios y mayúsculas para evitar duplicados
+                const itemSaca = inv.find(i => i.material.toLowerCase().replace(/\s+/g, '') === nombre.toLowerCase().replace(/\s+/g, ''));
                 if (itemSaca) {
                     promesas.push(supabase.from('inventario').update({ cantidad: parseFloat(itemSaca.cantidad) + cant }).eq('id', itemSaca.id));
                 } else {
-                    promesas.push(supabase.from('inventario').insert([{ material: nombre, cantidad: cant }]));
+                    promesas.push(supabase.from('inventario').insert([{ material: nombre, cantidad: cant, categoria: 'Materia Prima' }]));
                 }
             }
 
@@ -1364,7 +1381,7 @@ app.post('/entregar_sacos', async (req, res) => {
     }
 
     const { empleado_id, sacos_ids, capa_real_kg, capote_real_kg, nota, fecha } = req.body;
-    const tiempo = getDateTime();
+    const tiempo = obtenerHoraColombia();
     const fechEntrega = fecha || tiempo.fecha;
 
     try {
@@ -1407,19 +1424,20 @@ app.post('/entregar_sacos', async (req, res) => {
             if (m.includes('capote') && cp > 0) {
                 promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - cp) }).eq('id', item.id)); cp = 0;
             }
-            if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('saco') && !m.includes('prima') && pi > 0) {
-                promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id)); pi = 0;
+            if ((m.includes('picadura') || m.includes('tripa')) && !m.includes('saca') && !m.includes('procesada') && pi > 0) {
+                promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, item.cantidad - pi) }).eq('id', item.id)); 
+                pi = 0;
             }
         }
 
-        // C. Descontar Sacas Específicas
+        // C. Descontar Sacas Específicas - NORMALIZADO V3.3
         const conteoSacas = {};
         for (let s of sacosInfo) {
             const nombre = s.tipo === 'sobrante' ? 'Saca Picadura Sobrante' : `Saca Picadura ${s.peso_kg}kg`;
             conteoSacas[nombre] = (conteoSacas[nombre] || 0) + 1;
         }
         for (let [nombre, cant] of Object.entries(conteoSacas)) {
-            const itemSaca = inv.find(i => i.material.toLowerCase() === nombre.toLowerCase());
+            const itemSaca = inv.find(i => i.material.toLowerCase().replace(/\s+/g, '') === nombre.toLowerCase().replace(/\s+/g, ''));
             if (itemSaca) promesas.push(supabase.from('inventario').update({ cantidad: Math.max(0, parseFloat(itemSaca.cantidad) - cant) }).eq('id', itemSaca.id));
         }
 
@@ -1450,6 +1468,7 @@ app.post('/entregar_sacos', async (req, res) => {
         }
 
         // 6. Actualizar Saldos de Material del Empleado
+        const empleado = resEmpleado.data; // Solucionando ReferenceError
         const nSaldoCapa = (parseFloat(empleado.saldo_capa_kg) || 0) + (despacho.capa_kg || 0) - capaKgReal;
         const nSaldoCapo = (parseFloat(empleado.saldo_capote_kg) || 0) + (despacho.capote_kg || 0) - capoteKgReal;
         const nSaldoPica = (parseFloat(empleado.saldo_picadura_kg) || 0) + (despacho.picadura_kg || 0) - totalPicaduraKg;
@@ -1466,6 +1485,15 @@ app.post('/entregar_sacos', async (req, res) => {
         await supabase.from('despachos_registro').update({ 
             estado: 'entregado', capa_kg: capaKgReal, capote_kg: capoteKgReal, picadura_kg: totalPicaduraKg 
         }).eq('id', despacho.id);
+
+        // 8. Registro de Auditoría
+        registrarAuditoria(req, 'BODEGA', `ENTREGA DE MATERIAL`, {
+            fabriquin: empleado.nombre,
+            factura_id: despacho.id,
+            peso_capa: capaKgReal,
+            peso_capote: capoteKgReal,
+            peso_picadura: totalPicaduraKg
+        });
 
         return res.json({ ok: true, msg: 'Entrega unificada completada con éxito.' });
     } catch(e) {

@@ -5,35 +5,35 @@
 
 <% if (session.rol === 'fabriquin' || session.rol === 'fabricacion') { %>
     <h2>Generar Nueva Orden de Fabricación</h2>
-    <form action="/agregar_pedido" method="POST" style="background: white; padding: 20px; border-radius: 8px;">
+    <form action="/agregar_pedido" method="POST" class="card" style="margin-bottom: 25px;">
         <input type="hidden" name="tipo_tabaco" value="Tabacos Normales">
         <label><strong>¿Cuántos tabacos vas a fabricar?</strong></label><br><br>
-        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px; padding: 6px; margin-bottom: 15px;"><br>
-        <button type="submit" style="background: #22c55e;">Generar Orden</button>
+        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px; margin-bottom: 15px;"><br>
+        <button type="submit" class="premium-btn" style="background: #10b981; color: black; font-weight: bold;">Generar Orden</button>
     </form>
     <hr>
 <% } %>
 
 <% if (session.rol === 'envolvedor') { %>
     <h2>Solicitar Tabacos para Envolver</h2>
-    <form action="/agregar_pedido" method="POST" style="background: white; padding: 20px; border-radius: 8px; border-left: 5px solid #3b82f6;">
+    <form action="/agregar_pedido" method="POST" class="card" style="border-left: 5px solid var(--primary); margin-bottom: 25px;">
         <label><strong>¿Cuántos tabacos vas a retirar para envolver?</strong></label><br><br>
-        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px;">
-        <button type="submit" style="background: #3b82f6;">Solicitar Material</button>
+        <input type="number" name="cantidad_tabacos" step="1" placeholder="Ej: 1500" required style="width: 250px; margin-bottom: 15px;"><br>
+        <button type="submit" class="premium-btn" style="background: var(--primary); color: black; font-weight: bold;">Solicitar Material</button>
     </form>
     <hr>
 <% } %>
 
 <h2>Historial de Órdenes</h2>
 
-<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px; display: flex; gap: 20px; align-items: center;">
-    <div>
+<div class="card" style="margin-bottom: 20px; display: flex; gap: 20px; align-items: center;">
+    <div style="flex: 1;">
         <strong>🔎 Buscar Usuario: </strong><br>
-        <input type="text" id="inputUsuario" placeholder="Ej: rene, carlos..." style="width: 200px; padding: 6px; margin-top: 5px;">
+        <input type="text" id="inputUsuario" placeholder="Ej: rene, carlos..." style="width: 100%; margin-top: 5px; background: transparent;">
     </div>
     <div>
         <strong>⚙️ Filtrar por Tipo: </strong><br>
-        <select id="selectTipo" style="padding: 6px; margin-top: 5px; width: 150px;">
+        <select id="selectTipo" style="margin-top: 5px; width: 180px;">
             <option value="todos">Todos los pedidos</option>
             <option value="fabricación">Solo Fabricación</option>
             <option value="envoltura">Solo Envoltura</option>
@@ -55,7 +55,7 @@
     </tr>
 
     <% pedidos.forEach(function(p) { %>
-    <tr class="fila-pedido" style="background: white;">
+    <tr class="fila-pedido">
         <td><%= p.id %></td>
         <td class="col-usuario" style="text-transform: capitalize;"><strong><%= p.usuario %></strong></td>
         <td class="col-tipo">
@@ -77,13 +77,13 @@
 
         <td style="text-align: center;">
             <% if (p.estado === 'pendiente') { %> 
-                <span style="color: #d97706; font-weight: bold; background: #fef3c7; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🟡 Pendiente</span>
+                <span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(245, 158, 11, 0.2); font-size: 12px;">🟡 Pendiente</span>
             <% } else if (p.estado === 'aprobado') { %> 
-                <span style="color: #2563eb; font-weight: bold; background: #dbeafe; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🔵 En Proceso</span>
+                <span style="color: #3b82f6; font-weight: bold; background: rgba(59, 130, 246, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(59, 130, 246, 0.2); font-size: 12px;">🔵 En Proceso</span>
             <% } else if (p.estado === 'completado') { %> 
-                <span style="color: #16a34a; font-weight: bold; background: #dcfce7; padding: 4px 8px; border-radius: 10px; font-size: 13px;">✅ Completado</span>
+                <span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 12px;">✅ Completado</span>
             <% } else if (p.estado === 'rechazado') { %> 
-                <span style="color: #dc2626; font-weight: bold; background: #fee2e2; padding: 4px 8px; border-radius: 10px; font-size: 13px;">🔴 Rechazado</span>
+                <span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(239, 68, 68, 0.2); font-size: 12px;">🔴 Rechazado</span>
             <% } %>
         </td>
         
@@ -103,11 +103,11 @@
                             <input type="hidden" name="cesta_seleccionada" value="ninguna">
                         <% } %>
 
-                        <button type="submit" style="background: #22c55e; margin-bottom: 5px; width: 100%; font-size: 12px; padding: 5px;">✔ Aprobar</button>
+                        <button type="submit" class="premium-btn" style="background: #10b981; color: black; margin-bottom: 5px; width: 100%; font-size: 12px; padding: 8px;">✔ Aprobar</button>
                     </form>
                     
                     <form action="/rechazar_pedido/<%= p.id %>" method="POST" style="margin:0;">
-                        <button type="submit" style="background: #ef4444; width: 100%; font-size: 12px; padding: 5px;">✖ Rechazar</button>
+                        <button type="submit" class="premium-btn" style="background: #ef4444; width: 100%; font-size: 12px; padding: 8px;">✖ Rechazar</button>
                     </form>
                 
                 <% } else { %>

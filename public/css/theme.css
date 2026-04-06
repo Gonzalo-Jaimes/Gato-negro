@@ -1,0 +1,176 @@
+/* 🐈‍⬛ Gato Negro - Sistema de Diseño Premium v3.0 */
+
+:root {
+    /* --- PALETA DE COLORES (HSL para mejor manipulación) --- */
+    --primary-h: 38;
+    --primary-s: 92%;
+    --primary-l: 50%;
+    --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l)); /* #f59e0b */
+    --primary-hover: hsl(var(--primary-h), var(--primary-s), 40%);
+    
+    --bg-main: #f8fafc;
+    --bg-card: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border-color: #e2e8f0;
+
+    /* --- LOGIN MESH (Light Mode default) --- */
+    --login-bg: radial-gradient(at 0% 0%, hsl(210, 40%, 98%) 0, transparent 50%), 
+                radial-gradient(at 50% 0%, hsl(215, 25%, 90%) 0, transparent 50%), 
+                radial-gradient(at 100% 0%, hsl(220, 20%, 85%) 0, transparent 50%),
+                #ffffff;
+    --login-card-bg: rgba(255, 255, 255, 0.7);
+    --login-text: #0f172a;
+    
+    /* --- MODO OSCURO (Dark Mode) --- */
+    --dark-bg: #030712; /* Blue-950 deep */
+    --dark-card: #111827;
+    --dark-border: #1f2937;
+    --dark-text: #f8fafc;
+    --dark-text-muted: #94a3b8;
+
+    /* --- LOGIN MESH (Dark Mode override) --- */
+    --dark-login-bg: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
+                     radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
+                     radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
+                     #030712;
+    --dark-login-card-bg: rgba(255, 255, 255, 0.03);
+    --dark-login-text: #ffffff;
+    
+    /* --- EFECTOS --- */
+    --radius: 12px;
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+    --glass-bg: rgba(255, 255, 255, 0.1);
+    --glass-blur: blur(12px);
+    
+    /* --- TIPOGRAFÍA --- */
+    --font-main: 'Inter', system-ui, -apple-system, sans-serif;
+    --font-head: 'Outfit', sans-serif;
+}
+
+/* Tipografías de Google */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap');
+
+/* --- RESET & GLOBAL --- */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { 
+    font-family: var(--font-main); 
+    background-color: var(--bg-main); 
+    color: var(--text-main); 
+    line-height: 1.5;
+    transition: background 0.3s, color 0.3s;
+}
+
+/* --- CLASES DE UTILIDAD --- */
+.premium-card {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 1.5rem;
+    box-shadow: var(--shadow-md);
+    border: 1px solid var(--border-color);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+.premium-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+.premium-btn {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    font-size: 1rem;
+    font-weight: 500;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.premium-btn:hover { background: var(--primary-hover); transform: scale(1.02); }
+
+/* --- DARK MODE SELECTOR --- */
+html.dark-mode {
+    --bg-main: var(--dark-bg);
+    --bg-card: var(--dark-card);
+    --text-main: var(--dark-text);
+    --text-muted: var(--dark-text-muted);
+    --border-color: var(--dark-border);
+    --login-bg: var(--dark-login-bg);
+    --login-card-bg: var(--dark-login-card-bg);
+    --login-text: var(--dark-login-text);
+}
+html.dark-mode .premium-card { background: var(--dark-card); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+
+/* --- COMPONENTES DE MODAL (Restauración v3.2) --- */
+.modal-overlay-pic {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.7);
+    backdrop-filter: blur(4px);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+}
+.modal-overlay-pic.activo { display: flex; }
+
+.modal-box-pic {
+    background: var(--bg-card);
+    border-radius: var(--radius);
+    padding: 2rem;
+    max-width: 600px;
+    width: 90%;
+    position: relative;
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-lg);
+    animation: modalAppear 0.3s ease-out;
+}
+
+@keyframes modalAppear {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+}
+
+/* --- BADGES DE SACOS --- */
+.saco-badge {
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: bold;
+    color: white;
+    display: inline-block;
+}
+.saco-35 { background: #1d4ed8; }
+.saco-28 { background: #0369a1; }
+.saco-21 { background: #0e7490; }
+.saco-14 { background: #065f46; }
+.saco-7  { background: #4d7c0f; }
+.saco-sob { background: #7c3aed; }
+
+/* --- ESTADÍSTICAS Y CAJAS --- */
+.stat-box { 
+    padding: 1.25rem; 
+    border-radius: 12px; 
+    background: var(--bg-card); 
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+.stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
+.stat-lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
+
+/* --- OPTIMIZACIÓN TÁCTIL Y RESPONSIVA (V3.1) --- */
+.touch-target {
+    min-height: 48px;
+    min-width: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.touch-input {
+    padding: 12px !important;
+    font-size: 16px !important; /* Previene auto-zoom en iOS Safari */
+    min-height: 48px;
+}
+@media (max-width: 768px) {
+    .pic-grid { grid-template-columns: 1fr !important; }
+    .touch-mobile-full { width: 100% !important; margin-bottom: 12px; }
+}

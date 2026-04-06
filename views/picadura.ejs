@@ -7,190 +7,153 @@
 
 <style>
 .pic-grid     { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 28px; }
-.pic-card     { background: white; border-radius: 12px; padding: 22px; box-shadow: 0 2px 10px rgba(0,0,0,0.07); }
-.pic-card h3  { margin: 0 0 16px 0; font-size: 17px; border-bottom: 2px solid #f0f0f0; padding-bottom: 10px; }
-.saco-badge   { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; margin: 2px; }
-.saco-35      { background: #1e40af; color: white; }
-.saco-28      { background: #0369a1; color: white; }
-.saco-21      { background: #0e7490; color: white; }
-.saco-14      { background: #065f46; color: white; }
-.saco-7       { background: #4d7c0f; color: white; }
-.saco-sob     { background: #9333ea; color: white; }
-.stat-box     { text-align: center; padding: 14px; border-radius: 10px; background: #f8fafc; }
-.stat-num     { font-size: 32px; font-weight: 900; line-height: 1; }
-.stat-lbl     { font-size: 11px; text-transform: uppercase; color: #6b7280; margin-top: 4px; }
-.inp-qty      { width: 70px; padding: 6px 8px; border: 1px solid #d1d5db; border-radius: 6px; text-align: center; font-size: 15px; }
-.btn-primary  { background: #2563eb; color: white; border: none; padding: 12px 24px; border-radius: 8px; font-weight: bold; font-size: 15px; cursor: pointer; width: 100%; margin-top: 12px; }
-.btn-primary:hover { background: #1d4ed8; }
-.lote-card    { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin-bottom: 12px; }
-.lote-card.activo  { border-left: 4px solid #16a34a; }
-.lote-card.agotado { border-left: 4px solid #9ca3af; opacity: 0.7; }
-
-/* Modal de entrega de sacos */
-.modal-overlay-pic  { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 9000; align-items: center; justify-content: center; }
-.modal-overlay-pic.activo { display: flex; }
-.modal-box-pic      { background: white; border-radius: 14px; padding: 28px; max-width: 600px; width: 95%; max-height: 88vh; overflow-y: auto; }
-.saco-selector      { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
-.saco-item          { display: flex; align-items: center; gap: 6px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; cursor: pointer; transition: all 0.15s; }
-.saco-item:hover    { border-color: #2563eb; background: #eff6ff; }
-.saco-item.seleccionado { background: #2563eb; color: white; border-color: #1d4ed8; }
-@media (max-width: 700px) { .pic-grid { grid-template-columns: 1fr; } }
-
-/* === DARK MODE: PICADURA === */
-html.dark-mode .pic-card             { background: #111 !important; border: 1px solid #2d2d2d !important; color: #e5e7eb !important; }
-html.dark-mode .pic-card h3          { border-bottom-color: #2d2d2d !important; color: #f3f4f6 !important; }
-html.dark-mode .lote-card            { background: #111 !important; border-color: #2d2d2d !important; color: #e5e7eb !important; }
-html.dark-mode .lote-card.activo     { border-left-color: #16a34a !important; }
-html.dark-mode .saco-item            { background: #1a1a1a !important; border-color: #333 !important; color: #e5e7eb !important; }
-html.dark-mode .saco-item:hover      { background: #1a2a4d !important; border-color: #2563eb !important; }
-html.dark-mode .saco-item.seleccionado { background: #1d4ed8 !important; color: white !important; }
-html.dark-mode .modal-box-pic        { background: #111 !important; color: #e5e7eb !important; border: 1px solid #2d2d2d !important; }
-/* Stat boxes — fondo dark según color */
-html.dark-mode .stat-box             { background: #1a1a1a !important; border: 1px solid #2d2d2d !important; }
-html.dark-mode .stat-lbl             { color: #6b7280 !important; }
-/* Stat boxes con background inline coloreado */
-html.dark-mode .stat-box[style*="background: #eff6ff"],
-html.dark-mode .stat-box[style*="background:#eff6ff"] { background: #0f1f3d !important; }
-html.dark-mode .stat-box[style*="background: #f0fdf4"],
-html.dark-mode .stat-box[style*="background:#f0fdf4"] { background: #071a0e !important; }
-html.dark-mode .stat-box[style*="background: #faf5ff"],
-html.dark-mode .stat-box[style*="background:#faf5ff"] { background: #160a2a !important; }
-/* Resumen de cálculo y modal de entrega */
-html.dark-mode #resumen-calculo       { background: #0f1f3d !important; color: #93c5fd !important; border-color: #1e3a6e !important; }
-html.dark-mode #resumen-sacos-sel     { background: #0f1f3d !important; color: #93c5fd !important; }
-/* Formulario de sacos por lote — cajas grises */
-html.dark-mode [style*="background: #f8fafc"],
-html.dark-mode [style*="background:#f8fafc"] { background: #1a1a1a !important; }
-html.dark-mode [style*="background: #faf5ff"],
-html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
+/* Componentes Semánticos v3.1 */
+.pic-card     { background: var(--bg-card); border-radius: var(--radius); padding: 22px; border: 1px solid var(--border-color); box-shadow: var(--shadow-sm); }
+.pic-card h3  { margin: 0 0 16px 0; font-size: 17px; border-bottom: 2px solid var(--border-color); padding-bottom: 10px; color: var(--text-main); }
+.stat-box     { text-align: center; padding: 14px; border-radius: 10px; background: rgba(var(--text-muted), 0.05); border: 1px solid var(--border-color); }
+.lote-card    { border: 1px solid var(--border-color); border-radius: 10px; padding: 16px; margin-bottom: 12px; background: var(--bg-card); }
+.modal-box-pic { background: var(--bg-card); border-radius: 14px; padding: 28px; max-width: 650px; width: 95%; border: 1px solid var(--border-color); box-shadow: var(--shadow-lg); }
+.saco-item    { display: flex; align-items: center; gap: 6px; background: rgba(var(--text-muted), 0.03); border: 1px solid var(--border-color); border-radius: 8px; padding: 8px 12px; cursor: pointer; color: var(--text-main); transition: all 0.2s; }
+.saco-item:hover { border-color: var(--primary); background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1); }
+.inp-qty      { width: 60px; padding: 6px; border: 1px solid var(--border-color); border-radius: 6px; text-align: center; color: var(--text-main); background: var(--bg-card); }
 
 </style>
 
 <h1>📦 Bodega Central de Material</h1>
 <hr>
 
-<!-- ⚡ RESUMEN DE STOCK ACTUAL (RESTAURADO V2.9.5) -->
+<!-- ⚡ RESUMEN DE STOCK ACTUAL (Mejorado v3.2) -->
 <div class="pic-grid" style="grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 14px; margin-bottom: 28px;">
     <% 
         const _pesosStock = [35, 28, 21, 14, 7];
-        const _coloresStock = { 35: 'saco-35', 28: 'saco-28', 21: 'saco-21', 14: 'saco-14', 7: 'saco-7' };
         const _conteosStock = {};
         _pesosStock.forEach(p => { _conteosStock[p] = sacosDisponibles.filter(s => s.peso_kg == p).length; });
         const _sobrantesStock = sacosDisponibles.filter(s => s.tipo === 'sobrante').length;
         const _totalStock = sacosDisponibles.length;
         const _kgStock = sacosDisponibles.reduce((acc, s) => acc + parseFloat(s.peso_kg), 0);
     %>
-    <div class="stat-box" style="background: #eff6ff;">
-        <div class="stat-num" style="color:#2563eb;"><%= _totalStock %></div>
+    <div class="stat-box" style="border-top: 4px solid #2563eb;">
+        <div class="stat-num" style="color:var(--primary);"><%= _totalStock %></div>
         <div class="stat-lbl">Total Sacos</div>
     </div>
-    <div class="stat-box" style="background: #f0fdf4;">
+    <div class="stat-box" style="border-top: 4px solid #16a34a;">
         <div class="stat-num" style="color:#16a34a;"><%= _kgStock.toFixed(0) %> kg</div>
-        <div class="stat-lbl">Kg en Bodega</div>
+        <div class="stat-lbl">Kg Procesados</div>
     </div>
     <% _pesosStock.forEach(p => { 
         let _colorVal = '#4d7c0f';
-        if (p == 35) _colorVal = '#1e40af';
-        else if (p == 28) _colorVal = '#0369a1';
-        else if (p == 21) _colorVal = '#0e7490';
-        else if (p == 14) _colorVal = '#065f46';
+        if (p == 35) _colorVal = '#1d4ed8';
+        else if (p == 28) _colorVal = '#0284c7';
+        else if (p == 21) _colorVal = '#0891b2';
+        else if (p == 14) _colorVal = '#059669';
     %>
     <div class="stat-box">
         <div class="stat-num" style="font-size:26px; color: <%= _colorVal %>;"><%= _conteosStock[p] %></div>
         <div class="stat-lbl"><%= p %> kg</div>
     </div>
     <% }); %>
-    <div class="stat-box" style="background: #faf5ff;">
+    <div class="stat-box" style="border-top: 4px solid #9333ea;">
         <div class="stat-num" style="font-size:26px; color:#9333ea;"><%= _sobrantesStock %></div>
         <div class="stat-lbl">Sobrantes</div>
     </div>
 </div>
 
 <!-- ⚡ MATERIA PRIMA EN ALMACÉN (CONEXIÓN CON INVENTARIO V2.10.1) -->
-<div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px; margin-bottom: 28px;">
-    <h4 style="margin: 0 0 12px 0; font-size: 13px; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px;">
-        🧱 Materia Prima Disponible (Almacén General)
-    </h4>
+<div class="card" style="border: 1px solid var(--border-color); padding: 18px; margin-bottom: 28px; background: rgba(var(--text-muted), 0.02);">
     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px;">
         <% 
-            const getInv = (mat) => {
-                const item = inventario.find(i => i.material.toLowerCase().includes(mat.toLowerCase()) && !i.material.toLowerCase().includes('procesada') && !i.material.toLowerCase().includes('reserva'));
+            const getInv = (mat, exclude = ['procesada', 'reserva']) => {
+                const item = inventario.find(i => {
+                    const m = i.material.toLowerCase();
+                    return m.includes(mat.toLowerCase()) && !exclude.some(ex => m.includes(ex));
+                });
                 return item ? parseFloat(item.cantidad).toFixed(1) : '0.0';
             };
+            const getPicaProcesada = () => {
+                // Sumar todos los kg de sacas en el inventario global
+                return inventario
+                    .filter(i => i.material.toLowerCase().includes('saca picadura'))
+                    .reduce((acc, i) => acc + parseFloat(i.cantidad || 0) * (parseFloat(i.material.match(/\d+/)) || 0), 0)
+                    .toFixed(1);
+            };
         %>
-        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #7c3aed;">
-            <div style="font-size: 11px; color: #64748b; font-weight: bold;">CAPA (KG)</div>
+        <div class="card" style="padding: 12px; border-left: 4px solid #7c3aed;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">CAPA EN BODEGA</div>
             <div style="font-size: 20px; font-weight: 900; color: #7c3aed;"><%= getInv('capa') %> <small style="font-size: 12px;">kg</small></div>
         </div>
-        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #2563eb;">
-            <div style="font-size: 11px; color: #64748b; font-weight: bold;">CAPOTE (KG)</div>
+        <div class="card" style="padding: 12px; border-left: 4px solid #2563eb;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">CAPOTE EN BODEGA</div>
             <div style="font-size: 20px; font-weight: 900; color: #2563eb;"><%= getInv('capote') %> <small style="font-size: 12px;">kg</small></div>
         </div>
-        <div style="background: white; padding: 12px; border-radius: 10px; border-left: 4px solid #16a34a;">
-            <div style="font-size: 11px; color: #64748b; font-weight: bold;">PICADURA BRUTA (KG)</div>
-            <div style="font-size: 20px; font-weight: 900; color: #16a34a;"><%= getInv('picadura') %> <small style="font-size: 12px;">kg</small></div>
+        <div class="card" style="padding: 12px; border-left: 4px solid #16a34a;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PICADURA BRUTA (HOJA)</div>
+            <div style="font-size: 20px; font-weight: 900; color: #f59e0b;"><%= getInv('picadura', ['saca', 'saco', 'procesada']) %> <small style="font-size: 12px;">kg</small></div>
+        </div>
+        <div class="card" style="padding: 12px; border-left: 4px solid #059669;">
+            <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PICADURA PROCESADA (SACAS)</div>
+            <div style="font-size: 20px; font-weight: 900; color: #059669;"><%= _kgStock.toFixed(1) %> <small style="font-size: 12px;">kg</small></div>
         </div>
     </div>
 </div>
 
 <!-- ⚡ PANEL DE DESPACHO ACTIVO (STICKY) -->
-<div class="pic-card" style="position: sticky; top: 10px; z-index: 1000; border: 2px solid #2563eb; background: #f0f9ff; margin-bottom: 28px;">
+<div class="card" style="position: sticky; top: 10px; z-index: 1000; border: 2px solid var(--primary); background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1); margin-bottom: 28px; backdrop-filter: blur(10px);">
     <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
         <span style="font-size: 24px;">📥</span>
-        <h3 style="margin: 0; border: none; padding: 0; color: #1e3a8a;">Despacho de Material Activo</h3>
+        <h3 style="margin: 0; border: none; padding: 0; color: var(--text-main);">Despacho de Material Activo</h3>
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 20px; align-items: start;">
         <!-- Paso 1: Fabriquín -->
         <div>
-            <label style="font-size:12px; font-weight:bold; color:#1e40af; text-transform:uppercase; display:block; margin-bottom:6px;">1. Seleccionar Fabriquín:</label>
-            <select id="sel-empleado-pic" style="width:100%; padding:10px; border:1px solid #93c5fd; border-radius:8px; font-size:15px; font-weight:bold;" onchange="actualizarMetasMaterial()">
+            <label style="font-size:12px; font-weight:bold; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:6px;">1. Seleccionar Fabriquín:</label>
+            <select id="sel-empleado-pic" style="font-size:15px; font-weight:bold;" onchange="actualizarMetasMaterial()">
                 <option value="">-- ¿A quién entregamos? --</option>
                 <% empleados.forEach(emp => { %>
                 <option value="<%= emp.id %>"><%= emp.nombre %></option>
                 <% }); %>
             </select>
-            <div id="status-picadura" style="margin-top:10px; font-size:12px; font-weight:bold; text-align:center; padding:8px; border-radius:8px; min-height: 45px; display: flex; align-items: center; justify-content: center;">
+            <div id="status-picadura" style="margin-top:10px; font-size:12px; font-weight:bold; text-align:center; padding:8px; border-radius:8px; min-height: 45px; display: flex; align-items: center; justify-content: center; background: rgba(var(--text-muted), 0.05); color: var(--text-muted);">
                 ⚠️ Selecciona un trabajador primero.
             </div>
         </div>
 
         <!-- Paso 2: Metas y Pesos Reales -->
-        <div id="bloque-metas" style="opacity: 0.5; pointer-events: none; background: white; border-radius: 10px; padding: 15px; border: 1px solid #e2e8f0;">
+        <div id="bloque-metas" style="opacity: 0.5; pointer-events: none; border-radius: 10px; padding: 15px; border: 1px solid var(--border-color); background: rgba(var(--text-muted), 0.02);">
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px; text-align:center;">
                 <div>
-                    <div style="font-size:10px; color:#64748b; text-transform:uppercase;">Meta Picadura</div>
+                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Picadura</div>
                     <div style="font-size:18px; font-weight:900; color:#16a34a;" id="meta-pica">0 kg</div>
                 </div>
                 <div>
-                    <div style="font-size:10px; color:#64748b; text-transform:uppercase;">Meta Capa</div>
+                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Capa</div>
                     <div style="font-size:18px; font-weight:900; color:#7c3aed;" id="meta-capa">0 kg</div>
                 </div>
                 <div>
-                    <div style="font-size:10px; color:#64748b; text-transform:uppercase;">Meta Capote</div>
+                    <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Capote</div>
                     <div style="font-size:18px; font-weight:900; color:#2563eb;" id="meta-capo">0 kg</div>
                 </div>
             </div>
             
             <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
                 <div>
-                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:#475569;">PESO REAL CAPA (kg):</label>
-                    <input type="number" id="real-capa-pic" step="0.01" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
+                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:var(--text-main);">PESO REAL CAPA (kg):</label>
+                    <input type="number" id="real-capa-pic" step="0.01" class="touch-input" style="width:100%; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; background:var(--bg-card); color:var(--text-main);">
                 </div>
                 <div>
-                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:#475569;">PESO REAL CAPOTE (kg):</label>
-                    <input type="number" id="real-capote-pic" step="0.01" style="width:100%; padding:8px; border:1px solid #cbd5e1; border-radius:6px; font-weight:bold;">
+                    <label style="font-size:11px; font-weight:bold; display:block; margin-bottom:4px; color:var(--text-main);">PESO REAL CAPOTE (kg):</label>
+                    <input type="number" id="real-capote-pic" step="0.01" class="touch-input" style="width:100%; border:1px solid var(--border-color); border-radius:6px; font-weight:bold; background:var(--bg-card); color:var(--text-main);">
                 </div>
             </div>
         </div>
 
         <!-- Paso 3: Confirmación -->
         <div>
-            <label style="font-size:12px; font-weight:bold; color:#1e40af; text-transform:uppercase; display:block; margin-bottom:6px;">2. Confirmar:</label>
-            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" style="width:100%; background:#16a34a; color:white; border:none; padding:12px; border-radius:8px; font-weight:900; cursor:pointer; font-size:15px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);">
+            <label style="font-size:12px; font-weight:bold; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:6px;">2. Confirmar:</label>
+            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" class="premium-btn touch-target touch-mobile-full" style="width:100%; background:#10b981; color:white; font-size:15px; box-shadow: var(--shadow-sm); border: none; font-weight: bold;">
                 ✅ DESPACHAR
             </button>
-            <div id="resumen-sacos-sel" style="margin-top:8px; font-size:13px; color:#1e40af; font-weight: bold; text-align: center;">
+            <div id="resumen-sacos-sel" style="margin-top:8px; font-size:13px; color:var(--text-main); font-weight: bold; text-align: center;">
                 0 bultos seleccionados
             </div>
             <p id="pic-error" style="color:#ef4444; font-size:12px; margin-top:6px; font-weight: bold; text-align: center; display:none;"></p>
@@ -209,11 +172,11 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 16px;">
                     <div>
                         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Fecha de la Pesada:</label>
-                        <input type="date" name="fecha" value="<%= new Date().toISOString().slice(0,10) %>" required style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                        <input type="date" name="fecha" value="<%= new Date().toISOString().slice(0,10) %>" required style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box; background:var(--bg-card); color:var(--text-main);">
                     </div>
                     <div>
                         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Picadura bruta entrada (kg):</label>
-                        <input type="number" name="kg_entrada" step="0.1" min="1" placeholder="Ej: 3000" required style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                        <input type="number" name="kg_entrada" step="0.1" min="1" placeholder="Ej: 3000" class="touch-input" required style="width:100%; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box; background:var(--bg-card); color:var(--text-main);">
                     </div>
                 </div>
 
@@ -221,12 +184,12 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                     <% pesos.forEach(p => { %>
-                    <div style="display: flex; align-items: center; gap: 10px; background: #f8fafc; padding: 10px; border-radius: 8px;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(var(--text-main), 0.05); padding: 10px; border-radius: 8px;">
                         <span class="saco-badge <%= colores[p] %>"><%= p %> kg</span>
                         <input type="number" name="sacos_<%= p %>" class="inp-qty" min="0" value="0" placeholder="0">
                     </div>
                     <% }); %>
-                    <div style="display: flex; align-items: center; gap: 10px; background: #faf5ff; padding: 10px; border-radius: 8px; grid-column: span 2;">
+                    <div style="display: flex; align-items: center; gap: 10px; background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1); padding: 10px; border-radius: 8px; grid-column: span 2;">
                         <span class="saco-badge saco-sob">Sobrante</span>
                         <span style="font-size: 13px; color: #6b7280;">Cantidad:</span>
                         <input type="number" name="sacos_sobrante_qty" class="inp-qty" min="0" value="0">
@@ -243,9 +206,9 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
 
                 <div>
                     <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Nota (opcional):</label>
-                    <input type="text" name="nota" placeholder="Ej: Lote con humedad alta" style="width:100%; padding:8px; border:1px solid #d1d5db; border-radius:6px; box-sizing:border-box;">
+                    <input type="text" name="nota" placeholder="Ej: Lote con humedad alta" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box; background:var(--bg-card); color:var(--text-main);">
                 </div>
-                <button type="submit" class="btn-primary">💾 Registrar Pesada y Generar Sacos</button>
+                <button type="submit" class="premium-btn" style="background: var(--primary); color: black;">💾 Registrar Pesada y Generar Sacos</button>
             </form>
         </div>
     </div>
@@ -279,9 +242,11 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
                         </div>
                         <div class="saco-selector" id="sacos-lote-<%= lote.id %>">
                             <% sacosLote.forEach(s => { %>
-                            <div class="saco-item" data-saco-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" data-lote="<%= lote.id %>" onclick="toggleSaco(this)">
-                                <strong>#<%= s.numero_saco %></strong>
-                                <span style="font-size:12px;"><%= s.peso_kg %> kg<%= s.tipo === 'sobrante' ? ' ⭐' : '' %></span>
+                            <div class="saco-item touch-target" data-saco-id="<%= s.id %>" data-kg="<%= s.peso_kg %>" data-lote="<%= lote.id %>" onclick="toggleSaco(this)" style="display:flex; justify-content:space-between;">
+                                <div style="display:flex; align-items:center; gap:6px;">
+                                    <strong>#<%= s.numero_saco %></strong>
+                                    <span style="font-size:12px;"><%= s.peso_kg %> kg<%= s.tipo === 'sobrante' ? ' ⭐' : '' %></span>
+                                </div>
                                 <span onclick="event.stopPropagation(); abrirDivision('<%= s.id %>','<%= s.numero_saco %>', <%= s.peso_kg || 0 %>)" 
                                       title="Dividir en sacos menores"
                                       style="font-size:11px; color:#9ca3af; cursor:pointer; padding:1px 4px; border-radius:4px;">✂️</span>
@@ -334,7 +299,7 @@ html.dark-mode [style*="background:#faf5ff"] { background: #160a2a !important; }
 </div>
 
 <!-- MODAL DIVIDIR SACO -->
-<div class="modal-overlay-pic" id="modal-division">
+<div class="modal-overlay-pic" id="modal-division" onclick="if(event.target===this)this.classList.remove('activo')">
   <div class="modal-box-pic">
     <h3 style="margin:0 0 4px 0; color:#1e3a5f;">✂️ Dividir Saco en Menores</h3>
     <p id="txt-saco-origen" style="font-size:13px; color:#6b7280; margin-bottom:16px;"></p>
@@ -558,20 +523,20 @@ function recalcStatusPicadura(meta) {
 
     if (actual === 0) {
         statusEl.innerHTML = `⚠️ Falta seleccionar los sacos p/ ${meta} kg`;
-        statusEl.style.background = '#fff7ed';
-        statusEl.style.color = '#9a3412';
+        statusEl.style.background = 'transparent';
+        statusEl.style.color = '#dc2626';
     } else if (Math.abs(diff) < 0.1) {
         statusEl.innerHTML = `✅ ¡Perfecto! Meta de ${meta} kg cubierta.`;
-        statusEl.style.background = '#f0fdf4';
-        statusEl.style.color = '#16a34a';
+        statusEl.style.background = 'transparent';
+        statusEl.style.color = '#10b981';
     } else if (diff > 0) {
         statusEl.innerHTML = `⚠️ Exceso de ${diff.toFixed(1)} kg.`;
-        statusEl.style.background = '#fef2f2';
+        statusEl.style.background = 'transparent';
         statusEl.style.color = '#dc2626';
     } else {
         statusEl.innerHTML = `⏳ Faltan ${Math.abs(diff).toFixed(1)} kg p/ la meta.`;
-        statusEl.style.background = '#eff6ff';
-        statusEl.style.color = '#1d4ed8';
+        statusEl.style.background = 'transparent';
+        statusEl.style.color = '#3b82f6';
     }
 }
 
@@ -602,7 +567,16 @@ async function confirmarEntrega() {
         const data = await resp.json();
         if (data.ok) {
             btn.innerHTML = '✅ DESPACHO FINALIZADO';
-            setTimeout(() => { location.reload(); }, 1000);
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    title: '¡Despacho Exitoso!',
+                    text: 'La saca y los pesos fueron asignados correctamente al fabriquín.',
+                    icon: 'success',
+                    confirmButtonColor: '#10b981'
+                }).then(() => location.reload());
+            } else {
+                setTimeout(() => { location.reload(); }, 1000);
+            }
         } else {
             errEl.textContent = data.msg || 'Error al procesar.';
             errEl.style.display = 'block';

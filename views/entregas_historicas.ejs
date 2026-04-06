@@ -5,13 +5,13 @@
 
 <p style="color: #555; font-size: 15px; margin-bottom: 20px;">Use la barra de búsqueda para auditar semanas, nombres de fabriquines o estados específicos. Haz clic en cualquier fila para ver el desglose día a día.</p>
 
-<div style="margin-bottom: 20px;">
-    <input type="text" id="buscadorHistorico" placeholder="🔍 Escribe para buscar Fabriquín, Fecha (Ej: 26/03), o Estado..." style="width: 100%; max-width: 500px; padding: 12px 15px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+<div style="margin-bottom: 25px;">
+    <input type="text" id="buscadorHistorico" placeholder="🔍 Escribe para buscar Fabriquín, Fecha (Ej: 26/03), o Estado..." style="width: 100%; max-width: 500px; padding: 12px 18px; background: transparent; border-radius: 30px; font-size: 16px;">
 </div>
 
-<div style="background: white; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-x: auto;">
+<div class="card" style="overflow-x: auto; padding: 0;">
     <table style="width: 100%; border-collapse: collapse; text-align: center; min-width: 900px;" id="tablaHistorico">
-        <thead style="background: #111; color: white;">
+        <thead style="background: var(--bg-card); color: var(--text-main);">
             <tr>
                 <th style="padding: 15px; text-align: left;">Fabriquín / Obrero</th>
                 <th style="padding: 15px;">Semana</th>
@@ -70,9 +70,9 @@
                     
                     <td style="padding: 15px;">
                         <% if (lote.estado !== 'pendiente') { %>
-                            <span style="background: #d1fae5; color: #065f46; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">✔ Liquidada y Pagada</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">✔ Liquidada</span>
                         <% } else { %>
-                            <span style="background: #fef08a; color: #854d0e; padding: 5px 12px; border-radius: 20px; font-size: 12px; font-weight: bold;">🟡 Semana Abierta</span>
+                            <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.2);">🟡 Abierta</span>
                         <% } %>
                     </td>
                     <td style="padding: 15px; color: #6366f1; font-weight: bold; font-size: 18px;">⊕</td>

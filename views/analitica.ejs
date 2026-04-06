@@ -9,14 +9,14 @@
 <hr style="margin-bottom: 30px;">
 
 <!-- CONTENEDOR DE GRÁFICAS Y CONTROLES -->
-<div style="background: white; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-top: 4px solid #8b5cf6; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-    <h3 style="margin-top: 0; color: #8b5cf6;">📈 BI Dashboard: Generador de Gráficas Dinámicas</h3>
-    <p style="color: gray; font-size: 14px; margin-bottom: 20px;">Filtra y visualiza millones de movimientos por material.</p>
+<div class="card" style="border-top: 4px solid var(--primary); margin-bottom: 30px;">
+    <h3 style="margin-top: 0; color: var(--primary);">📈 BI Dashboard: Generador de Gráficas Dinámicas</h3>
+    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Filtra y visualiza millones de movimientos por material.</p>
     
     <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
         <div style="flex: 1; min-width: 250px;">
             <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Dataset a Visualizar:</label>
-            <select id="biDataset" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px;" onchange="renderBiChart()">
+            <select id="biDataset" onchange="renderBiChart()">
                 <option value="TABACOS_PRODUCCION">🚬 Tabacos Fabricados (Acumulado Total)</option>
                 <option value="MATERIA_PRIMA">🟤 Uso de Materias Primas (Capa, Capote, Picadura)</option>
                 <option value="CESTAS">🧺 Inventario y Movimiento de Cestas Físicas</option>
@@ -25,7 +25,7 @@
         </div>
         <div style="flex: 1; min-width: 250px;">
             <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Tipo de Gráfica Geometría:</label>
-            <select id="biType" style="width: 100%; padding: 10px; border-radius: 5px; border: 1px solid #ccc; font-size: 16px;" onchange="renderBiChart()">
+            <select id="biType" onchange="renderBiChart()">
                 <option value="bar">📊 Gráfica de Barras (Cantidades)</option>
                 <option value="pie">🥧 Gráfica de Torta (Proporciones / Pie)</option>
                 <option value="doughnut">🍩 Gráfica de Dona (Rentabilidad)</option>
@@ -41,20 +41,20 @@
 
 <div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; margin-bottom: 40px;">
     <!-- Resumen Macro Financiero Rápido -->
-    <div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid #3b82f6; flex: 1; min-width: 400px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
-        <h3 style="text-align: center; color: #333; margin-top: 0;">💵 Cierre Contable Macro (Acumulado Total)</h3>
-        <p style="text-align: center; color: gray; font-size: 13px; margin-bottom: 20px;">Comparativa en Pesos Colombianos (COP)</p>
+    <div class="card" style="border-top: 4px solid var(--primary); flex: 1; min-width: 400px;">
+        <h3 style="text-align: center; color: var(--text-main); margin-top: 0;">💵 Cierre Contable Macro (Acumulado Total)</h3>
+        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Comparativa en Pesos Colombianos (COP)</p>
         
-        <div style="display: flex; justify-content: space-between; font-size: 16px; background: #f8fafc; padding: 15px; border-radius: 5px; font-weight: bold;">
+        <div style="display: flex; justify-content: space-between; font-size: 16px; background: rgba(var(--text-muted), 0.05); padding: 15px; border-radius: 12px; font-weight: bold;">
             <div style="color: #10b981;">Ingresos:<br>$<%= finanzas.ingresos.toLocaleString('es-CO') %></div>
             <div style="color: #ef4444;">Nómina:<br>$<%= finanzas.nomina.toLocaleString('es-CO') %></div>
             <div style="color: #f59e0b;">Mtto Máquinas:<br>$<%= finanzas.mantenimiento.toLocaleString('es-CO') %></div>
             
             <% let balance = finanzas.ingresos - finanzas.nomina - finanzas.mantenimiento; %>
             <% if(balance >= 0) { %>
-                <div style="color: #10b981; border-left: 2px solid #ccc; padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
+                <div style="color: #10b981; border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
             <% } else { %>
-                <div style="color: #dc2626; border-left: 2px solid #ccc; padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
+                <div style="color: #dc2626; border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
             <% } %>
         </div>
     </div>
@@ -156,7 +156,14 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 plugins: {
-                    legend: { display: (tipoGrafica === 'pie' || tipoGrafica === 'doughnut') ? true : false }
+                    legend: { 
+                        display: (tipoGrafica === 'pie' || tipoGrafica === 'doughnut') ? true : false,
+                        labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() } },
+                    y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() } }
                 }
             }
         });

@@ -67,7 +67,7 @@
 <hr>
 
 <h2>Generar Nueva Orden de Trabajo</h2>
-<form action="/agregar_mantenimiento" method="POST" style="background: white; padding: 20px; border-radius: 8px; border-left: 5px solid #2563eb; display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+<form action="/agregar_mantenimiento" method="POST" class="card" style="border-left: 5px solid var(--primary); display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;">
     
     <div>
         <label><strong>Fecha:</strong></label><br>
@@ -128,7 +128,7 @@
     </div>
 
     <div style="grid-column: span 2; margin-top: 10px;">
-        <button type="submit" style="background: #2563eb; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Orden de Trabajo</button>
+        <button type="submit" class="premium-btn" style="background: var(--primary); color: black; font-weight: bold; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Orden de Trabajo</button>
     </div>
 </form>
 
@@ -136,9 +136,9 @@
 
 <h2>Historial de Órdenes de Trabajo</h2>
 
-<div style="margin-bottom: 20px; background: white; padding: 15px; border-radius: 8px;">
+<div class="card" style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
     <strong>🔎 Buscar mantenimiento: </strong>
-    <input type="text" id="inputBusqueda" placeholder="Buscar por máquina, responsable o fecha..." style="width: 300px; padding: 8px; border: 1px solid #ccc; border-radius: 4px;">
+    <input type="text" id="inputBusqueda" placeholder="Buscar por máquina, responsable o fecha..." style="flex: 1; max-width: 400px; background: transparent;">
 </div>
 
 <table>
@@ -179,12 +179,12 @@
 </table>
 
 <!-- MODAL DETALLE ORDEN DE TRABAJO -->
-<div id="modal-detalle-mtto" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.6); z-index:9000; align-items:center; justify-content:center;" onclick="if(event.target===this)this.style.display='none'">
-    <div style="background:white; border-radius:12px; padding:30px; max-width:650px; width:95%; box-shadow:0 20px 60px rgba(0,0,0,0.4); position:relative; max-height:90vh; overflow-y:auto;">
+<div id="modal-detalle-mtto" class="modal-overlay-pic">
+    <div class="modal-box-pic" style="max-width:650px; width:95%; max-height:90vh; overflow-y:auto; padding: 30px;">
         <button onclick="document.getElementById('modal-detalle-mtto').style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✖</button>
         
-        <div style="border-bottom:3px solid #2563eb; margin-bottom:20px; padding-bottom:12px;">
-            <h2 style="margin:0; color:#111;" id="mtto-titulo">📋 Orden de Trabajo #</h2>
+        <div style="border-bottom:3px solid var(--primary); margin-bottom:20px; padding-bottom:12px;">
+            <h2 style="margin:0; color:var(--text-main);" id="mtto-titulo">📋 Orden de Trabajo #</h2>
             <span id="mtto-estado-badge" style="font-size:14px; font-weight:bold;"></span>
         </div>
 

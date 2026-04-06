@@ -6,47 +6,111 @@
         <p style="color: gray; margin-top: 0;">Resumen visual de todos los materiales disponibles clasificados por categoría.</p>
     </div>
     
-    <div style="background: white; padding: 10px 15px; border-radius: 30px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); display: flex; align-items: center; width: 300px;">
+    <div class="card" style="padding: 10px 15px; border-radius: 30px; display: flex; align-items: center; width: 300px; border: 1px solid var(--border-color);">
         <span style="font-size: 20px; margin-right: 10px;">🔍</span>
-        <input type="text" id="buscadorStock" onkeyup="filtrarTarjetas()" placeholder="Buscar material o categoría..." style="border: none; outline: none; width: 100%; font-size: 16px;">
+        <input type="text" id="buscadorStock" onkeyup="filtrarTarjetas()" placeholder="Buscar material o categoría..." style="border: none; outline: none; width: 100%; font-size: 16px; background: transparent; color: var(--text-main);">
     </div>
 </div>
 
 <hr style="margin-bottom: 30px;">
 
 <% 
-    // Lógica para agrupar inteligentemente
+    // Lógica para agrupar inteligentemente (v3.2.1)
     let categorias = {};
+    let desgloses = {}; // Para guardar detalles de sacas agrupadas
+
     if (locals.inventario) {
         locals.inventario.forEach(item => {
-            let nombreM = item.material.toLowerCase();
+            let nombreOriginal = item.material.trim();
+            let nombreM = nombreOriginal.toLowerCase();
             let catOriginal = item.categoria || 'Otros';
             let catFinal = '';
 
-            // 1. FORZAMOS GRUPOS PERSONALIZADOS (Tus reglas)
-            if (nombreM.includes('cesta')) {
-                catFinal = '🧺 Cestas (Todos los colores)';
+            // --- NORMALIZACIÓN V3.4 (Materia Prima Unificada) ---
+            if (nombreM.includes('picadura bruta') || nombreM === 'material' || nombreM === 'picadura' || nombreM === 'hoja') {
+                nombreOriginal = 'Picadura Bruta (Hoja)';
+                nombreM = nombreOriginal.toLowerCase();
+            }
+
+            // 1. FORZAMOS GRUPOS PERSONALIZADOS
+            if (nombreM.includes('saca picadura') || nombreM.includes('saco picadura')) {
+                // AGRUPACIÓN ESPECIAL PARA SACAS
+                catFinal = '🟤 Materia Prima';
+                let nombreAgrupado = 'Picadura Procesada (Sacas)';
+                
+                if (!desgloses[nombreAgrupado]) desgloses[nombreAgrupado] = {};
+                
+                // Normalizamos el tipo de saca (ej: "35kg" vs "35 kg")
+                let subKey = nombreOriginal.replace(/\s+/g, ''); // "SacaPicadura35kg"
+                if (!desgloses[nombreAgrupado][subKey]) {
+                    desgloses[nombreAgrupado][subKey] = { label: nombreOriginal, cantidad: 0 };
+                }
+                desgloses[nombreAgrupado][subKey].cantidad += item.cantidad;
+                
+                nombreM = nombreAgrupado.toLowerCase();
+                nombreOriginal = nombreAgrupado;
             } else if (nombreM.includes('tabaco')) {
-                catFinal = '🚬 Tabacos (Normales, Anillados, Envoltura)';
+                // AGRUPACIÓN PARA TABACOS (PRODUCCIÓN)
+                catFinal = '📦 Producto Terminado';
+                let nombreAgrupado = 'Tabacos Totales (Producción)';
+                
+                if (!desgloses[nombreAgrupado]) desgloses[nombreAgrupado] = {};
+                let subKey = nombreM; 
+                if (!desgloses[nombreAgrupado][subKey]) {
+                    desgloses[nombreAgrupado][subKey] = { label: nombreOriginal, cantidad: 0 };
+                }
+                desgloses[nombreAgrupado][subKey].cantidad += item.cantidad;
+                
+                nombreM = nombreAgrupado.toLowerCase();
+                nombreOriginal = nombreAgrupado;
+            } else if (nombreM.includes('cesta')) {
+                // AGRUPACIÓN PARA CESTAS
+                catFinal = '🧺 Cestas';
+                let nombreAgrupado = 'Cestas (Resumen de Colores)';
+                
+                if (!desgloses[nombreAgrupado]) desgloses[nombreAgrupado] = {};
+                let subKey = nombreM; 
+                if (!desgloses[nombreAgrupado][subKey]) {
+                    desgloses[nombreAgrupado][subKey] = { label: nombreOriginal, cantidad: 0 };
+                }
+                desgloses[nombreAgrupado][subKey].cantidad += item.cantidad;
+                
+                nombreM = nombreAgrupado.toLowerCase();
+                nombreOriginal = nombreAgrupado;
+            } else if (nombreM.includes('papel') || nombreM.includes('envoltura')) {
+                // AGRUPACIÓN PARA PAPEL
+                catFinal = '🔧 Insumos';
+                let nombreAgrupado = 'Insumos de Papelería';
+                
+                if (!desgloses[nombreAgrupado]) desgloses[nombreAgrupado] = {};
+                let subKey = nombreM; 
+                if (!desgloses[nombreAgrupado][subKey]) {
+                    desgloses[nombreAgrupado][subKey] = { label: nombreOriginal, cantidad: 0 };
+                }
+                desgloses[nombreAgrupado][subKey].cantidad += item.cantidad;
+                
+                nombreM = nombreAgrupado.toLowerCase();
+                nombreOriginal = nombreAgrupado;
             } 
-            // 2. SI NO ES CESTA NI TABACO, USA SU CATEGORÍA NORMAL CON EMOJIS
             else {
                 if (catOriginal === 'Materia Prima') catFinal = '🟤 Materia Prima';
                 else if (catOriginal === 'En Proceso') catFinal = '🟡 En Proceso';
                 else if (catOriginal === 'Producto Terminado') catFinal = '📦 Producto Terminado';
-                else if (catOriginal === 'Insumos' || catOriginal.includes('Mtto')) catFinal = '🔧 Insumos y Repuestos';
+                else if (catOriginal === 'Insumos' || catOriginal.includes('Mtto')) catFinal = '🔧 Insumos';
                 else catFinal = '📁 ' + catOriginal;
             }
 
-            // Agrupamos y Sumamos en la vista
             if (!categorias[catFinal]) categorias[catFinal] = [];
             
             let existe = categorias[catFinal].find(i => i.material.toLowerCase().trim() === nombreM.trim());
             if (existe) {
                 existe.cantidad += item.cantidad;
             } else {
-                // Clonar para no mutar el original
-                categorias[catFinal].push({ material: item.material.trim(), cantidad: item.cantidad });
+                categorias[catFinal].push({ 
+                    material: nombreOriginal, 
+                    cantidad: item.cantidad, 
+                    esAgrupado: nombreOriginal.includes('Sacas') || nombreOriginal.includes('Resumen') || nombreOriginal.includes('Totales') || nombreOriginal.includes('Insumos')
+                });
             }
         });
     }
@@ -55,38 +119,67 @@
 <% if (Object.keys(categorias).length > 0) { %>
     <% for (const [nombreCategoria, items] of Object.entries(categorias)) { %>
         
-        <h2 class="titulo-categoria" style="color: #444; border-bottom: 2px solid #ddd; padding-bottom: 5px; margin-top: 30px;">
+        <h2 class="titulo-categoria" style="color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 5px; margin-top: 30px;">
             <%= nombreCategoria %>
         </h2>
 
         <div style="display: flex; flex-wrap: wrap; gap: 20px; margin-top: 15px;">
             <% items.forEach(function(item) { 
-                // Colores de fondo suaves y bordes
-                let colorBorde = "#3b82f6"; // Azul default
-                let colorFondo = "#ffffff";
+                // Colores de borde dinámicos v3.1 (Fondos ahora son variables de tema)
+                let colorBorde = "var(--primary)"; 
                 let nombreM = item.material.toLowerCase();
                 
-                if (nombreM.includes("capa")) { colorBorde = "#eab308"; colorFondo = "#fefce8"; }
-                else if (nombreM.includes("capote")) { colorBorde = "#d97706"; colorFondo = "#fffbeb"; }
-                else if (nombreM.includes("tripa") || nombreM.includes("material")) { colorBorde = "#84cc16"; colorFondo = "#f7fee7"; }
-                else if (nombreM.includes("cesta")) { colorBorde = "#64748b"; colorFondo = "#f8fafc"; }
-                else if (nombreM.includes("papel")) { colorBorde = "#8b5cf6"; colorFondo = "#f5f3ff"; }
-                else if (nombreM.includes("tabaco")) { colorBorde = "#1f2937"; colorFondo = "#f3f4f6"; }
-                else if (nombreCategoria.includes("Producto")) { colorBorde = "#10b981"; colorFondo = "#ecfdf5"; }
+                if (nombreM.includes("capa")) { colorBorde = "#eab308"; }
+                else if (nombreM.includes("capote")) { colorBorde = "#d97706"; }
+                else if (nombreM.includes("tripa") || nombreM.includes("material")) { colorBorde = "#84cc16"; }
+                else if (nombreM.includes("cesta")) { colorBorde = "#64748b"; }
+                else if (nombreM.includes("papel")) { colorBorde = "#8b5cf6"; }
+                else if (nombreM.includes("tabaco")) { colorBorde = "var(--text-main)"; }
+                else if (nombreCategoria.includes("Producto")) { colorBorde = "#10b981"; }
             %>
-                <div class="tarjeta-material" data-nombre="<%= item.material.toLowerCase() %>" data-cat="<%= nombreCategoria.toLowerCase() %>" style="background: <%= colorFondo %>; border-left: 6px solid <%= colorBorde %>; padding: 20px; border-radius: 8px; width: 220px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s;">
-                    <h3 style="margin: 0 0 10px 0; color: #333; text-transform: capitalize; font-size: 18px;"><%= item.material %></h3>
+                <div class="tarjeta-material card <%= item.esAgrupado ? 'interactiva' : '' %>" 
+                     data-nombre="<%= item.material.toLowerCase() %>" 
+                     data-cat="<%= nombreCategoria.toLowerCase() %>" 
+                     style="border-left: 6px solid <%= colorBorde %>; width: 220px; background: rgba(var(--text-muted), 0.03); cursor: <%= item.esAgrupado ? 'pointer' : 'default' %>;"
+                     <% if (item.esAgrupado) { %> onclick="toggleBreakdown(this)" <% } %>>
                     
-                    <h1 style="margin: 0; color: #111; font-size: 32px; font-weight: 900;"><%= item.cantidad %> <small style="font-size: 14px; color: gray; font-weight: normal;">uds/kg</small></h1>
+                    <h3 style="margin: 0 0 10px 0; color: var(--text-main); text-transform: capitalize; font-size: 18px;">
+                        <%= item.material %> <%= item.esAgrupado ? '🔍' : '' %>
+                    </h3>
+                    
+                    <h1 style="margin: 0; color: var(--text-main); font-size: 32px; font-weight: 900;">
+                        <%= item.cantidad %> <small style="font-size: 14px; color: var(--text-muted); font-weight: normal;">uds/kg</small>
+                    </h1>
+
+                    <% if (item.esAgrupado && desgloses[item.material]) { %>
+                        <div class="breakdown-container" style="display: none; margin-top: 15px; padding-top: 10px; border-top: 1px dashed var(--border-color); font-size: 13px; color: var(--text-muted);">
+                            <% let totalKg = 0; %>
+                            <% Object.values(desgloses[item.material]).forEach(sub => { 
+                                let n = sub.label.match(/\d+/);
+                                if (n) totalKg += sub.cantidad * parseInt(n[0]);
+                            %>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span><%= sub.label.replace('Saca Picadura ', '').replace('Saca Picadura', '') %>:</span>
+                                    <span style="font-weight: bold; color: var(--text-main);"><%= sub.cantidad %></span>
+                                </div>
+                            <% }); %>
+                            <% if (item.material.includes('Sacas')) { %>
+                            <div style="display: flex; justify-content: space-between; margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 4px;">
+                                <strong>Peso Total Aprox:</strong>
+                                <strong style="color: #10b981;"><%= totalKg %> kg</strong>
+                            </div>
+                            <% } %>
+                        </div>
+                    <% } %>
                 </div>
             <% }); %>
         </div>
 
     <% } %>
 <% } else { %>
-    <div style="text-align: center; padding: 50px; background: white; border-radius: 10px;">
-        <h2 style="color: gray;">Tu bodega está vacía.</h2>
-        <p>Ve a "🔄 Entradas y Salidas" para registrar tu primer material.</p>
+    <div class="card" style="text-align: center; padding: 50px;">
+        <h2 style="color: var(--text-muted);">Tu bodega está vacía.</h2>
+        <p style="color: var(--text-muted);">Ve a "🔄 Entradas y Salidas" para registrar tu primer material.</p>
     </div>
 <% } %>
 
@@ -117,6 +210,18 @@
                 titulo.style.display = 'block';
             }
         });
+    }
+
+    function toggleBreakdown(card) {
+        const breakdown = card.querySelector('.breakdown-container');
+        if (breakdown) {
+            const isHidden = breakdown.style.display === 'none';
+            breakdown.style.display = isHidden ? 'block' : 'none';
+            
+            // Efecto visual opcional
+            card.style.transform = isHidden ? 'scale(1.02)' : 'scale(1)';
+            card.style.zIndex = isHidden ? '10' : '1';
+        }
     }
 </script>
 

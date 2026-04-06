@@ -799,4 +799,16 @@ El proceso de desarrollo demandó superar diversas fracturas técnicas. Se docum
 
 ---
 
-*Fin del documento — Gato Negro ERP V2.4 | Universidad de Pamplona | 2026*
+### 6.10 Fase 4 – Estabilización Pre-Deploy, Trazabilidad y UI (V3.0 - V3.1.0)
+
+La iteración V3 marca el paso previo al despliegue en un entorno de producción real, atendiendo tres pilares principales: Experiencia de Usuario (UI/UX), Robustez de Base de Datos y Trazabilidad absoluta.
+
+| Versión | Características Principales Desarrolladas |
+|---------|---------------------------------------------|
+| **V3.0.0** | **Sistema de Diseño Premium (Modo Oscuro):** Implementación integral de variables CSS (`theme.css`) para soporte de Modo Claro/Oscuro en todas las vistas (EJS). Rediseño del Login con patrones paramétricos (Mesh Background). |
+| **V3.0.2** | **Estabilización de Rutas Críticas:** Solución de fugas de memoria (`Crash`) en Node.js al invocar fechas locales de servidor, y agrupamiento inteligente de "Sacas" en la vista de Inventario Global con sub-calculadoras de peso ($Kg$). Integración de Selectores Anidados en el módulo de Ingreso de Materia Prima para erradicar errores tipográficos cruzados ("Cestas Rojas" vs "cestas rojas"). |
+| **V3.1.0** | **Trazabilidad (Logs) y Soporte Táctil (Pre-Deploy):** Creación de la política analítica de "Auditoría en la sombra" (`auditoria_logs`). Todo movimiento logístico ahora inyecta automáticamente un registro histórico en base de datos. Se expandió el soporte responsivo para tablets de planta industrial (Supervisores), estandarizando las zonas táctiles (`.touch-target`) a un mínimo de 48px y anulando el "Auto-Zoom" intrusivo nativo en sistemas iOS/Android. |
+
+---
+
+*Fin del documento — Gato Negro ERP V3.1.0 | Universidad de Pamplona | 2026*
