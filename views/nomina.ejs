@@ -54,15 +54,29 @@
     <!-- PANEL LATERAL DE DEUDAS Y VALES -->
     <div>
         <div class="card" style="border-top: 4px solid #ef4444; margin-bottom: 20px;">
-            <h3 style="margin-top: 0; color: #ef4444; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">🔴 Otorgar Vale / Rezagos</h3>
+            <h3 style="margin-top: 0; color: #ef4444; border-bottom: 1px solid var(--border-color); padding-bottom: 10px;">🔴 Otorgar Vale</h3>
             <form action="/agregar_deuda" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
                 
                 <label>Empleado / Fabriquín</label>
-                <select name="usuario" required>
-                    <% nomina.forEach(n => { %>
-                        <option value="<%= n.usuario %>"><%= n.usuario %></option>
-                    <% }) %>
-                </select>
+                <div style="position: relative;">
+                    <input type="text" id="buscar_empleado" placeholder="Escribe código o nombre..." 
+                           autocomplete="off" required
+                           style="width: 100%; font-size: 14px; padding: 10px; border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 4px; box-sizing: border-box;"
+                           oninput="filtrarEmpleados()" onfocus="mostrarDropdownEmpleados()" onblur="setTimeout(cerrarDropdownEmpleados, 200)">
+                    
+                    <div id="empleados_dropdown" style="display:none; background:var(--bg-card); border: 1px solid #f59e0b; border-radius: 8px; max-height: 200px; overflow-y: auto; position: absolute; width:100%; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+                        <% empleados.forEach(emp => { %>
+                        <div class="emp-opcion"
+                             data-texto="<%= emp.codigo.toLowerCase() %> <%= emp.nombre.toLowerCase() %>"
+                             data-display="<%= emp.codigo %> - <%= emp.nombre %>"
+                             onclick="seleccionarEmpleado('<%= emp.codigo %> - <%= emp.nombre %>')"
+                             style="padding: 10px 14px; cursor: pointer; color: var(--text-main); border-bottom: 1px solid var(--border-color); font-size: 14px;">
+                            <strong><%= emp.codigo %></strong> &ndash; <%= emp.nombre %>
+                        </div>
+                        <% }) %>
+                    </div>
+                </div>
+                <input type="hidden" name="usuario" id="empleado_seleccionado" required>
 
                 <label>Monto Adicionado ($)</label>
                 <input type="number" step="0.01" name="monto" required placeholder="0.00">
@@ -83,9 +97,31 @@
                     <li style="color: #9ca3af; font-size: 13px;">No hay deudas sin cobrar.</li>
                 <% } else { %>
                     <% deudas_activas.forEach(d => { %>
-                        <li style="padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 13px;">
+                        <li style="padding: 10px; border-bottom: 1px solid var(--border-color); font-size: 13px; position:relative;">
                             <strong style="color: #ef4444;">$<%= d.monto_deuda.toLocaleString('es-CO') %> COP</strong> descontar a <strong style="color: var(--text-main);"><%= d.usuario %></strong><br>
                             <span style="color: var(--text-muted); font-size: 11px;"><%= d.concepto %> (<%= d.fecha %>)</span>
+                            
+                            <!-- Botón Abonar -->
+                            <button onclick="document.getElementById('form-abono-<%= d.id %>').style.display='block'" style="position: absolute; right: 10px; top: 15px; background: #10b981; color: white; border: none; padding: 5px 10px; font-size: 11px; border-radius: 4px; cursor: pointer;">
+                                👇 Abonar
+                            </button>
+
+                            <!-- Formulario Oculto de Abono -->
+                            <div id="form-abono-<%= d.id %>" style="display: none; margin-top: 10px; background: var(--bg-body); padding: 10px; border-radius: 6px; border: 1px solid rgba(16, 185, 129, 0.3);">
+                                <form action="/abonar_deuda/<%= d.id %>" method="POST" style="display:flex; flex-direction:column; gap:8px;">
+                                    <input type="hidden" name="usuario" value="<%= d.usuario %>">
+                                    <input type="hidden" name="deuda_total_original" value="<%= d.monto_deuda %>">
+                                    <input type="number" step="0.01" name="monto_abono" placeholder="Monto a Abonar ($)" max="<%= d.monto_deuda %>" required style="padding:5px; border-radius:4px; border:1px solid var(--border-color);">
+                                    <select name="tipo_abono" required style="padding:5px; border-radius:4px; border:1px solid var(--border-color);">
+                                        <option value="efectivo">Pago en Efectivo</option>
+                                        <option value="rezago">Pago con Rezago Físico (Descontar Tabacos)</option>
+                                    </select>
+                                    <div style="display:flex; gap:10px;">
+                                        <button type="submit" style="background: #10b981; color: white; border: none; padding: 5px; flex:1; font-weight: bold; border-radius: 4px; cursor: pointer;">✔ Confirmar</button>
+                                        <button type="button" onclick="document.getElementById('form-abono-<%= d.id %>').style.display='none'" style="background: #6b7280; color: white; border: none; padding: 5px; flex:1; font-weight: bold; border-radius: 4px; cursor: pointer;">Cancelar</button>
+                                    </div>
+                                </form>
+                            </div>
                         </li>
                     <% }) %>
                 <% } %>
@@ -94,6 +130,31 @@
     </div>
 
 </div>
-
 </div>
+
+<script>
+    function mostrarDropdownEmpleados() { 
+        document.getElementById('empleados_dropdown').style.display = 'block'; 
+    }
+    function cerrarDropdownEmpleados()  { 
+        document.getElementById('empleados_dropdown').style.display = 'none'; 
+    }
+    function filtrarEmpleados() {
+        const q = document.getElementById('buscar_empleado').value.toLowerCase();
+        document.getElementById('empleados_dropdown').style.display = 'block';
+        document.querySelectorAll('.emp-opcion').forEach(div => {
+            if(div.getAttribute('data-texto').includes(q)) {
+                div.style.display = 'block';
+            } else {
+                div.style.display = 'none';
+            }
+        });
+    }
+    function seleccionarEmpleado(displayInfo) {
+        document.getElementById('buscar_empleado').value = displayInfo;
+        document.getElementById('empleado_seleccionado').value = displayInfo;
+        cerrarDropdownEmpleados();
+    }
+</script>
+
 </body></html>

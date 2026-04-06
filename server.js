@@ -1585,8 +1585,8 @@ app.get('/cierre_diario', async (req, res) => {
 app.get('/nomina', async (req, res) => {
     if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
     
-    // Viejos arrays de la fase pasada
-    const { data: usuarios } = await supabase.from('usuarios').select('*').in('rol', ['fabriquin', 'fabricacion', 'envolvedor']);
+    // Todos los empleados (Fabriquines)
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo', { ascending: true });
     const { data: deudas_activas } = await supabase.from('deudores_fabriquines').select('*').eq('estado', 'ACTIVA');
     
     // Nuevos arreglos Listos Para Imprimir V1.8 (Administración Central)
@@ -1594,6 +1594,7 @@ app.get('/nomina', async (req, res) => {
     
     res.render('nomina', { 
         nomina: [], 
+        empleados: empleados || [],
         deudas_activas: deudas_activas || [], 
         cierres_pendientes: cierres_pendientes || [] 
     });
@@ -1905,6 +1906,131 @@ app.post('/agregar_deuda', async (req, res) => {
         estado: 'ACTIVA'
     }]);
     res.redirect('/nomina');
+});
+
+// NUEVO: Abonos parciales de deuda y rezagos físicos
+app.post('/abonar_deuda/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const deudaId = req.params.id;
+    const { usuario, deuda_total_original, monto_abono, tipo_abono } = req.body;
+    let abonoNum = parseFloat(monto_abono);
+    let originalNum = parseFloat(deuda_total_original);
+    
+    if (isNaN(abonoNum) || abonoNum <= 0) return res.send(mostrarAlerta('Error', 'Monto de abono inválido.', 'error', '/nomina'));
+    
+    let nuevoSaldo = Math.max(0, originalNum - abonoNum);
+    let estadoActualizado = nuevoSaldo <= 0 ? 'COBRADA' : 'ACTIVA';
+    
+    // 1. Actualizar la deuda en DB
+    await supabase.from('deudores_fabriquines')
+        .update({ monto_deuda: nuevoSaldo, estado: estadoActualizado })
+        .eq('id', deudaId);
+        
+    // 2. Si el abono fue en "rezago" (tabacos físicos), inyectarlo al inventario
+    if (tipo_abono === 'rezago') {
+        const tiempo = obtenerHoraColombia();
+        // Buscar el material "Rezago" o "Tabacos Malos" o "Recorte"
+        // Si no existe, usamos "Recorte" que es el material genérico de merma
+        const { data: inv } = await supabase.from('inventario').select('*');
+        if (inv) {
+            let mat = inv.find(i => i.material.toLowerCase().includes('recorte') || i.material.toLowerCase().includes('rezago'));
+            if (mat) {
+                await supabase.from('inventario').update({ cantidad: mat.cantidad + abonoNum }).eq('id', mat.id);
+                // Log de auditoria
+                await supabase.from('movimientos').insert([{
+                    fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'INGRESO',
+                    material: mat.material, cantidad: abonoNum, usuario: req.session.usuario || 'Admin',
+                    descripcion: `Abono de deuda por Rezago de ${usuario}`
+                }]);
+            }
+        }
+    }
+    
+    res.redirect('/nomina');
+});
+
+// --- MÓDULO 8: ÁREA DE ANILLADORES (TAREAS DIGITALES) ---
+app.get('/anilladores', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+
+    const { data: usuariosAnilladores } = await supabase.from('usuarios').select('*').eq('rol', 'anillador');
+    const { data: tareasPendientes } = await supabase.from('tareas_anilladores').select('*').eq('estado', 'pendiente').order('fecha', { ascending: false });
+    const { data: tareasValidadas } = await supabase.from('tareas_anilladores').select('*').eq('estado', 'validada').order('fecha_validacion', { ascending: false }).limit(50);
+    
+    res.render('anilladores', {
+        session: req.session,
+        usuariosAnilladores: usuariosAnilladores || [],
+        tareasPendientes: tareasPendientes || [],
+        tareasValidadas: tareasValidadas || []
+    });
+});
+
+app.post('/anilladores/crear_tarea', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const { anillador_id, fabriquin_origen, cantidad_cestas, precio_cesta } = req.body;
+    
+    // Obtener nombre del anillador para la tarjeta
+    const { data: anilladorInfo } = await supabase.from('usuarios').select('nombre').eq('id', anillador_id).single();
+    if (!anilladorInfo) return res.send(mostrarAlerta('Error', 'Anillador Inválido', 'error', '/anilladores'));
+
+    const cant = parseFloat(cantidad_cestas);
+    const precio = parseFloat(precio_cesta);
+    const total = cant * precio;
+    const tiempo = obtenerHoraColombia();
+
+    await supabase.from('tareas_anilladores').insert([{
+        fecha: tiempo.fecha,
+        hora: tiempo.hora,
+        anillador_id: anillador_id,
+        anillador_nombre: anilladorInfo.nombre,
+        fabriquin_origen: fabriquin_origen,
+        cantidad_cestas: cant,
+        precio_cesta: precio,
+        total_ganado: total,
+        estado: 'pendiente'
+    }]);
+
+    res.redirect('/anilladores');
+});
+
+app.post('/anilladores/validar_tarea/:id', async (req, res) => {
+    if (!req.session.rol || req.session.rol !== 'admin') return res.redirect('/');
+    
+    const tareaId = req.params.id;
+    const { cantidad_cestas } = req.body;
+    const cantNum = parseFloat(cantidad_cestas);
+    
+    // 1. Marcar como validada
+    await supabase.from('tareas_anilladores').update({ 
+        estado: 'validada',
+        fecha_validacion: new Date().toISOString()
+    }).eq('id', tareaId);
+
+    // 2. Descontar del inventario "Tabacos Normales" y pasarlo a "Tabacos Anillados"
+    // Un simple movimiento de transformación usando 1250 tabacos por cesta (estándar Gato Negro)
+    const cantTabacos = cantNum * 1250;
+    
+    const { data: invNormal } = await supabase.from('inventario').select('*').ilike('material', '%tabaco%normal%').single();
+    const { data: invAnillado } = await supabase.from('inventario').select('*').ilike('material', '%tabaco%anillado%').single();
+    
+    const tiempo = obtenerHoraColombia();
+    
+    if (invNormal && invAnillado) {
+        // Restar de normales
+        await supabase.from('inventario').update({ cantidad: Math.max(0, invNormal.cantidad - cantTabacos) }).eq('id', invNormal.id);
+        // Sumar a anillados
+        await supabase.from('inventario').update({ cantidad: invAnillado.cantidad + cantTabacos }).eq('id', invAnillado.id);
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'TRANSFORMACIÓN',
+            material: 'Tabacos Anillados', cantidad: cantTabacos, usuario: req.session.usuario || 'Admin',
+            descripcion: `Validación Tarea Anillador: Conversión automática de ${cantNum} Cestas a Anillados.`
+        }]);
+    }
+
+    res.redirect('/anilladores');
 });
 
 // --- MÓDULO 7: DESPACHOS DE ANILLADO Y EMPAQUE ---
