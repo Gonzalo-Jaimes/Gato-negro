@@ -23,7 +23,10 @@ app.use(express.json());
 app.use(session({
     secret: 'gato_negro_nube',
     resave: false,
-    saveUninitialized: false
+    saveUninitialized: false,
+    cookie: {
+        maxAge: 1000 * 60 * 60 * 24 * 7 // Sesión activa por 7 días
+    }
 }));
 
 app.use((req, res, next) => {
