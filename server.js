@@ -1,5 +1,5 @@
 const express = require('express');
-const session = require('express-session');
+const session = require('cookie-session');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js'); 
 const QRCode = require('qrcode');
@@ -21,12 +21,9 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
 app.use(session({
-    secret: 'gato_negro_nube',
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-        maxAge: 1000 * 60 * 60 * 24 * 7 // Sesión activa por 7 días
-    }
+    name: 'gato_session',
+    keys: ['gato_negro_nube'],
+    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
 }));
 
 app.use((req, res, next) => {
