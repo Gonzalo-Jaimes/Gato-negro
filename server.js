@@ -13,6 +13,15 @@ const supabaseKey = 'sb_publishable_XXDhaCrrjj_DVUdxh04wFg_9dwm1_jQ';
 const supabase = createClient(supabaseUrl, supabaseKey);
 console.log("☁️ Conectado a la base de datos en Supabase");
 
+// --- INTEGRACIÓN DE TELEGRAM BOT (WEBHOOK) ---
+const bot = require('./bot.js');
+app.post('/api/bot', (req, res) => {
+    bot.processUpdate(req.body);
+    res.sendStatus(200);
+});
+console.log("🤖 Webhook de Telegram listo en /api/bot");
+
+
 // Configuración de EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
