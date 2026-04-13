@@ -10,12 +10,10 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 
 if (!TELEGRAM_TOKEN) {
-    console.error('❌ FATAL: No se encontró TELEGRAM_TOKEN en .env');
-    process.exit(1);
+    console.warn('⚠️ ADVERTENCIA: No se encontró TELEGRAM_TOKEN. El bot de Telegram estará desactivado.');
 }
 if (!GEMINI_API_KEY) {
-    console.error('❌ FATAL: No se encontró GEMINI_API_KEY en .env');
-    process.exit(1);
+    console.warn('⚠️ ADVERTENCIA: No se encontró GEMINI_API_KEY. Las funciones de IA estarán desactivadas.');
 }
 
 // ============================================================
@@ -30,7 +28,6 @@ supabase.from('empleados_fabriquines').select('id').limit(1)
     .then(({ data, error }) => {
         if (error) {
             console.error('❌ Supabase SIN conexión:', error.message);
-            console.error('   👉 Verifica la clave en Supabase → Settings → API → anon key');
         } else {
             console.log('✅ Supabase conectado correctamente.');
         }
@@ -39,13 +36,28 @@ supabase.from('empleados_fabriquines').select('id').limit(1)
 // ============================================================
 // 🧠 CLIENTE DE GEMINI
 // ============================================================
-const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+let ai = null;
+if (GEMINI_API_KEY) {
+    ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
+}
 
 // ============================================================
 // 🤖 BOT DE TELEGRAM
 // ============================================================
-const bot = new TelegramBot(TELEGRAM_TOKEN, { polling: false }); // Modo Webhook
-console.log('🚀 Black Cat Agent (BCA) configurado para modo Webhook...');
+let bot = null;
+if (TELEGRAM_TOKEN) {
+    bot = new TelegramBot(TELEGRAM_TOKEN, { polling: false }); // Modo Webhook
+    console.log('🚀 Black Cat Agent (BCA) configurado para modo Webhook...');
+} else {
+    // Objeto ficticio para evitar errores de referencia en otros archivos
+    bot = {
+        processUpdate: () => console.warn('🤖 Bot desactivado: No se puede procesar actualización sin Token.'),
+        sendMessage: () => console.warn('🤖 Bot desactivado: No se puede enviar mensaje sin Token.'),
+        sendChatAction: () => {},
+        on: () => {}
+    };
+}
+
 
 
 // ============================================================

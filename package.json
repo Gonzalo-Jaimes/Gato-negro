@@ -1,6 +1,6 @@
 {
   "name": "gato-negro-erp",
-  "version": "3.2.1",
+  "version": "3.2.2",
   "dependencies": {
     "@google/genai": "^1.49.0",
     "@supabase/supabase-js": "^2.99.1",

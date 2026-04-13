@@ -20,12 +20,20 @@ console.log("☁️ Conectado a la base de datos en Supabase");
 // --- INTEGRACIÓN DE TELEGRAM BOT (WEBHOOK) ---
 const bot = require('./bot.js');
 app.post('/api/bot', (req, res) => {
-    if (req.body) {
+    // Diagnóstico rápido
+    if (!process.env.TELEGRAM_TOKEN) {
+        console.error("❌ ERROR: TELEGRAM_TOKEN no configurado en Vercel.");
+        return res.status(200).send("Bot Desactivado: Falta Token"); 
+    }
+    
+    if (req.body && Object.keys(req.body).length > 0) {
+        console.log("📩 Webhook recibido");
         bot.processUpdate(req.body);
     }
     res.sendStatus(200);
 });
-console.log("🤖 Webhook de Telegram listo en /api/bot");
+console.log("🤖 Webhook de Telegram listo en /api/bot (V3)");
+
 
 // Configuración de EJS
 app.set('view engine', 'ejs');
