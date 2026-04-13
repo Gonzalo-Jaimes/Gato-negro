@@ -577,24 +577,31 @@ bot.on('message', async (msg) => {
         return;
     }
 
-    // 2. Comando /start – bienvenida sin IA
-    if (text === '/start') {
+    // 2. Comando /start o Saludos – bienvenida
+    const saludos = ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hey'];
+    const esSaludo = saludos.some(s => text.toLowerCase().startsWith(s));
+
+    if (text === '/start' || esSaludo) {
         bot.sendMessage(chatId,
-            `🐾 ¡Miau, ${fromUser}! Soy el *Black Cat Agent (BCA)*.\n\n` +
-            `Soy el asistente inteligente de Gato Negro. Aquí tienes lo que puedo hacer:\n\n` +
+            `🐾 *¡Hola, ${fromUser}!* ¿En qué te puedo ayudar el día de hoy?\n\n` +
+            `Soy el *Black Cat Agent (BCA)*, tu asistente en Gato Negro. Si quieres ver todos mis comandos, escribe */ayuda* o consulta esta lista:\n\n` +
             `📝 *Registros Rápidos:*\n` +
             `• \`F01 2000 tabacos\`\n` +
-            `• \`F01 2000 tabacos 2 cestas rojas\`\n` +
-            `• \`Alcides Correa 2000 tabacos\`\n\n` +
-            `📊 *Consultas Operativas:*\n` +
+            `• \`Alcides 2000 tabacos extra\`\n\n` +
+            `📊 *Consultas:*\n` +
             `• /pendientes - Quiénes deben tabacos\n` +
-            `• /entregas - Resumen de últimos despachos\n` +
-            `• /maquinas - Estado de la planta\n` +
-            `• /deuda F11 - Ver deudas de un empleado\n\n` +
-            `💬 *IA (Lenguaje Natural):*\n` +
-            `• "Dime quiénes me deben dinero"\n` +
-            `• "Analiza la producción de esta semana"`,
+            `• /entregas - Últimos despachos\n` +
+            `• /maquinas - Estado de la planta\n\n` +
+            `💬 *IA:* Puedes preguntarme cosas como *"¿Cuánto debe Alcides?"* o *"¿Cómo va la producción?"*`,
             { parse_mode: 'Markdown' });
+        return;
+    }
+
+    // Comando /ayuda (alias de /start)
+    if (text === '/ayuda') {
+        // Ejecuta la misma lógica que /start
+        const msgAyuda = `🐾 *Comandos Disponibles:*\n\n/pendientes - Ver deudores\n/entregas - Últimos despachos\n/maquinas - Estado planta\n/deuda [COD] - Ver deuda específica\n/id - Ver tu ID\n/ping - Test de vida`;
+        bot.sendMessage(chatId, msgAyuda, { parse_mode: 'Markdown' });
         return;
     }
 
@@ -603,6 +610,7 @@ bot.on('message', async (msg) => {
         bot.sendMessage(chatId, '😼 *¡Pong!* Estoy vivo y conectado a Gato Negro.', { parse_mode: 'Markdown' });
         return;
     }
+
 
     // --- NUEVOS COMANDOS OPERATIVOS ---
     

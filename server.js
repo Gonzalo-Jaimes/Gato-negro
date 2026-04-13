@@ -7,6 +7,10 @@ const bcrypt = require('bcrypt');
 
 const app = express();
 
+// --- MIDDLEWARES (Deben ir antes de las rutas) ---
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+
 // --- CONFIGURACIÓN DE SUPABASE (LA NUBE) ---
 const supabaseUrl = 'https://jgvnqumkzfwruhjglics.supabase.co';
 const supabaseKey = 'sb_publishable_XXDhaCrrjj_DVUdxh04wFg_9dwm1_jQ';
@@ -16,18 +20,18 @@ console.log("☁️ Conectado a la base de datos en Supabase");
 // --- INTEGRACIÓN DE TELEGRAM BOT (WEBHOOK) ---
 const bot = require('./bot.js');
 app.post('/api/bot', (req, res) => {
-    bot.processUpdate(req.body);
+    if (req.body) {
+        bot.processUpdate(req.body);
+    }
     res.sendStatus(200);
 });
 console.log("🤖 Webhook de Telegram listo en /api/bot");
-
 
 // Configuración de EJS
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(express.urlencoded({ extended: true }));
-app.use(express.json());
+
 
 app.use(session({
     name: 'gato_session',
