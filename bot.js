@@ -735,7 +735,6 @@ async function procesarMensajeSync(msg) {
         // Intentamos avisar al usuario si es posible
         try { bot.sendMessage(chatId, "🐾 *Miau...* Tuve un error interno inesperado. Por favor, intenta de nuevo en un momento."); } catch(err) {}
     }
-    }
 }
 
 // Escuchar en entorno local (Long Polling)
