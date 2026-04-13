@@ -568,7 +568,7 @@ async function responderConGemini(chatId, textoUsuario) {
 // ============================================================
 // 📨 PROCESAMIENTO DE MENSAJES DE TELEGRAM
 // ============================================================
-bot.on('message', async (msg) => {
+async function procesarMensajeSync(msg) {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
     const fromUser = msg.from.first_name || 'Patrón';
@@ -735,7 +735,11 @@ bot.on('message', async (msg) => {
         // Intentamos avisar al usuario si es posible
         try { bot.sendMessage(chatId, "🐾 *Miau...* Tuve un error interno inesperado. Por favor, intenta de nuevo en un momento."); } catch(err) {}
     }
-});
+    }
+}
+
+// Escuchar en entorno local (Long Polling)
+bot.on('message', procesarMensajeSync);
 
 // ============================================================
 // ⚠️ MANEJO DE ERRORES DE POLLING (con auto-recuperación)
@@ -748,6 +752,8 @@ process.on('unhandledRejection', (reason) => {
     console.error('⚠️ Error no manejado:', reason?.message || reason);
 });
 
+// Exportamos el bot y la función síncrona
+bot.procesarMensajeSync = procesarMensajeSync;
 module.exports = bot;
 
 

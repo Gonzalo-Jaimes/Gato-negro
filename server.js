@@ -19,7 +19,7 @@ console.log("☁️ Conectado a la base de datos en Supabase");
 
 // --- INTEGRACIÓN DE TELEGRAM BOT (WEBHOOK) ---
 const bot = require('./bot.js');
-app.post('/api/bot', (req, res) => {
+app.post('/api/bot', async (req, res) => {
     // Diagnóstico rápido
     if (!process.env.TELEGRAM_TOKEN) {
         console.error("❌ ERROR: TELEGRAM_TOKEN no configurado en Vercel.");
@@ -28,8 +28,22 @@ app.post('/api/bot', (req, res) => {
     
     if (req.body && Object.keys(req.body).length > 0) {
         console.log("📩 Webhook recibido");
-        bot.processUpdate(req.body);
+
+        // [ESTRATEGIA SERVERLESS]: Esperar a que termine todo el código asíncrono
+        // ANTES de enviarle el 200 a Telegram. Así Vercel no corta el proceso.
+        if (req.body.message && bot.procesarMensajeSync) {
+            try {
+                await bot.procesarMensajeSync(req.body.message);
+            } catch (err) {
+                console.error("❌ Error grave en procesarMensajeSync:", err);
+            }
+        } else {
+            // Fallback nativo para otros eventos que por ahora no usamos
+            bot.processUpdate(req.body);
+        }
     }
+    
+    // AHORA SÍ, decirle a Telegram y a Vercel que concluimos
     res.sendStatus(200);
 });
 console.log("🤖 Webhook de Telegram listo en /api/bot (V3)");
