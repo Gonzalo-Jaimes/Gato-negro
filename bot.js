@@ -628,17 +628,23 @@ bot.on('message', async (msg) => {
     
     // A. Ver deudores de tabaco
     if (text === '/pendientes') {
+        bot.sendChatAction(chatId, 'typing');
+        const waitMsg = await bot.sendMessage(chatId, '🐾 *Miau...* Consultando deudores en la base de datos, un momento.', { parse_mode: 'Markdown' });
         const respuesta = await listarPendientesTabacos();
+        bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {}); // Borramos el mensaje de espera
         bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
         return;
     }
 
+
     // B. Ver últimas entregas
     if (text === '/entregas') {
+        bot.sendChatAction(chatId, 'typing');
         const respuesta = await listarUltimasEntregas();
         bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
         return;
     }
+
 
     // C. Registro rápido de producción (Texto Natural)
     // Ejemplo: "F01 2000 tabacos 2 cestas rojas" o "Alcides 2000 tabacos extra"
@@ -647,6 +653,7 @@ bot.on('message', async (msg) => {
     if (match) {
         bot.sendChatAction(chatId, 'typing');
         const nombreCod = match[1].trim();
+
         const tabacos = parseInt(match[2]);
         const esExtra = !!match[3];
         const cestas = match[4] ? parseInt(match[4]) : 0;
@@ -659,10 +666,12 @@ bot.on('message', async (msg) => {
 
 
 
-    // 4. Comando /maquinas – directo a Supabase, SIN necesitar Gemini
+    // 4. Comando /maquinas – directo a Supabase
     if (text === '/maquinas' || text === '/reporte') {
+        bot.sendChatAction(chatId, 'typing');
         try {
             const { data: maquinas } = await supabase.from('maquinas').select('*');
+
             if (!maquinas || maquinas.length === 0) {
                 bot.sendMessage(chatId, '⚙️ No hay datos de maquinaria en la base de datos.');
                 return;
@@ -689,9 +698,11 @@ bot.on('message', async (msg) => {
         return;
     }
 
-    // 5. Comando /deuda [codigo] – directo a Supabase, SIN necesitar Gemini
+    // 5. Comando /deuda [codigo] – directo a Supabase
     if (text.startsWith('/deuda')) {
+        bot.sendChatAction(chatId, 'typing');
         const partes = text.trim().split(/\s+/);
+
         const codigo = partes[1] ? partes[1].toUpperCase() : null;
         if (!codigo) {
             bot.sendMessage(chatId, '⚠️ Usa: `/deuda F11` para ver deuda de un empleado, o escríbeme en lenguaje natural: "¿Cuánto debe Alcides?"', { parse_mode: 'Markdown' });
