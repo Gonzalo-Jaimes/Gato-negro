@@ -574,231 +574,173 @@ bot.on('message', async (msg) => {
     const fromUser = msg.from.first_name || 'Patrón';
     const text = msg.text || '';
 
-    console.log(`📩 Mensaje de ${fromUser} (ID: ${userId}): "${text}"`);
-
-    // 0. Filtro de Seguridad
-    if (!esAdmin(userId)) {
-        console.log(`⛔ Usuario no autorizado: ${userId}`);
-        bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
+    // Evitar procesar si el bot no está inicializado (Mock)
+    if (!process.env.TELEGRAM_TOKEN) {
+        console.warn("⚠️ Bot ignorando mensaje: Token no configurado.");
         return;
     }
 
-    // 1. Comando /id  – siempre responder sin IA
-    if (text === '/id') {
-        bot.sendMessage(chatId, `🔑 Tu ID de Telegram es: \`${userId}\``, { parse_mode: 'Markdown' });
-        return;
-    }
-
-    // 2. Comando /start o Saludos – bienvenida
-    const saludos = ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hey'];
-    const esSaludo = saludos.some(s => text.toLowerCase().startsWith(s));
-
-    if (text === '/start' || esSaludo) {
-        bot.sendMessage(chatId,
-            `🐾 *¡Hola, ${fromUser}!* ¿En qué te puedo ayudar el día de hoy?\n\n` +
-            `Soy el *Black Cat Agent (BCA)*, tu asistente en Gato Negro. Si quieres ver todos mis comandos, escribe */ayuda* o consulta esta lista:\n\n` +
-            `📝 *Registros Rápidos:*\n` +
-            `• \`F01 2000 tabacos\`\n` +
-            `• \`Alcides 2000 tabacos extra\`\n\n` +
-            `📊 *Consultas:*\n` +
-            `• /pendientes - Quiénes deben tabacos\n` +
-            `• /entregas - Últimos despachos\n` +
-            `• /maquinas - Estado de la planta\n\n` +
-            `💬 *IA:* Puedes preguntarme cosas como *"¿Cuánto debe Alcides?"* o *"¿Cómo va la producción?"*`,
-            { parse_mode: 'Markdown' });
-        return;
-    }
-
-    // Comando /ayuda (alias de /start)
-    if (text === '/ayuda') {
-        // Ejecuta la misma lógica que /start
-        const msgAyuda = `🐾 *Comandos Disponibles:*\n\n/pendientes - Ver deudores\n/entregas - Últimos despachos\n/maquinas - Estado planta\n/deuda [COD] - Ver deuda específica\n/id - Ver tu ID\n/ping - Test de vida`;
-        bot.sendMessage(chatId, msgAyuda, { parse_mode: 'Markdown' });
-        return;
-    }
-
-    // 3. Comando /ping – test rápido sin IA
-    if (text === '/ping') {
-        bot.sendMessage(chatId, '😼 *¡Pong!* Estoy vivo y conectado a Gato Negro.', { parse_mode: 'Markdown' });
-        return;
-    }
-
-
-    // --- NUEVOS COMANDOS OPERATIVOS ---
-    
-    // A. Ver deudores de tabaco
-    if (text === '/pendientes') {
-        bot.sendChatAction(chatId, 'typing');
-        const waitMsg = await bot.sendMessage(chatId, '🐾 *Miau...* Consultando deudores en la base de datos, un momento.', { parse_mode: 'Markdown' });
-        const respuesta = await listarPendientesTabacos();
-        bot.deleteMessage(chatId, waitMsg.message_id).catch(() => {}); // Borramos el mensaje de espera
-        bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
-        return;
-    }
-
-
-    // B. Ver últimas entregas
-    if (text === '/entregas') {
-        bot.sendChatAction(chatId, 'typing');
-        const respuesta = await listarUltimasEntregas();
-        bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
-        return;
-    }
-
-
-    // C. Registro rápido de producción (Texto Natural)
-    // Ejemplo: "F01 2000 tabacos 2 cestas rojas" o "Alcides 2000 tabacos extra"
-    const regexProd = /^([A-Z0-9]{3}|[a-zA-Z\s]{3,})\s+(\d+)\s+tabacos(?:\s+(extra))?(?:\s*(?:y|,|)\s*(\d+)\s+cestas(?:\s+([\w\s]+))?)?$/i;
-    const match = text.trim().match(regexProd);
-    if (match) {
-        bot.sendChatAction(chatId, 'typing');
-        const nombreCod = match[1].trim();
-
-        const tabacos = parseInt(match[2]);
-        const esExtra = !!match[3];
-        const cestas = match[4] ? parseInt(match[4]) : 0;
-        const color = match[5] ? match[5].trim() : null;
-        
-        const respuesta = await registrarProduccionRapida(nombreCod, tabacos, cestas, color, esExtra);
-        bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
-        return;
-    }
-
-
-
-    // 4. Comando /maquinas – directo a Supabase
-    if (text === '/maquinas' || text === '/reporte') {
-        bot.sendChatAction(chatId, 'typing');
-        try {
-            const { data: maquinas } = await supabase.from('maquinas').select('*');
-
-            if (!maquinas || maquinas.length === 0) {
-                bot.sendMessage(chatId, '⚙️ No hay datos de maquinaria en la base de datos.');
-                return;
-            }
-            let funcionales = 0, fallas = 0, urgentes = [];
-            const hoy = new Date();
-            maquinas.forEach(m => {
-                if (m.estado === 'Funcional') funcionales++;
-                else fallas++;
-                if (m.ultimo_mtto) {
-                    const last = new Date(m.ultimo_mtto + 'T00:00:00');
-                    const dias = Math.floor((hoy - last) / (1000 * 60 * 60 * 24));
-                    if (dias >= (m.frecuencia_mtto_dias || 30)) urgentes.push(m.nombre);
-                }
-            });
-            let msg = `⚙️ *Estado de Maquinaria:*\n✅ Operacionales: ${funcionales}\n⚠️ Con fallas: ${fallas}\n\n`;
-            msg += urgentes.length > 0
-                ? `🚨 *Mantenimientos Pendientes:*\n- ${urgentes.join('\n- ')}`
-                : `✨ Todo al día con los mantenimientos.`;
-            bot.sendMessage(chatId, msg, { parse_mode: 'Markdown' });
-        } catch (e) {
-            bot.sendMessage(chatId, '❌ Error al consultar maquinaria: ' + e.message);
-        }
-        return;
-    }
-
-    // 5. Comando /deuda [codigo] – directo a Supabase
-    if (text.startsWith('/deuda')) {
-        bot.sendChatAction(chatId, 'typing');
-        const partes = text.trim().split(/\s+/);
-
-        const codigo = partes[1] ? partes[1].toUpperCase() : null;
-        if (!codigo) {
-            bot.sendMessage(chatId, '⚠️ Usa: `/deuda F11` para ver deuda de un empleado, o escríbeme en lenguaje natural: "¿Cuánto debe Alcides?"', { parse_mode: 'Markdown' });
-            return;
-        }
-        try {
-            const { data: emp } = await supabase.from('empleados_fabriquines').select('*').eq('codigo', codigo).single();
-            if (!emp) {
-                bot.sendMessage(chatId, `❌ No encontré al empleado con código *${codigo}*.\nUsa /deuda seguido del código (ej: /deuda F11).`, { parse_mode: 'Markdown' });
-                return;
-            }
-            const { data: prestamos } = await supabase.from('prestamos_fabriquines')
-                .select('saldo_pendiente').eq('empleado_id', emp.id).eq('estado', 'activo');
-            let deudaPesos = 0;
-            if (prestamos) prestamos.forEach(p => deudaPesos += parseFloat(p.saldo_pendiente || 0));
-
-            bot.sendMessage(chatId,
-                `👤 *${emp.nombre} (${emp.codigo})*\n\n` +
-                `🧺 Deuda Tabacos: *${(emp.deuda_tabacos || 0).toLocaleString('es-CO')} u*\n` +
-                `💵 Préstamos activos: *$${deudaPesos.toLocaleString('es-CO')} COP*`,
-                { parse_mode: 'Markdown' });
-        } catch (e) {
-            bot.sendMessage(chatId, '❌ Error al consultar deuda: ' + e.message);
-        }
-        return;
-    }
-
-    // 6. Todo lo demás → Gemini (lenguaje natural)
-    bot.sendChatAction(chatId, 'typing');
     try {
-        const respuesta = await responderConGemini(chatId, text);
+        console.log(`📩 Mensaje de ${fromUser} (ID: ${userId}): "${text}"`);
 
-        if (respuesta === '__ERROR_APIKEY__') {
-            bot.sendMessage(chatId, '❌ La API Key de Gemini no es válida. Verifica GEMINI_API_KEY en tu .env');
+        // 0. Filtro de Seguridad
+        if (!esAdmin(userId)) {
+            console.log(`⛔ Usuario no autorizado: ${userId}`);
+            bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
             return;
         }
-        if (respuesta === '__ERROR_QUOTA__') {
+
+        // 1. Comando /id  – siempre responder sin IA
+        if (text === '/id') {
+            bot.sendMessage(chatId, `🔑 Tu ID de Telegram es: \`${userId}\``, { parse_mode: 'Markdown' });
+            return;
+        }
+
+        // 2. Comando /start o Saludos – bienvenida
+        const saludos = ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hey'];
+        const esSaludo = saludos.some(s => text.toLowerCase().startsWith(s));
+
+        if (text === '/start' || esSaludo) {
+            bot.sendChatAction(chatId, 'typing');
             bot.sendMessage(chatId,
-                '⚠️ La cuota diaria gratuita de Gemini se agotó.\n\n' +
-                'Mientras tanto puedes usar:\n' +
-                '/maquinas → Estado de la planta\n' +
-                '/deuda F11 → Deuda de un empleado\n' +
-                '/ping → Verificar que el bot vive\n\n' +
-                'Para lenguaje natural activa billing en:\nhttps://console.cloud.google.com/billing');
-            return;
-        }
-        if (respuesta === '__ERROR_GENERAL__') {
-            bot.sendMessage(chatId, '❌ Error al contactar la IA. Revisa la consola.');
+                `🐾 *¡Hola, ${fromUser}!* ¿En qué te puedo ayudar el día de hoy?\n\n` +
+                `Soy el *Black Cat Agent (BCA)*, tu asistente en Gato Negro. Si quieres ver todos mis comandos, escribe */ayuda*\n\n` +
+                `📝 *Registros:* \`F01 2000 tabacos\`\n` +
+                `📊 *Consultas:* /pendientes, /maquinas, /entregas\n` +
+                `💬 *IA:* Pregúntame lo que quieras.`,
+                { parse_mode: 'Markdown' }).catch(e => console.error("Error al enviar saludo:", e.message));
             return;
         }
 
-        try {
-            await bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
-        } catch (mdError) {
-            console.warn('⚠️ Markdown inválido, enviando como texto plano:', mdError.message);
-            bot.sendMessage(chatId, respuesta);
+        // Comando /ayuda (alias de /start)
+        if (text === '/ayuda') {
+            bot.sendChatAction(chatId, 'typing');
+            const msgAyuda = `🐾 *Comandos Disponibles:*\n\n/pendientes - Ver deudores\n/entregas - Últimos despachos\n/maquinas - Estado planta\n/deuda [COD] - Ver deuda específica\n/id - Ver tu ID\n/ping - Test de vida`;
+            bot.sendMessage(chatId, msgAyuda, { parse_mode: 'Markdown' });
+            return;
         }
-    } catch (e) {
-        console.error('❌ Error al enviar respuesta:', e.message);
-        bot.sendMessage(chatId, '❌ Error inesperado. Revisa la consola.');
+
+        // 3. Comando /ping – test rápido
+        if (text === '/ping') {
+            bot.sendMessage(chatId, '😼 *¡Pong!* Estoy vivo y conectado a Gato Negro.', { parse_mode: 'Markdown' });
+            return;
+        }
+
+        // --- NUEVOS COMANDOS OPERATIVOS ---
+        
+        // A. Ver deudores de tabaco
+        if (text === '/pendientes') {
+            bot.sendChatAction(chatId, 'typing');
+            try {
+                const respuesta = await listarPendientesTabacos();
+                bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
+            } catch (err) {
+                bot.sendMessage(chatId, "❌ Error al listar pendientes. Revisa los logs.");
+            }
+            return;
+        }
+
+        // B. Ver últimas entregas
+        if (text === '/entregas') {
+            bot.sendChatAction(chatId, 'typing');
+            const respuesta = await listarUltimasEntregas();
+            bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
+            return;
+        }
+
+        // C. Registro rápido de producción (Texto Natural)
+        const regexProd = /^([A-Z0-9]{3}|[a-zA-Z\s]{3,})\s+(\d+)\s+tabacos(?:\s+(extra))?(?:\s*(?:y|,|)\s*(\d+)\s+cestas(?:\s+([\w\s]+))?)?$/i;
+        const match = text.trim().match(regexProd);
+        if (match) {
+            bot.sendChatAction(chatId, 'typing');
+            const nombreCod = match[1].trim();
+            const tabacos = parseInt(match[2]);
+            const esExtra = !!match[3];
+            const cestas = match[4] ? parseInt(match[4]) : 0;
+            const color = match[5] ? match[5].trim() : null;
+            
+            const respuesta = await registrarProduccionRapida(nombreCod, tabacos, cestas, color, esExtra);
+            bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
+            return;
+        }
+
+        // 4. Comando /maquinas
+        if (text === '/maquinas' || text === '/reporte') {
+            bot.sendChatAction(chatId, 'typing');
+            try {
+                const { data: maquinas } = await supabase.from('maquinas').select('*');
+                if (!maquinas || maquinas.length === 0) {
+                    bot.sendMessage(chatId, '⚙️ No hay datos de maquinaria.');
+                    return;
+                }
+                let funcionales = 0, fallas = 0, urgentes = [];
+                const hoy = new Date();
+                maquinas.forEach(m => {
+                    if (m.estado === 'Funcional') funcionales++;
+                    else fallas++;
+                    if (m.ultimo_mtto) {
+                        const last = new Date(m.ultimo_mtto + 'T00:00:00');
+                        const dias = Math.floor((hoy - last) / (1000 * 60 * 60 * 24));
+                        if (dias >= (m.frecuencia_mtto_dias || 30)) urgentes.push(m.nombre);
+                    }
+                });
+                let resp = `⚙️ *Estado de Maquinaria:*\n✅ Operacionales: ${funcionales}\n⚠️ Con fallas: ${fallas}\n\n`;
+                resp += urgentes.length > 0 ? `🚨 *Pendientes:* ${urgentes.join(', ')}` : `✨ Todo al día.`;
+                bot.sendMessage(chatId, resp, { parse_mode: 'Markdown' });
+            } catch (e) {
+                bot.sendMessage(chatId, '❌ Error en maquinaria: ' + e.message);
+            }
+            return;
+        }
+
+        // 5. Comando /deuda [codigo]
+        if (text.startsWith('/deuda')) {
+            bot.sendChatAction(chatId, 'typing');
+            const partes = text.trim().split(/\s+/);
+            const codigo = partes[1] ? partes[1].toUpperCase() : null;
+            if (!codigo) {
+                bot.sendMessage(chatId, '⚠️ Usa: `/deuda F11`', { parse_mode: 'Markdown' });
+                return;
+            }
+            try {
+                const { data: emp } = await supabase.from('empleados_fabriquines').select('*').eq('codigo', codigo).single();
+                if (!emp) {
+                    bot.sendMessage(chatId, `❌ No encontré al empleado *${codigo}*.`);
+                    return;
+                }
+                const { data: p } = await supabase.from('prestamos_fabriquines').select('saldo_pendiente').eq('empleado_id', emp.id).eq('estado', 'activo');
+                let dP = 0; if (p) p.forEach(x => dP += parseFloat(x.saldo_pendiente || 0));
+                bot.sendMessage(chatId, `👤 *${emp.nombre}*\n🧺 Tabacos: *${emp.deuda_tabacos}*\n💵 Pesos: *$${dP.toLocaleString()}*`, { parse_mode: 'Markdown' });
+            } catch (e) {
+                bot.sendMessage(chatId, '❌ Error en deuda: ' + e.message);
+            }
+            return;
+        }
+
+        // 6. Todo lo demás → Gemini
+        bot.sendChatAction(chatId, 'typing');
+        try {
+            const respuestaIA = await responderConGemini(chatId, text);
+            if (respuestaIA.startsWith('__ERROR')) {
+                bot.sendMessage(chatId, "⚠️ La IA está ocupada o sin cuota, pero puedes usar los comandos directos como /pendientes.");
+            } else {
+                bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' }).catch(() => bot.sendMessage(chatId, respuestaIA));
+            }
+        } catch (iaErr) {
+            bot.sendMessage(chatId, "❌ Error al procesar con IA. Intenta con comandos directos.");
+        }
+
+    } catch (globalErr) {
+        console.error("❌ CRASH EVITADO en bot.on('message'):", globalErr);
+        // Intentamos avisar al usuario si es posible
+        try { bot.sendMessage(chatId, "🐾 *Miau...* Tuve un error interno inesperado. Por favor, intenta de nuevo en un momento."); } catch(err) {}
     }
 });
 
 // ============================================================
-// ============================================================
 // ⚠️ MANEJO DE ERRORES DE POLLING (con auto-recuperación)
 // ============================================================
-let recuperando409 = false;
-
 bot.on('polling_error', (error) => {
-    // ERROR 409: Conflicto — otra instancia del bot está activa
-    if (error.code === 'ETELEGRAM' && error.message.includes('409')) {
-        if (recuperando409) return; // Ya estamos recuperando, ignorar duplicados
-        recuperando409 = true;
-        console.warn('⚠️ 409 detectado: otra instancia activa. Esperando 5s antes de reiniciar polling...');
-
-        bot.stopPolling().then(() => {
-            setTimeout(() => {
-                console.log('🔄 Reiniciando polling...');
-                bot.startPolling({ restart: true });
-                recuperando409 = false;
-                console.log('✅ Polling reiniciado correctamente.');
-            }, 5000);
-        }).catch(e => {
-            console.error('Error al detener polling:', e.message);
-            recuperando409 = false;
-        });
-        return;
-    }
-
-    // ERROR 401: Token inválido
-    if (error.message && error.message.includes('401')) {
-        console.error('❌ ERROR 401: TELEGRAM_TOKEN inválido. Verifica tu .env');
-        return;
-    }
-
     console.error('❌ Error de polling:', error.message);
 });
 
@@ -807,4 +749,5 @@ process.on('unhandledRejection', (reason) => {
 });
 
 module.exports = bot;
+
 
