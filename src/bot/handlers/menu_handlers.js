@@ -57,6 +57,26 @@ function getAccionesMaquina(maquinaId) {
 }
 
 /**
+ * Menú para elegir el tipo de mantenimiento
+ */
+function getMttoTipoKeyboard(maquinaId) {
+    return {
+        inline_keyboard: [
+            [
+                { text: '🔴 Correctivo', callback_data: `maquina_tipo_Correctivo_${maquinaId}` },
+                { text: '🟡 Preventivo', callback_data: `maquina_tipo_Preventivo_${maquinaId}` }
+            ],
+            [
+                { text: '🟢 Limpieza Post-Prod', callback_data: `maquina_tipo_Limpieza_${maquinaId}` }
+            ],
+            [
+                { text: '⬅️ Volver', callback_data: `maquina_ver_${maquinaId}` }
+            ]
+        ]
+    };
+}
+
+/**
  * Menú de Fabriquines
  */
 const fabriquinesKeyboard = {
@@ -93,6 +113,7 @@ module.exports = {
     mainKeyboard,
     getMaquinasKeyboard,
     getAccionesMaquina,
+    getMttoTipoKeyboard,
     fabriquinesKeyboard,
     backToFabKeyboard,
     backToMaquinasKeyboard,

@@ -123,22 +123,22 @@ background:#333;
 
 <h2>Menú</h2>
 
-{% if session["rol"] == "admin" %}
-
-<a href="/inventario">📦 Inventario</a>
-<a href="/mantenimiento">🔧 Mantenimiento</a>
-<a href="/pedidos">📋 Pedidos</a>
-<a href="/usuarios">👥 Usuarios</a>
-
-{% elif session["rol"] == "fabricacion" %}
-
-<a href="/pedidos">📋 Pedidos</a>
-
-{% elif session["rol"] == "mantenimiento" %}
-
-<a href="/mantenimiento">🔧 Mantenimiento</a>
-
-{% endif %}
+<% if (session.rol == "admin") { %>
+    <a href="/admin/inventario">📦 Inventario</a>
+    <a href="/admin/movimientos">📊 Kardex</a>
+    <a href="/produccion/despacho">🚛 Despacho Tarea</a>
+    <a href="/produccion/recepcion_diaria">🧺 Recepción Diaria</a>
+    <a href="/produccion/pedidos">📋 Órdenes Prod.</a>
+    <a href="/produccion/mermas">⚠️ Mermas/Compras</a>
+    <a href="/produccion/recepcion_empaque">📦 Empaque</a>
+    <a href="/equipos/lista">⚙️ Maquinaria</a>
+    <a href="/finanzas/analitica">💰 Finanzas</a>
+    <a href="/admin/usuarios">👥 Usuarios</a>
+<% } else if (session.rol == "fabricacion" || session.rol == "fabriquin") { %>
+    <a href="/produccion/pedidos">📋 Mis Órdenes</a>
+<% } else if (session.rol == "mantenimiento") { %>
+    <a href="/equipos/mantenimiento">🔧 Mantenimiento</a>
+<% } %>
 
 <a href="/logout">🚪 Cerrar sesión</a>
 

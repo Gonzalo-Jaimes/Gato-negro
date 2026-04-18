@@ -249,4 +249,46 @@ router.get('/entregas_historicas', isAdmin, async (req, res) => {
     res.render('produccion/historial_entregas', { entregas: entregas || [] });
 });
 
+// ---------------- ÁREA DE EMPAQUE (RESTAURADA) ----------------
+
+router.get('/recepcion_empaque', isAdmin, async (req, res) => {
+    const { data: empaquetadores } = await supabase.from('usuarios').select('*').eq('rol', 'empacador');
+    const { data: registros } = await supabase.from('recepcion_empaque').select('*').eq('estado', 'pendiente').order('id', { ascending: false });
+    res.render('produccion/empaque_recepcion', { personal: empaquetadores || [], registros: registros || [] });
+});
+
+router.get('/despacho_empaque', isAdmin, async (req, res) => {
+    const { data: empaquetadores } = await supabase.from('usuarios').select('*').eq('rol', 'empacador');
+    const { data: registros } = await supabase.from('despacho_empaque').select('*').eq('estado', 'pendiente');
+    res.render('produccion/empaque_despacho', { personal: empaquetadores || [], registros: registros || [] });
+});
+
+// ---------------- MERMAS Y COMPRAS (RESTAURADA) ----------------
+
+router.get('/mermas', isAdmin, async (req, res) => {
+    const { data: compras } = await supabase.from('compras_materia_prima').select('*').order('fecha', { ascending: false }).limit(50);
+    const { data: mermas }  = await supabase.from('mermas_materia_prima').select('*').order('fecha', { ascending: false }).limit(50);
+    res.render('produccion/mermas', { compras: compras || [], mermas: mermas || [] });
+});
+
+// ---------------- PEDIDOS Y ÓRDENES (RESTAURADA) ----------------
+
+router.get('/pedidos', isAuth, async (req, res) => {
+    const { data: pedidos } = await supabase.from('pedidos_tabaco').select('*').order('id', { ascending: false }).limit(100);
+    const { data: cestas }  = await supabase.from('inventario').select('*').ilike('material', 'Cestas%');
+    res.render('produccion/pedidos', { 
+        pedidos: pedidos || [], 
+        cestas_inventario: cestas || [],
+        session: req.session 
+    });
+});
+
+// ---------------- RECEPCIÓN GENERAL (RESTAURADA) ----------------
+
+router.get('/recepcion_general', isAdmin, async (req, res) => {
+    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('nombre');
+    const { data: registros } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').order('id', { ascending: false }).limit(50);
+    res.render('produccion/recepcion_general', { empleados: empleados || [], registros: registros || [] });
+});
+
 module.exports = router;

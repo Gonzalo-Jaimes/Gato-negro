@@ -627,6 +627,7 @@ async function procesarMensajeSync(msg) {
         if (estadoActual && estadoActual.state === 'ESPERANDO_MTTO') {
             const reporte = text;
             const maquina = estadoActual.machineName;
+            const tipoMtto = estadoActual.mttoType || 'Correctivo/Ajuste';
             const tiempo = obtenerHoraColombia();
 
             bot.sendChatAction(chatId, 'typing');
@@ -636,7 +637,7 @@ async function procesarMensajeSync(msg) {
                 fecha: tiempo.fecha,
                 hora: tiempo.hora,
                 maquina: maquina,
-                tipo: 'Correctivo/Ajuste',
+                tipo: tipoMtto,
                 descripcion: reporte,
                 hecho_por: fromUser,
                 estado: 'REALIZADO'
@@ -665,12 +666,10 @@ async function procesarMensajeSync(msg) {
             // ... (Lógica de Gemini existente)
         }
 
-        // 3. Si no hay estado y no es comando, ignoramos o pedimos usar menú
-        // Para evitar el mensaje molesto de "IA ocupada"
-        if (!text.startsWith('/')) {
-            console.log(`ℹ️ Texto ignorado (Sin contexto): "${text}"`);
-            // Nota: Podríamos enviar un mensaje de "Usa el menú", pero suele ser molesto.
-            // Mejor solo responder si el usuario explícitamente entró a una sección.
+        // 3. Filtro de Seguridad (Ignorar texto plano si no hay contexto)
+        // Esto evita que mensajes aleatorios disparen procesos pesados o IA.
+        if (!text.startsWith('/') && !estadoActual) {
+            console.log(`ℹ️ Mensaje ignorado (Sin contexto): "${text}"`);
             return;
         }
 
@@ -779,18 +778,14 @@ async function procesarMensajeSync(msg) {
             return;
         }
 
-        // 6. Todo lo demás → Gemini
+        // 6. Fallback (IA Temporalmente Desactivada)
+        // Se desactiva Gemini por límite de cuota y para priorizar el menú táctil.
+        /* 
         bot.sendChatAction(chatId, 'typing');
-        try {
-            const respuestaIA = await responderConGemini(chatId, text);
-            if (respuestaIA.startsWith('__ERROR')) {
-                bot.sendMessage(chatId, "⚠️ La IA está ocupada o sin cuota, pero puedes usar los comandos directos como /pendientes.");
-            } else {
-                bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' }).catch(() => bot.sendMessage(chatId, respuestaIA));
-            }
-        } catch (iaErr) {
-            bot.sendMessage(chatId, "❌ Error al procesar con IA. Intenta con comandos directos.");
-        }
+        const respuestaIA = await responderConGemini(chatId, text);
+        ... 
+        */
+        console.log(`🤖 IA en pausa. Usuario envió: "${text}"`);
 
     } catch (globalErr) {
         console.error("❌ CRASH EVITADO en bot.on('message'):", globalErr);
@@ -819,6 +814,7 @@ process.on('unhandledRejection', (reason) => {
 bot.on('callback_query', async (query) => {
     const chatId = query.message.chat.id;
     const messageId = query.message.message_id;
+    const userId = query.from.id;
     const data = query.data;
 
     try {
@@ -985,11 +981,31 @@ bot.on('callback_query', async (query) => {
         }
         if (data.startsWith('maquina_mtto_')) {
             const id = data.replace('maquina_mtto_', '');
+            await bot.editMessageText(`🔧 *Tipo de Mantenimiento*\n\n¿Qué tipo de reporte deseas realizar para esta máquina?`, {
+                chat_id: chatId,
+                message_id: messageId,
+                parse_mode: 'Markdown',
+                reply_markup: menus.getMttoTipoKeyboard(id)
+            });
+        }
+
+        if (data.startsWith('maquina_tipo_')) {
+            // Formato: maquina_tipo_{Tipo}_{Id}
+            const partes = data.split('_');
+            const tipo = partes[2];
+            const id = partes[3];
+
             const { data: m } = await supabase.from('maquinas').select('nombre').eq('id', id).single();
-            
             if (m) {
-                userStates[userId] = { state: 'ESPERANDO_MTTO', machineName: m.nombre };
-                await bot.editMessageText(`📧 *Reporte de Mantenimiento: ${m.nombre}*\n\nPor favor, escribe el detalle de la falla o el servicio realizado.\n\n_(Ejemplo: "Limpieza general y cambio de aceite")_`, {
+                userStates[userId] = { 
+                    state: 'ESPERANDO_MTTO', 
+                    machineName: m.nombre,
+                    mttoType: tipo 
+                };
+                
+                let emoji = tipo === 'Correctivo' ? '🔴' : (tipo === 'Preventivo' ? '🟡' : '🟢');
+                
+                await bot.editMessageText(`${emoji} *Reporte: ${tipo} (${m.nombre})*\n\nPor favor, escribe el detalle del trabajo o la novedad encontrada.`, {
                     chat_id: chatId,
                     message_id: messageId,
                     parse_mode: 'Markdown',
@@ -998,10 +1014,9 @@ bot.on('callback_query', async (query) => {
             }
         }
 
-        // G. IA CHAT
+        // G. IA CHAT (MODO MANTENIMIENTO)
         if (data === 'menu_ia') {
-            userStates[userId] = { state: 'CHAT_IA' };
-            await bot.editMessageText(`🤖 *Asistente Inteligente*\n\n¿En qué puedo ayudarte hoy?\n\nHe activado el modo de conversación. Puedes hacerme preguntas sobre el ERP o pedirme consejos sobre maquinaria.\n\n_Escribe tu mensaje abajo:_`, {
+            await bot.editMessageText(`🤖 *Chat con IA*\n\nEstamos en proceso de darle vida a *EL CHAT CON IA*.\n\nPor el momento, esta función está en mantenimiento para mejorar la velocidad y capacidad de respuesta. ¡Vuelve pronto!`, {
                 chat_id: chatId,
                 message_id: messageId,
                 parse_mode: 'Markdown',
