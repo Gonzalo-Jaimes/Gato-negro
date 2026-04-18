@@ -67,6 +67,28 @@ app.use('/operarios', operarioRoutes);
 app.post('/login', adminRoutes); 
 app.get('/logout', adminRoutes);
 
+// --- CAPA DE REDIRECCIÓN (LEGACY) ---
+const legacyMap = {
+    '/despacho': '/produccion/despacho',
+    '/recepcion_diaria': '/produccion/recepcion_diaria',
+    '/entregas_historicas': '/produccion/entregas_historicas',
+    '/maquinas': '/equipos/lista',
+    '/mantenimiento': '/equipos/mantenimiento',
+    '/inventario': '/admin/inventario',
+    '/usuarios': '/admin/usuarios',
+    '/empleados': '/admin/empleados',
+    '/bodega': '/operarios/bodega',
+    '/analitica': '/finanzas/analitica',
+    '/nomina': '/finanzas/nomina',
+    '/recepcion_empaque': '/produccion/recepcion_empaque',
+    '/despacho_empaque': '/produccion/despacho_empaque',
+    '/pedidos': '/produccion/pedidos'
+};
+
+Object.entries(legacyMap).forEach(([oldPath, newPath]) => {
+    app.get(oldPath, (req, res) => res.redirect(newPath));
+});
+
 // --- MANEJO DE ERRORES 404 ---
 app.use((req, res) => {
     res.status(404).send('<h2>404 - Página no encontrada en Gato Negro ERP</h2>');
