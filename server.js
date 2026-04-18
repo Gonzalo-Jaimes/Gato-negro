@@ -63,9 +63,10 @@ app.use('/equipos', equiposRoutes);
 app.use('/finanzas', finanzasRoutes);
 app.use('/operarios', operarioRoutes);
 
-// Shortcuts para compatibilidad con logins viejos o accesos directos
-app.post('/login', adminRoutes); 
-app.get('/logout', adminRoutes);
+// Login/Logout: el router de admin ya expone /login y /logout internamente
+// Se accede como /admin/login y /admin/logout — usamos redirecciones de compatibilidad
+app.post('/login', (req, res, next) => { req.url = '/login'; adminRoutes(req, res, next); });
+app.get('/logout', (req, res, next) => { req.url = '/logout'; adminRoutes(req, res, next); });
 
 // --- CAPA DE REDIRECCIÓN (LEGACY) ---
 const legacyMap = {
