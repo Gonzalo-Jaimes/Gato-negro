@@ -1,0 +1,285 @@
+<%- include('../partials/header') %>
+
+<!-- SELECT2 & JQUERY CDNs -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<style>
+    /* Soporte Dark Mode Robusto para la Librería Select2 */
+    html.dark-mode .select2-container--default .select2-selection--single { background-color: #222 !important; border-color: #444 !important; color: white !important; height: 38px; }
+    html.dark-mode .select2-container--default .select2-selection--single .select2-selection__rendered { color: white !important; line-height: 38px; }
+    html.dark-mode .select2-dropdown { background-color: #222 !important; color: white !important; border-color: #444 !important; z-index: 9999; }
+    html.dark-mode .select2-container--default .select2-results__option--selected { background-color: #444 !important; }
+    html.dark-mode .select2-container--default .select2-results__option--highlighted.select2-results__option--selectable { background-color: #3b82f6 !important; color: white !important; }
+    html.dark-mode .select2-search--dropdown .select2-search__field { background-color: #111 !important; color: white !important; border: 1px solid #555 !important; }
+
+    /* === DARK MODE: MODAL DETALLE ORDEN DE TRABAJO === */
+    html.dark-mode #modal-detalle-mtto > div {
+        background: #111111 !important;
+        color: #e5e7eb !important;
+        border: 1px solid #333 !important;
+    }
+    /* Tarjetas info dentro del modal */
+    html.dark-mode #modal-detalle-mtto [style*="background:#f8fafc"],
+    html.dark-mode #modal-detalle-mtto [style*="background: #f8fafc"] {
+        background: #1a1a1a !important;
+        border: 1px solid #2d2d2d !important;
+    }
+    /* Descripción del trabajo (azul) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#eff6ff"],
+    html.dark-mode #modal-detalle-mtto [style*="background: #eff6ff"] {
+        background: #0f1f3d !important;
+        border-left-color: #3b82f6 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#1d4ed8"] { color: #60a5fa !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#1e3a5f"] { color: #93c5fd !important; }
+    /* Tiempo parada (verde) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#f0fdf4"] {
+        background: #0a2010 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#15803d"] { color: #4ade80 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#166534"] { color: #4ade80 !important; }
+    /* Costo MO (amarillo) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#fefce8"] {
+        background: #1e1600 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#92400e"] { color: #fcd34d !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#78350f"] { color: #fcd34d !important; }
+    /* Costo Materiales (rojo) */
+    html.dark-mode #modal-detalle-mtto [style*="background:#fef2f2"] {
+        background: #1e0808 !important;
+    }
+    html.dark-mode #modal-detalle-mtto [style*="color:#991b1b"] { color: #fca5a5 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#7f1d1d"] { color: #fca5a5 !important; }
+    /* Botón cerrar */
+    html.dark-mode #modal-detalle-mtto button[style*="color:#666"] { color: #aaa !important; }
+    html.dark-mode #modal-detalle-mtto button[style*="color:#666"]:hover { color: #fff !important; }
+    /* Total footer */
+    html.dark-mode #modal-detalle-mtto [style*="border-top:1px solid #e5e7eb"],
+    html.dark-mode #modal-detalle-mtto [style*="border-top: 1px solid #e5e7eb"] { border-color: #333 !important; }
+    html.dark-mode #modal-detalle-mtto [style*="color:#111"] { color: #f3f4f6 !important; }
+    /* Header del modal (línea azul) */
+    html.dark-mode #modal-detalle-mtto [style*="border-bottom:3px solid #2563eb"],
+    html.dark-mode #modal-detalle-mtto [style*="border-bottom: 3px solid #2563eb"] { border-color: #3b82f6 !important; }
+</style>
+<h1>🔧 Órdenes de Mantenimiento</h1>
+<hr>
+
+<h2>Generar Nueva Orden de Trabajo</h2>
+<form action="/agregar_mantenimiento" method="POST" class="card" style="border-left: 5px solid var(--primary); display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+    
+    <div>
+        <label><strong>Fecha:</strong></label><br>
+        <input type="date" name="fecha" required style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Hora:</strong></label><br>
+        <input type="time" name="hora" required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Máquina / Equipo:</strong></label><br>
+        <select name="maquina" class="select2-maquinas" required style="width: 100%; padding: 8px;">
+            <option value="">Seleccione o escriba un equipo...</option>
+            <% maquinas.forEach(function(m) { %>
+                <option value="<%= m.nombre %>"><%= m.nombre %> (<%= m.codigo %>)</option>
+            <% }); %>
+        </select>
+    </div>
+    <div>
+        <label><strong>Tipo de Actividad / Mantenimiento:</strong></label><br>
+        <select name="tipo" style="width: 100%; padding: 8px;">
+            <option value="Limpieza Post-Produccion">🔵 Limpieza y Rutina Post-Producción</option>
+            <option value="Preventivo">🟢 Mantenimiento Preventivo (Rutina Pesada)</option>
+            <option value="Correctivo">🔴 Mantenimiento Correctivo (Alerta Máxima)</option>
+        </select>
+    </div>
+
+    <div style="grid-column: span 2;">
+        <label><strong>Descripción del Trabajo:</strong></label><br>
+        <input type="text" name="descripcion" placeholder="Ej: Cambio de rodamientos, limpieza general..." required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Tiempo de Parada (Minutos):</strong></label><br>
+        <input type="number" name="tiempo_min" placeholder="Ej: 120" value="0" style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Responsable (Hecho por):</strong></label><br>
+        <input type="text" name="hecho_por" placeholder="Ej: Don Gonzalo" required style="width: 100%;">
+    </div>
+
+    <div>
+        <label><strong>Costo Mano de Obra ($):</strong></label><br>
+        <input type="number" step="0.01" name="costo_mo" value="0.00" style="width: 100%;">
+    </div>
+    <div>
+        <label><strong>Costo de Materiales ($):</strong></label><br>
+        <input type="number" step="0.01" name="costo_mat" value="0.00" style="width: 100%;">
+    </div>
+
+    <div style="grid-column: span 2;">
+        <label><strong>Estado de la Orden:</strong></label><br>
+        <select name="estado" style="width: 100%; padding: 8px; font-weight: bold;">
+            <option value="REALIZADO">✔ REALIZADO</option>
+            <option value="NO REALIZADO">✖ NO REALIZADO (Pendiente)</option>
+        </select>
+    </div>
+
+    <div style="grid-column: span 2; margin-top: 10px;">
+        <button type="submit" class="premium-btn" style="background: var(--primary); color: black; font-weight: bold; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Orden de Trabajo</button>
+    </div>
+</form>
+
+<hr>
+
+<h2>Historial de Órdenes de Trabajo</h2>
+
+<div class="card" style="margin-bottom: 20px; display: flex; align-items: center; gap: 15px;">
+    <strong>🔎 Buscar mantenimiento: </strong>
+    <input type="text" id="inputBusqueda" placeholder="Buscar por máquina, responsable o fecha..." style="flex: 1; max-width: 400px; background: transparent;">
+</div>
+
+<table>
+    <tr>
+        <th>Nº Orden</th>
+        <th>Fecha / Hora</th>
+        <th>Máquina</th>
+        <th>Tipo</th>
+        <th>Responsable</th>
+        <th>Tiempos y Costos</th>
+        <th>Status</th>
+    </tr>
+
+    <% mantenimientos.forEach(function(mtto) { %>
+    <tr class="fila-mtto" onclick="verDetalleMtto(<%= mtto.id %>)" style="cursor:pointer;" title="Click para ver detalle completo">
+        <td><strong># <%= mtto.id %></strong></td>
+        <td><%= mtto.fecha %><br><small><%= mtto.hora %></small></td>
+        <td style="text-transform: capitalize;"><strong><%= mtto.maquina %></strong></td>
+        <td>
+            <% if (mtto.tipo === 'Preventivo') { %> 🟢 Preventivo 
+            <% } else if (mtto.tipo === 'Correctivo') { %> 🔴 Correctivo
+            <% } else { %> 🔵 <%= mtto.tipo %> <% } %>
+        </td>
+        <td style="text-transform: capitalize;"><%= mtto.hecho_por %></td>
+        <td style="text-align: left; font-size: 14px;">
+            ⏱️ <b>Tiempo:</b> <%= mtto.tiempo_min %> min <br>
+            💰 $<%= (mtto.costo_mo + mtto.costo_mat).toLocaleString('es-CO') %> COP total
+        </td>
+        <td>
+            <% if (mtto.estado === 'REALIZADO') { %> 
+                <span style="color: green; font-weight: bold;">✔ REALIZADO</span> 
+            <% } else { %> 
+                <span style="color: red; font-weight: bold;">✖ PENDIENTE</span> 
+            <% } %>
+        </td>
+    </tr>
+    <% }); %>
+</table>
+
+<!-- MODAL DETALLE ORDEN DE TRABAJO -->
+<div id="modal-detalle-mtto" class="modal-overlay-pic">
+    <div class="modal-box-pic" style="max-width:650px; width:95%; max-height:90vh; overflow-y:auto; padding: 30px;">
+        <button onclick="document.getElementById('modal-detalle-mtto').style.display='none'" style="position:absolute; top:12px; right:16px; background:none; border:none; font-size:22px; cursor:pointer; color:#666;">✖</button>
+        
+        <div style="border-bottom:3px solid var(--primary); margin-bottom:20px; padding-bottom:12px;">
+            <h2 style="margin:0; color:var(--text-main);" id="mtto-titulo">📋 Orden de Trabajo #</h2>
+            <span id="mtto-estado-badge" style="font-size:14px; font-weight:bold;"></span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px;">
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Máquina / Equipo</div>
+                <div style="font-size:18px; font-weight:bold; color:#111;" id="mtto-maquina">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Tipo de Mantenimiento</div>
+                <div style="font-size:16px; font-weight:bold;" id="mtto-tipo">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Fecha y Hora</div>
+                <div style="font-size:16px; font-weight:bold; color:#374151;" id="mtto-fecha">—</div>
+            </div>
+            <div style="background:#f8fafc; padding:12px; border-radius:8px;">
+                <div style="font-size:11px; color:#888; text-transform:uppercase; margin-bottom:4px;">Responsable</div>
+                <div style="font-size:16px; font-weight:bold; color:#374151;" id="mtto-hecho-por">—</div>
+            </div>
+        </div>
+
+        <div style="background:#eff6ff; border-left:4px solid #2563eb; padding:14px; border-radius:0 8px 8px 0; margin-bottom:20px;">
+            <div style="font-size:11px; color:#1d4ed8; text-transform:uppercase; margin-bottom:6px; font-weight:bold;">📝 Descripción del Trabajo</div>
+            <div style="font-size:15px; color:#1e3a5f; line-height:1.6;" id="mtto-descripcion">—</div>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px;">
+            <div style="background:#f0fdf4; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#15803d; text-transform:uppercase;">⏱️ Tiempo Parada</div>
+                <div style="font-size:22px; font-weight:bold; color:#166534;" id="mtto-tiempo">—</div>
+                <div style="font-size:11px; color:#6b7280;">minutos</div>
+            </div>
+            <div style="background:#fefce8; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#92400e; text-transform:uppercase;">👷 Costo M.O.</div>
+                <div style="font-size:18px; font-weight:bold; color:#78350f;" id="mtto-costo-mo">—</div>
+            </div>
+            <div style="background:#fef2f2; padding:12px; border-radius:8px; text-align:center;">
+                <div style="font-size:11px; color:#991b1b; text-transform:uppercase;">⚙️ Costo Materiales</div>
+                <div style="font-size:18px; font-weight:bold; color:#7f1d1d;" id="mtto-costo-mat">—</div>
+            </div>
+        </div>
+
+        <div style="margin-top:16px; text-align:right; padding-top:12px; border-top:1px solid #e5e7eb;">
+            <strong style="font-size:16px;">Total: <span id="mtto-costo-total" style="color:#111;">—</span></strong>
+        </div>
+    </div>
+</div>
+
+<!-- Datos JSON de todos los mantenimientos para el modal -->
+<script>
+    const MTTOS_DATA = <%- JSON.stringify(mantenimientos) %>;
+
+    function verDetalleMtto(id) {
+        const m = MTTOS_DATA.find(x => x.id === id);
+        if (!m) return;
+
+        document.getElementById('mtto-titulo').textContent = `📋 Orden de Trabajo #${m.id}`;
+        
+        const esRealizado = m.estado === 'REALIZADO';
+        const badge = document.getElementById('mtto-estado-badge');
+        badge.textContent = esRealizado ? '✔ REALIZADO' : '✖ PENDIENTE';
+        badge.style.color = esRealizado ? '#15803d' : '#dc2626';
+
+        document.getElementById('mtto-maquina').textContent   = m.maquina;
+        document.getElementById('mtto-tipo').textContent       = m.tipo === 'Preventivo' ? '🟢 Preventivo' : m.tipo === 'Correctivo' ? '🔴 Correctivo' : `🔵 ${m.tipo}`;
+        document.getElementById('mtto-fecha').textContent      = `${m.fecha} — ${m.hora}`;
+        document.getElementById('mtto-hecho-por').textContent  = m.hecho_por;
+        document.getElementById('mtto-descripcion').textContent = m.descripcion;
+        document.getElementById('mtto-tiempo').textContent     = m.tiempo_min;
+        document.getElementById('mtto-costo-mo').textContent   = `$${(m.costo_mo||0).toLocaleString('es-CO')}`;
+        document.getElementById('mtto-costo-mat').textContent  = `$${(m.costo_mat||0).toLocaleString('es-CO')}`;
+        const total = (m.costo_mo||0) + (m.costo_mat||0);
+        document.getElementById('mtto-costo-total').textContent = `$${total.toLocaleString('es-CO')} COP`;
+
+        const modal = document.getElementById('modal-detalle-mtto');
+        modal.style.display = 'flex';
+    }
+
+    // Inicialización del Motor Inteligente de Búsqueda de Máquinas
+    $(document).ready(function() {
+        $('.select2-maquinas').select2({
+            placeholder: "🔍 Escriba el nombre o código...",
+            allowClear: true,
+            width: '100%'
+        });
+    });
+
+    document.getElementById('inputBusqueda').addEventListener('keyup', function() {
+        let textoBusqueda = this.value.toLowerCase();
+        let filas = document.querySelectorAll('.fila-mtto');
+        filas.forEach(fila => {
+            fila.style.display = fila.innerText.toLowerCase().includes(textoBusqueda) ? '' : 'none';
+        });
+    });
+</script>
+
+<%- include('../partials/footer') %>

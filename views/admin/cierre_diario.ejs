@@ -1,0 +1,107 @@
+<%- include('../partials/header') %>
+
+<div class="header-card" style="background: #111; color: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; text-align: center;">
+    <h2 style="margin: 0; color: #3b82f6;">💰 Mi Cierre de Producción</h2>
+    <p style="margin-top: 5px; color: #ccc;">Sincronizado con recursos humanos - <%= new Date().toLocaleDateString('es-ES') %></p>
+</div>
+
+<!-- DASHBOARD DE SALDO -->
+<div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 30px;">
+    
+    <div class="card" style="border-top: 5px solid #10b981; text-align: center; margin-bottom: 0;">
+        <span style="display: block; font-size: 13px; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">A Favor (Esta Semana)</span>
+        <span style="font-size: 32px; font-weight: bold; color: #10b981;">$<%= ganancia_semana.toLocaleString('es-CO') %> COP</span>
+    </div>
+    
+    <div class="card" style="border-top: 5px solid #ef4444; text-align: center; margin-bottom: 0;">
+        <span style="display: block; font-size: 13px; color: var(--text-muted); font-weight: bold; text-transform: uppercase;">Vales / Rezagos</span>
+        <span style="font-size: 32px; font-weight: bold; color: #ef4444;">$<%= deuda_total.toLocaleString('es-CO') %> COP</span>
+    </div>
+    
+    <div class="card" style="border-top: 5px solid #3b82f6; text-align: center; margin-bottom: 0; background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1);">
+        <span style="display: block; font-size: 13px; color: var(--primary); font-weight: bold; text-transform: uppercase;">Estimado a Cobrar</span>
+        <span style="font-size: 32px; font-weight: bold; color: var(--primary);">$<%= saldo_neto.toLocaleString('es-CO') %> COP</span>
+    </div>
+
+</div>
+
+<!-- REGISTRO CENTRALIZADO -->
+<div class="card" style="border-left: 5px solid var(--primary); margin-bottom: 30px;">
+    <h3 style="margin-top: 0; color: var(--text-main);">🤖 Automatización de Nómina</h3>
+    <p style="color: var(--text-muted); font-size: 15px; margin-bottom: 0;">
+        Tus tabacos y canastas son registrados <strong>automáticamente</strong> en este panel cuando la Administración (Almacén) recibe físicamente tus productos y confirma la "Recepción de Tareas". <br><br>
+        <i>Ya no necesitas subir reportes manuales. Tu enfoque es fabricar.</i>
+    </p>
+</div>
+
+<!-- HISTORIAL DE TAREAS RECIBIDAS (NOVEDAD) -->
+<h3 style="color: var(--text-main); margin-top: 30px;">📦 Material Recibido (Tareas Asignadas)</h3>
+<p style="color: var(--text-muted); font-size: 14px; margin-top: 0;">Aquí puedes ver la materia prima que el Almacén te ha despachado.</p>
+<div class="card" style="border-radius: 8px; overflow: hidden; margin-bottom: 30px; padding: 0;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background: #f8f9fa;">
+            <tr>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Fecha</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">ID Tarea</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Material / Tarea</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Cantidad</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (!locals.tareas_asignadas || tareas_asignadas.length === 0) { %>
+                <tr><td colspan="5" style="padding: 20px; text-align: center; color: #9ca3af;">No te han asignado ningún material aún.</td></tr>
+            <% } else { %>
+                <% tareas_asignadas.forEach(t => { %>
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 12px 15px;"><strong><%= t.fecha %></strong></td>
+                        <td style="padding: 12px 15px; color: gray;">#<%= t.id %></td>
+                        <td style="padding: 12px 15px; color: #2563eb; font-weight: bold;"><%= t.material %></td>
+                        <td style="padding: 12px 15px; font-weight: bold;"><%= t.cantidad %></td>
+                        <td style="padding: 12px 15px;">
+                            <% if(t.estado === 'completado') { %>
+                                <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">Liquidado</span>
+                            <% } else { %>
+                                <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.2);">En Proceso</span>
+                            <% } %>
+                        </td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+<!-- HISTORIAL DE LA SEMANA -->
+<h3 style="color: #374151;">📋 Mis Ganancias (Por cobrar en Nómina)</h3>
+<div style="background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 10px rgba(0,0,0,0.05); border: 1px solid #e5e7eb;">
+    <table style="width: 100%; border-collapse: collapse; text-align: left;">
+        <thead style="background: #f8f9fa;">
+            <tr>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Fecha</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Cantidad</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Tarifa (Uni)</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Total Generado</th>
+                <th style="padding: 12px 15px; border-bottom: 2px solid #e5e7eb; color: #4b5563;">Estado</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% if (produccion.length === 0) { %>
+                <tr><td colspan="5" style="padding: 20px; text-align: center; color: #9ca3af;">No tienes producciones pendientes de cobro esta semana.</td></tr>
+            <% } else { %>
+                <% produccion.forEach(p => { %>
+                    <tr style="border-bottom: 1px solid #f3f4f6;">
+                        <td style="padding: 12px 15px;"><strong><%= p.fecha %></strong></td>
+                        <td style="padding: 12px 15px; color: #2563eb; font-weight: bold;"><%= p.cantidad_producida %> unds</td>
+                        <td style="padding: 12px 15px; color: #6b7280;">$<%= p.precio_por_unidad %> COP</td>
+                        <td style="padding: 12px 15px; color: #059669; font-weight: bold;">$<%= parseFloat(p.total_ganado).toLocaleString('es-CO') %> COP</td>
+                        <td style="padding: 12px 15px;"><span style="background: #fef08a; color: #854d0e; padding: 4px 8px; border-radius: 12px; font-size: 12px; font-weight: bold;"><%= p.estado %></span></td>
+                    </tr>
+                <% }) %>
+            <% } %>
+        </tbody>
+    </table>
+</div>
+
+</div>
+</body></html>

@@ -1,0 +1,124 @@
+<%- include('../partials/header') %>
+
+<h1>🖨️ Panel de Códigos QR</h1>
+<hr>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; background: #e0e7ff; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6; flex-wrap: wrap; gap: 10px;" class="btn-imprimir">
+    <div style="display: flex; gap: 10px;">
+        <button onclick="marcarTodos(true)" style="background: #111; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">☑ Seleccionar Todos</button>
+        <button onclick="marcarTodos(false)" style="background: #64748b; color: white; padding: 8px 15px; border: none; border-radius: 4px; cursor: pointer;">☐ Limpiar</button>
+    </div>
+    
+    <!-- NUEVA BARRA DE BÚSQUEDA QR -->
+    <div>
+        <input type="text" id="buscadorQR" placeholder="🔍 Escribe para filtrar máquinas..." style="width: 280px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px;">
+    </div>
+    
+    <button onclick="imprimirSeleccionados()" style="background: #2563eb; color: white; padding: 10px 20px; font-size: 16px; border: none; border-radius: 5px; cursor: pointer; font-weight: bold; box-shadow: 0 4px 6px rgba(37,99,235,0.3);">🖨️ Imprimir Seleccionados</button>
+</div>
+
+<div class="qrs-container" style="display: flex; flex-wrap: wrap; gap: 20px;">
+    <% if (maquinas.length === 0) { %>
+        <p>No hay máquinas registradas en el sistema todavía.</p>
+    <% } else { %>
+        <% maquinas.forEach(function(m) { %>
+            <div class="qr-card" id="card-<%= m.id %>" style="background: white; border: 1px solid #ddd; padding: 20px; border-radius: 8px; width: 230px; text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.05); page-break-inside: avoid; position: relative;">
+                
+                <input type="checkbox" class="qr-checkbox btn-imprimir" value="<%= m.id %>" style="position: absolute; top: 15px; right: 15px; transform: scale(1.5); cursor: pointer;" title="Marcar para imprimir">
+                
+                <h3 style="margin: 0 0 5px; font-size: 18px; color: #111; width: 90%;"><%= m.nombre %></h3>
+                <p style="margin: 0 0 15px; font-size: 13px; color: #555; font-weight: bold; text-transform: uppercase;">Cód: <%= m.codigo %></p>
+                
+                <div style="border: 2px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px; background: #fafafa;">
+                    <img src="/maquina/<%= m.id %>/qr" alt="QR de <%= m.nombre %>" style="width: 100%; max-width: 180px; display: block; margin: auto;">
+                </div>
+                
+                <a href="/maquinas/ficha/<%= m.id %>" class="btn-ficha" target="_blank" style="display: inline-block; padding: 8px 15px; background: #111; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; width: 80%; transition: background 0.2s;">📄 Abrir Ficha Técnica</a>
+            </div>
+        <% }); %>
+    <% } %>
+</div>
+
+<style>
+    .btn-ficha:hover { background: #333 !important; }
+    
+    @media print {
+        /* Ocultar elementos de la interfaz de usuario regular durante la impresión */
+        body { background: white !important; }
+        .sidebar, .topbar, h1, hr, p, .btn-imprimir { display: none !important; }
+        .content { padding: 0 !important; margin: 0 !important; }
+        
+        .qrs-container { 
+            display: grid !important; 
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)) !important; 
+            gap: 15px !important; 
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        
+        .qr-card { 
+            display: none !important; /* Base invisible */
+        }
+
+        .qr-card.print-active { 
+            display: block !important;
+            width: 100% !important; 
+            max-width: none !important; 
+            box-shadow: none !important; 
+            border: 2px solid #000 !important; 
+            border-radius: 0 !important;
+            page-break-inside: avoid !important;
+            margin-bottom: 20px !important;
+        }
+        
+        /* Ocultar el botón dentro de la tarjeta al imprimir */
+        .qr-card .btn-ficha, .qr-checkbox { display: none !important; }
+    }
+
+    @media screen {
+        html.dark-mode body { background-color: #000 !important; color: #e5e7eb; }
+        html.dark-mode .qr-card { background: #111 !important; border-color: #444 !important; box-shadow: 0 4px 15px rgba(0,0,0,0.8); }
+    }
+</style>
+
+<script>
+    // Buscador en Tiempo Real de Fichas QR
+    document.getElementById('buscadorQR').addEventListener('keyup', function() {
+        let textoBusqueda = this.value.toLowerCase();
+        let tarjetas = document.querySelectorAll('.qr-card');
+        
+        tarjetas.forEach(tarjeta => {
+            // Evaluamos el contenido de texto (Abarca Nombre y Código de máquina)
+            let match = tarjeta.innerText.toLowerCase().includes(textoBusqueda);
+            tarjeta.style.display = match ? 'block' : 'none';
+        });
+    });
+
+    // Motor JS de Impresión Selectiva
+    function marcarTodos(estado) {
+        document.querySelectorAll('.qr-checkbox').forEach(cb => cb.checked = estado);
+    }
+
+    function imprimirSeleccionados() {
+        let seleccionados = 0;
+        // Limpiamos la clase en todas por si hay remanentes de una impresión vieja
+        document.querySelectorAll('.qr-card').forEach(card => card.classList.remove('print-active'));
+
+        document.querySelectorAll('.qr-checkbox').forEach(cb => {
+            if (cb.checked) {
+                document.getElementById('card-' + cb.value).classList.add('print-active');
+                seleccionados++;
+            }
+        });
+
+        if (seleccionados === 0) {
+            alert('⚠️ Debes marcar por lo menos un equipo en la casilla para usar la Impresión Selectiva.');
+            return;
+        }
+
+        // Activamos nativamente el Spool de Google Chrome/Windows
+        window.print();
+    }
+</script>
+
+<%- include('../partials/footer') %>

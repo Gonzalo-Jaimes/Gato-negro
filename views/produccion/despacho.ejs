@@ -1,0 +1,392 @@
+<%- include('../partials/header') %>
+
+<style>
+  .fab-deuda-badge { float: right; font-size: 13px; }
+  .deuda-roja  { color: #ef4444; }
+  .deuda-verde { color: #10b981; }
+
+  /* === DARK MODE: DESPACHO PAGE === */
+  /* Resultado del cálculo de pesaje */
+  html.dark-mode #resultado_calculo {
+      background: #111111 !important;
+      border-color: #333 !important;
+      color: #e5e7eb !important;
+  }
+  html.dark-mode #resultado_calculo h3 { color: #f3f4f6 !important; }
+  html.dark-mode #resultado_calculo p[style*="color: #ef4444"],
+  html.dark-mode #resultado_calculo p[style*="color:#ef4444"] { color: #f87171 !important; }
+  html.dark-mode #resultado_calculo p[style*="color: #10b981"],
+  html.dark-mode #resultado_calculo p[style*="color:#10b981"] { color: #34d399 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
+  html.dark-mode #resultado_calculo [style*="color:#6b7280"] { color: #9ca3af !important; }
+  html.dark-mode #resultado_calculo [style*="color: #1f2937"],
+  html.dark-mode #resultado_calculo [style*="color:#1f2937"] { color: #f3f4f6 !important; }
+  /* Sección material extra (rojo) dentro del resultado */
+  html.dark-mode #resultado_calculo [style*="background:#fef2f2"],
+  html.dark-mode #resultado_calculo [style*="background: #fef2f2"] {
+      background: #1e0808 !important;
+      border-color: #7f1d1d !important;
+  }
+  html.dark-mode #resultado_calculo [style*="color:#991b1b"] { color: #fca5a5 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #991b1b"] { color: #fca5a5 !important; }
+  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
+  html.dark-mode #resultado_calculo span[style*="color:#6b7280"] { color: #9ca3af !important; }
+  /* Inputs editables dentro del resultado */
+  html.dark-mode #resultado_calculo input[type="number"] {
+      background: #222 !important;
+      color: #fff !important;
+      border-color: #555 !important;
+  }
+  /* Sección de préstamos/suministros (amarilla) */
+  html.dark-mode [style*="background: #fef9c3"] { background: #1c1500 !important; }
+  html.dark-mode [style*="color: #854d0e"],
+  html.dark-mode [style*="color:#854d0e"] { color: #fcd34d !important; }
+  html.dark-mode [style*="color: #b45309"],
+  html.dark-mode [style*="color:#b45309"] { color: #fbbf24 !important; }
+  html.dark-mode [style*="color: #713f12"],
+  html.dark-mode [style*="color:#713f12"] { color: #f59e0b !important; }
+</style>
+
+<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+    <div>
+        <h1 style="margin: 0; color: #333;">📝 Despachar Tarea a Fabriquín</h1>
+        <p style="color: gray; margin-top: 5px;">Selecciona el empleado, ajusta manualmente el material si hay saldos pendientes y fija la meta semanal.</p>
+    </div>
+</div>
+
+<% /* Resumen V2.9.1 - Usando datos del servidor */ %>
+
+<div style="background:linear-gradient(135deg,#1e3a5f,#1d4ed8); border-radius:12px; padding:18px 22px; margin-bottom:24px; color:white;">
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+        <div>
+            <h3 style="margin:0; font-size:16px; color:white;">🚚 Plan de Carga — Próximas Entregas (En Bodega)</h3>
+            <p style="margin:2px 0 0 0; font-size:12px; opacity:0.75;"><%= resumenSemanal.total_fabriquines %> fabriquín(es) esperando material • <%= resumenSemanal.total_tabacos.toLocaleString() %> tabacos por asignar</p>
+        </div>
+        <button onclick="location.reload()" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); padding:5px 12px; border-radius:6px; font-size:12px; cursor:pointer;">↺ Actualizar</button>
+    </div>
+    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px,1fr)); gap:12px;">
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🟣 Capa por Cargar</div>
+            <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.capa_kg.toFixed(2) %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🔵 Capote por Cargar</div>
+            <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.capote_kg.toFixed(2) %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.12); border-radius:8px; padding:12px; text-align:center;">
+            <div style="font-size:11px; opacity:0.75; text-transform:uppercase; margin-bottom:4px;">🟢 Picadura por Cargar</div>
+            <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.picadura_kg.toFixed(2) %> kg</div>
+        </div>
+        <div style="background:rgba(255,255,255,0.18); border-radius:8px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.3);">
+            <div style="font-size:11px; opacity:0.95; text-transform:uppercase; margin-bottom:4px; font-weight:bold;">🧺 Cestas Sugeridas</div>
+            <div style="font-size:24px; font-weight:900;"><%= resumenSemanal.total_cestas %> uds</div>
+            <div style="font-size:10px; margin-top:4px; display:flex; flex-wrap:wrap; justify-content:center; gap:4px;">
+                <% Object.entries(resumenSemanal.cestas_por_color).forEach(([color, cant]) => { %>
+                    <span style="background:rgba(255,255,255,0.15); padding:2px 6px; border-radius:4px; text-transform:capitalize;">
+                        <%= color %>: <%= cant %>
+                    </span>
+                <% }) %>
+            </div>
+        </div>
+    </div>
+    <% if (resumenSemanal.total_fabriquines === 0) { %>
+    <p style="text-align:center; opacity:0.7; margin:8px 0 0 0; font-size:13px;">Sin tareas activas. A medida que despachas, aquí se acumula el total.</p>
+    <% } %>
+</div>
+<div style="display:flex; justify-content:center;">
+<div class="card" style="max-width: 680px; width: 100%; border-top: 4px solid #f59e0b;">
+    <h2 style="margin-top: 0;">Parámetros del Despacho</h2>
+    
+    <form action="/despachar_tarea" method="POST" target="_blank" onsubmit="setTimeout(()=> window.location.href='/despacho', 2000)">
+        
+        <!-- 1. SELECCIÓN DE FABRIQUÍN -->
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Fabriquín:</label>
+        <input type="text" id="buscar_fab" placeholder="Escribe el código (F01) o nombre (Alcides)..."
+               autocomplete="off"
+               style="width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 4px;"
+               oninput="filtrarFabriquines()" onfocus="mostrarDropdown()" onblur="setTimeout(cerrarDropdown, 200)">
+        <div id="fab_dropdown" style="display:none; background:var(--bg-card); border: 1px solid #f59e0b; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+            <% empleados.forEach(emp => { 
+                const prest = prestamos.find(p => p.empleado_id === emp.id);
+                const saldoPrest = prest ? prest.saldo_pendiente : 0;
+            %>
+            <div class="fab-opcion"
+                 data-id="<%= emp.id %>"
+                 data-saldo="<%= emp.deuda_tabacos %>"
+                 data-capa="<%= emp.saldo_capa_kg || 0 %>"
+                 data-capote="<%= emp.saldo_capote_kg || 0 %>"
+                 data-picadura="<%= emp.saldo_picadura_kg || 0 %>"
+                 data-prestamo="<%= saldoPrest %>"
+                 data-texto="<%= emp.codigo %> - <%= emp.nombre %>"
+                 onclick="seleccionarFab(this)"
+                 style="padding: 10px 14px; cursor: pointer; color: var(--text-main); border-bottom: 1px solid var(--border-color); font-size: 15px;">
+                <strong><%= emp.codigo %></strong> &ndash; <%= emp.nombre %>
+                <span class="fab-deuda-badge <%= emp.deuda_tabacos > 0 ? 'deuda-roja' : 'deuda-verde' %>">
+                    <%= emp.deuda_tabacos > 0 ? '⚠️ Debe ' + emp.deuda_tabacos.toLocaleString('es-CO') + ' tabs' : '✔ Sin deuda' %>
+                </span>
+            </div>
+            <% }) %>
+        </div>
+        <input type="hidden" name="empleado_id" id="empleado_id" required>
+
+        <!-- Alerta saldo tabacos -->
+        <div id="saldo_alerta" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #d97706;">
+            <strong>⚠️ Tiene Saldo en Casa:</strong> Este fabriquin aún debe <span id="saldo_info" style="font-weight: 900; font-size:18px;">0</span> tabacos. 
+            <br><small>El nuevo material se sumará a su deuda actual.</small>
+        </div>
+
+        <!-- Alerta saldo MATERIAL -->
+        <div id="saldo_material_alerta" style="display: none; background: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #dc2626;">
+            <strong>⚖️ Saldo de Material Pendiente:</strong><br>
+            <span id="info_capa_ant">Capa: 0 kg</span> &nbsp;|&nbsp;
+            <span id="info_capote_ant">Capote: 0 kg</span> &nbsp;|&nbsp;
+            <span id="info_picadura_ant">Picadura: 0 kg</span>
+            <br><small>Puedes descontar parcialmente estos saldos editando los kg a entregar abajo.</small>
+        </div>
+
+        <!-- 2. TABACOS -->
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Tabacos Físicos a Asignar Hoy (Nueva Tarea):</label>
+        <input type="number" name="meta_tabacos" id="meta_tabacos" placeholder="Ej: 10000" style="width: 100%; font-size: 18px; margin-bottom: 20px;" required>
+
+        <!-- 3. COLOR CESTA -->
+        <label style="font-weight: bold; display: block; margin-bottom: 5px;">3. Color de Cesta (Préstamo):</label>
+        <select name="color_cesta" id="color_cesta" style="width: 100%; font-size: 16px; margin-bottom: 20px;" required>
+            <option value="Cestas Rojas">🔴 Cestas Rojas</option>
+            <option value="Cestas Azules">🔵 Cestas Azules</option>
+            <option value="Cestas Negras">⚫ Cestas Negras</option>
+        </select>
+
+        <!-- 4. PRÉSTAMOS Y SUMINISTROS EXTRA -->
+        <div style="background: #fef9c3; border: 1px solid #fde047; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top:0; color:#854d0e; font-size:16px;">💰 Gestión de Préstamos y Suministros (Opcional)</h3>
+            
+            <p style="margin: 0 0 10px 0; color: #b45309; font-weight: bold;">
+                Deuda Actual (Préstamo): $<span id="lbl_deuda_prestamo">0</span> COP
+            </p>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💸 Abono al Préstamo ($):</label>
+                    <input type="number" name="abono_prestamo" id="abono_prestamo" placeholder="Ej: 50000" min="0" oninput="validarAbono()"
+                           style="width: 100%; padding: 8px; border: 1px solid #ca8a04; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 150px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💵 Nuevo Préstamo ($):</label>
+                    <input type="number" name="nuevo_prestamo" placeholder="Ej: 200000" min="0"
+                           style="width: 100%; padding: 8px; border: 1px solid #ca8a04; border-radius: 6px;">
+                </div>
+            </div>
+
+            <hr style="border:0; border-top:1px dashed #ca8a04; margin: 15px 0;">
+
+            <div style="display: flex; gap: 15px; flex-wrap: wrap;">
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">💧 Goma (Uds 0.25):</label>
+                    <input type="number" name="goma_uds" placeholder="Ej: 0.25" step="0.01" min="0" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">🔢 Goma (# Ref):</label>
+                    <input type="text" name="goma_num" placeholder="Ej: #23" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+                <div style="flex: 1; min-width: 120px;">
+                    <label style="font-size:13px; font-weight:bold; color:#713f12;">🗞️ Periódico (Kg):</label>
+                    <input type="number" name="periodico_kg" placeholder="Ej: 1" step="0.5" min="0" class="suministro-input"
+                           style="width: 100%; padding: 8px; border: 1px solid #92400e; border-radius: 6px;">
+                </div>
+            </div>
+            <p style="margin: 8px 0 0 0; font-size:12px; color:#713f12;">
+                * La Goma ($60.000 /ud) y Periódico ($6.000 /kg) se sumarán automáticamente a la deuda del préstamo.
+            </p>
+        </div>
+
+        <!-- SIMULAR -->
+        <button type="button" onclick="simularCalculo()" style="width: 100%; background: #3b82f6; font-size: 16px; margin-bottom: 20px;">🧮 Calcular Pesaje</button>
+
+        <!-- RESULTADO CON CAMPOS EDITABLES DE MATERIAL -->
+        <div id="resultado_calculo" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+            <h3 style="margin-top:0; color:#1f2937;">Material a Pesar y Extraer de Bodega:</h3>
+            <p style="color: #ef4444;"><strong>Deuda Anterior:</strong> <span id="res_casa"></span></p>
+            <p style="color: #10b981; font-weight:bold; font-size:18px;">Nueva Deuda Total: <span id="res_meta"></span> Tabacos</p>
+            <hr>
+
+            <p style="margin: 5px 0; font-size: 13px; color: #6b7280;">
+                🎟️ <strong><span id="res_fisico"></span> Tabacos</strong> — Edita los kg si necesitas ajustar por saldo de material:
+            </p>
+
+            <!-- CAPA -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:10px;">
+                <label style="min-width: 130px; font-weight:bold;">• Capa (kg):</label>
+                <input type="number" name="capa_kg" id="inp_capa" step="0.01" min="0"
+                       style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
+                <span id="lbl_capa_desc" style="font-size:12px; color:#6b7280;"></span>
+            </div>
+            <!-- CAPOTE -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                <label style="min-width: 130px; font-weight:bold;">• Capote (kg):</label>
+                <input type="number" name="capote_kg" id="inp_capote" step="0.01" min="0"
+                       style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
+                <span id="lbl_capote_desc" style="font-size:12px; color:#6b7280;"></span>
+            </div>
+            <!-- PICADURA -->
+            <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
+                <label style="min-width: 130px; font-weight:bold;">• Picadura (kg):</label>
+                <input type="number" name="picadura_kg" id="inp_picadura" step="0.01" min="0"
+                       style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
+                <span id="lbl_picadura_desc" style="font-size:12px; color:#6b7280;"></span>
+            </div>
+            <!-- MATERIAL EXTRA (por tabacos malos o faltante) -->
+            <div style="margin-top:16px; padding:12px; background:#fef2f2; border:1px dashed #fca5a5; border-radius:6px;">
+                <p style="margin:0 0 8px 0; font-size:13px; font-weight:bold; color:#991b1b;">
+                    ⚠️ Material Extra (por capa mala, faltante, etc.) — Quedará como saldo a descontar próximas semanas:
+                </p>
+                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Capa:</label>
+                        <input type="number" name="extra_capa_kg" id="inp_extra_capa" step="0.01" min="0" placeholder="0"
+                               style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
+                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Capote:</label>
+                        <input type="number" name="extra_capote_kg" id="inp_extra_capote" step="0.01" min="0" placeholder="0"
+                               style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
+                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Picadura:</label>
+                        <input type="number" name="extra_picadura_kg" id="inp_extra_picadura" step="0.01" min="0" placeholder="0"
+                               style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
+                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                    </div>
+                </div>
+                <p style="margin:6px 0 0 0; font-size:11px; color:#6b7280;">*El extra se suma al material entregado hoy y genera saldo negativo que se descuenta gradualmente en próximos despachos.</p>
+            </div>
+            <!-- CESTAS -->
+            <div style="margin-top:12px;">
+                🧱 <strong>Cestas a Prestar: <span id="cant_cestas">0</span> unidad(es)</strong>
+                <input type="hidden" name="cestas_cant" id="inp_cestas">
+            </div>
+        </div>
+
+        <hr style="margin-bottom: 20px;">
+        <button type="submit" id="btn_submit" style="width: 100%; background: #10b981; font-size: 18px; font-weight: bold;" disabled>
+            🖨️ Registrar Salida e Imprimir Formato
+        </button>
+    </form>
+</div>
+</div>
+
+<script>
+    let currentPrestamo = 0;
+
+    // --- BUSCADOR DE FABRIQUINES ---
+    function mostrarDropdown() { document.getElementById('fab_dropdown').style.display = 'block'; }
+    function cerrarDropdown()  { document.getElementById('fab_dropdown').style.display = 'none'; }
+    function filtrarFabriquines() {
+        const q = document.getElementById('buscar_fab').value.toLowerCase();
+        document.getElementById('fab_dropdown').style.display = 'block';
+        document.querySelectorAll('.fab-opcion').forEach(div => {
+            div.style.display = div.getAttribute('data-texto').toLowerCase().includes(q) ? 'block' : 'none';
+        });
+    }
+    function seleccionarFab(div) {
+        document.getElementById('buscar_fab').value = div.getAttribute('data-texto');
+        document.getElementById('empleado_id').value = div.getAttribute('data-id');
+        cerrarDropdown();
+
+        // Préstamo
+        currentPrestamo = parseFloat(div.getAttribute('data-prestamo')) || 0;
+        document.getElementById('lbl_deuda_prestamo').innerText = currentPrestamo.toLocaleString('es-CO');
+        document.getElementById('abono_prestamo').max = currentPrestamo;
+        
+        const saldo = parseFloat(div.getAttribute('data-saldo')) || 0;
+        document.getElementById('saldo_alerta').style.display = saldo > 0 ? 'block' : 'none';
+        if (saldo > 0) document.getElementById('saldo_info').innerText = saldo.toLocaleString('es-CO');
+
+        const capa     = parseFloat(div.getAttribute('data-capa'))     || 0;
+        const capote   = parseFloat(div.getAttribute('data-capote'))   || 0;
+        const picadura = parseFloat(div.getAttribute('data-picadura')) || 0;
+        const hayMat   = capa > 0 || capote > 0 || picadura > 0;
+        document.getElementById('saldo_material_alerta').style.display = hayMat ? 'block' : 'none';
+        document.getElementById('info_capa_ant').innerText     = `Capa: ${capa} kg`;
+        document.getElementById('info_capote_ant').innerText   = `Capote: ${capote} kg`;
+        document.getElementById('info_picadura_ant').innerText = `Picadura: ${picadura} kg`;
+
+        document.getElementById('resultado_calculo').style.display = 'none';
+        document.getElementById('btn_submit').disabled = true;
+    }
+
+    function validarAbono() {
+        const abono = parseFloat(document.getElementById('abono_prestamo').value) || 0;
+        if (abono > currentPrestamo) {
+            alert("El abono no puede superar la deuda actual de $" + currentPrestamo.toLocaleString());
+            document.getElementById('abono_prestamo').value = currentPrestamo;
+        }
+    }
+
+    // --- SIMULACIÓN CON MATERIAL EDITABLE ---
+    function simularCalculo() {
+        const hiddenId = document.getElementById('empleado_id').value;
+        if (!hiddenId) return alert('Selecciona un empleado primero.');
+        const a_entregar = parseFloat(document.getElementById('meta_tabacos').value) || 0;
+        if (a_entregar <= 0) { alert('No puedes entregar 0 tabacos.'); return; }
+
+        const divSel = document.querySelector('.fab-opcion[data-id="' + hiddenId + '"]');
+        const saldo  = divSel ? parseFloat(divSel.getAttribute('data-saldo')) || 0 : 0;
+        // saldo_capa_kg positivo = material en casa del fabriquín (por tabacos pendientes)
+        // saldo_capa_kg negativo = le dieron material extra que aún debe
+        const capa_ant     = divSel ? parseFloat(divSel.getAttribute('data-capa'))     || 0 : 0;
+        const capote_ant   = divSel ? parseFloat(divSel.getAttribute('data-capote'))   || 0 : 0;
+        const picadura_ant = divSel ? parseFloat(divSel.getAttribute('data-picadura')) || 0 : 0;
+
+        const meta  = saldo + a_entregar;
+        const mult  = a_entregar / 1000;
+        const cestas = Math.ceil(a_entregar / 1250);
+
+        const capaBase     = parseFloat((1.0 * mult).toFixed(2));
+        const capoteBase   = parseFloat((1.8 * mult).toFixed(2));
+        const picaduraBase = parseFloat((7.0 * mult).toFixed(2));
+
+        document.getElementById('res_meta').innerText   = meta.toLocaleString('es-CO');
+        document.getElementById('res_casa').innerText   = saldo.toLocaleString('es-CO');
+        document.getElementById('res_fisico').innerText = a_entregar.toLocaleString('es-CO');
+
+        // Pre-llenar los inputs con el valor calculado PARA LOS NUEVOS TABACOS
+        // (el saldo anterior de material ya lo tiene en casa, no lo volvemos a dar)
+        document.getElementById('inp_capa').value     = capaBase;
+        document.getElementById('inp_capote').value   = capoteBase;
+        document.getElementById('inp_picadura').value = picaduraBase;
+        document.getElementById('inp_cestas').value   = cestas;
+        document.getElementById('cant_cestas').innerText = cestas;
+
+        // Labels explicativos de saldo anterior
+        const lblCapa = document.getElementById('lbl_capa_desc');
+        const lblCapote = document.getElementById('lbl_capote_desc');
+        const lblPicadura = document.getElementById('lbl_picadura_desc');
+
+        if (capa_ant > 0) {
+            lblCapa.innerHTML = `<span style="color:#b45309;">(En casa: ${capa_ant} kg — por ${saldo.toLocaleString()} tabs pendientes)</span>`;
+        } else if (capa_ant < 0) {
+            lblCapa.innerHTML = `<span style="color:#dc2626;">(⚠️ Debe ${Math.abs(capa_ant)} kg de capa — descontar aquí)</span>`;
+        } else { lblCapa.textContent = ''; }
+
+        if (capote_ant > 0) {
+            lblCapote.innerHTML = `<span style="color:#b45309;">(En casa: ${capote_ant} kg — por ${saldo.toLocaleString()} tabs pendientes)</span>`;
+        } else if (capote_ant < 0) {
+            lblCapote.innerHTML = `<span style="color:#dc2626;">(⚠️ Debe ${Math.abs(capote_ant)} kg de capote — descontar aquí)</span>`;
+        } else { lblCapote.textContent = ''; }
+
+        if (picadura_ant > 0) {
+            lblPicadura.innerHTML = `<span style="color:#b45309;">(En casa: ${picadura_ant} kg — por ${saldo.toLocaleString()} tabs pendientes)</span>`;
+        } else if (picadura_ant < 0) {
+            lblPicadura.innerHTML = `<span style="color:#dc2626;">(⚠️ Debe ${Math.abs(picadura_ant)} kg de picadura — descontar aquí)</span>`;
+        } else { lblPicadura.textContent = ''; }
+
+        document.getElementById('resultado_calculo').style.display = 'block';
+        document.getElementById('btn_submit').disabled = false;
+    }
+</script>
+
+<%- include('../partials/footer') %>
