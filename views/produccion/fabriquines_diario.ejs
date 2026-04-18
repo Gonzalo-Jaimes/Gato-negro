@@ -1,0 +1,503 @@
+<%- include('../partials/header') %>
+
+<style>
+    .tabla-grid { width: 100%; border-collapse: collapse; min-width: 1600px; }
+    .tabla-grid th, .tabla-grid td { border: 1px solid var(--border-color); padding: 4px; text-align: center; font-size: 13px; }
+    .tabla-grid th { background-color: var(--bg-card); color: var(--text-main); position: sticky; top: 0; z-index: 10; }
+    .tabla-grid td input[type=number] { width: 45px; text-align: center; background: transparent; color: var(--text-main); border: 1px solid var(--border-color); padding: 4px; font-size: 14px; border-radius: 4px; }
+    .tabla-grid td input[type=number]:focus { outline: 2px solid #3b82f6; }
+    .btn-guardar  { background-color: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-liquidar { background-color: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 4px; }
+    .btn-prestamo { background-color: #f59e0b; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
+    .btn-historial { background-color: #6b7280; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
+    .btn-extra    { background-color: #15803d; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px; margin-top: 4px; }
+    .tabla-container { overflow-x: auto; background: white; border-radius: 8px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
+    /* Celdas de color por categoría — Adaptativas */
+    .td-recorte   { background: rgba(245, 158, 11, 0.05); }
+    .td-vena      { background: rgba(59, 130, 246, 0.05); }
+    .td-extra     { background: rgba(16, 185, 129, 0.05); }
+    .td-prestamo-cell { background: rgba(245, 158, 11, 0.1); min-width: 120px; }
+
+    /* Badge pendiente */
+    .badge-pendiente { font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 10px; display: inline-block; margin-top: 3px; }
+    .badge-pendiente.rojo { background: #fee2e2; color: #b91c1c; }
+    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+
+    /* Toast */
+    #toast-exito { position: fixed; top: 20px; right: 20px; background: #065f46; color: white; padding: 16px 22px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999; display: none; max-width: 380px; font-size: 14px; }
+    #toast-exito a { color: #6ee7b7; font-weight: bold; text-decoration: underline; }
+
+    /* Modal de préstamo */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
+    .modal-overlay.activo { display: flex; }
+    .modal-box { background: var(--bg-card); border-radius: 16px; padding: 30px; width: 450px; max-width: 95vw; border: 1px solid var(--border-color); }
+
+    /* Historial expandible */
+    .fila-historial { display: none; }
+    .fila-historial.visible { display: table-row; }
+    .historial-tabla { width: 100%; font-size: 12px; border-collapse: collapse; }
+    .historial-tabla td, .historial-tabla th { padding: 4px 8px; border: 1px solid #e5e7eb; }
+    .historial-tabla th { background: #f9fafb; }
+
+    /* === DARK MODE: RECEPCIÓN DIARIA === */
+    html.dark-mode .tabla-container { background: #111 !important; }
+    html.dark-mode .tabla-grid th { background-color: #1f1f1f !important; color: #e5e7eb !important; border-color: #333 !important; }
+    html.dark-mode .tabla-grid td { border-color: #2d2d2d !important; color: #d1d5db !important; }
+    html.dark-mode .tabla-grid td input[type=number] { background: #1f1f1f !important; color: #e5e7eb !important; border-color: #444 !important; }
+    /* Celdas de subproductos — muted version */
+    html.dark-mode .td-recorte   { background: #1e1a07 !important; }
+    html.dark-mode .td-vena      { background: #0e1027 !important; }
+    html.dark-mode .td-extra     { background: #071407 !important; }
+    html.dark-mode .td-prestamo-cell { background: #1c1500 !important; }
+    /* Modales en dark */
+    html.dark-mode .modal-box { background: #111 !important; color: #e5e7eb !important; border: 1px solid #333 !important; }
+    html.dark-mode .modal-box h3 { color: #f3f4f6 !important; }
+    html.dark-mode .modal-box label { color: #d1d5db !important; }
+    html.dark-mode .modal-box input, html.dark-mode .modal-box select { background: #1f1f1f !important; color: #e5e7eb !important; border-color: #444 !important; }
+    html.dark-mode .historial-tabla th { background: #1f1f1f !important; color: #e5e7eb !important; }
+    html.dark-mode .historial-tabla td { color: #d1d5db !important; border-color: #333 !important; }
+    .cargo { color: #b91c1c; font-weight: bold; }
+    .abono-row { color: #059669; font-weight: bold; }
+
+    html.dark-mode .tabla-grid th { background-color: #374151 !important; color: #e5e7eb !important; border-color: #4b5563 !important; }
+    html.dark-mode .tabla-grid td { border-color: #4b5563 !important; color: #e5e7eb !important; }
+    html.dark-mode .tabla-grid td input { background: #1f2937; color: white; border-color: #4b5563; }
+    html.dark-mode .tabla-container { background: #1f2937 !important; }
+    html.dark-mode .modal-box { background: #1f2937; color: #e5e7eb; }
+</style>
+
+<!-- TOAST ÉXITO DESPACHO -->
+<div id="toast-exito">
+    <div style="font-size:18px; margin-bottom:6px;">✅ <strong id="toast-msg">Tarea asignada</strong></div>
+    <div id="toast-link-container" style="margin-top: 8px;"></div>
+    <button onclick="document.getElementById('toast-exito').style.display='none'" style="margin-top:10px; background:rgba(255,255,255,0.2); border:none; color:white; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:12px;">✕ Cerrar</button>
+</div>
+
+<!-- MODAL PRÉSTAMO -->
+<div class="modal-overlay" id="modal-prestamo">
+    <div class="modal-box">
+        <h3 style="margin:0 0 16px 0; color:#92400e;">💳 Registrar Movimiento de Préstamo</h3>
+        <p id="modal-emp-nombre" style="font-weight:bold; margin-bottom:12px; color:#333;"></p>
+
+        <label style="font-size:13px; font-weight:bold;">Tipo de Movimiento:</label>
+        <select id="modal-tipo" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+            <option value="prestamo">💵 Préstamo / Adelanto en efectivo</option>
+            <option value="descuento_sueldo">✂️ Descuento directo de sueldo</option>
+            <option value="abono">💚 Abono (pago parcial de deuda)</option>
+        </select>
+
+        <label style="font-size:13px; font-weight:bold;">Monto ($):</label>
+        <input type="number" id="modal-monto" placeholder="Ej: 50000" min="0"
+               style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Fecha:</label>
+        <input type="date" id="modal-fecha" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Nota (opcional):</label>
+        <input type="text" id="modal-nota" placeholder="Ej: Para pagar operarios internos"
+               style="width:100%; padding:8px; margin-bottom:18px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="guardarMovimientoPrestamo()" style="flex:1; background:#f59e0b; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
+            <button onclick="cerrarModal()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
+        </div>
+        <p id="modal-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
+    </div>
+</div>
+
+<!-- MODAL MATERIAL EXTRA ENTRE SEMANA -->
+<div class="modal-overlay" id="modal-extra">
+    <div class="modal-box">
+        <h3 style="margin:0 0 16px 0; color:#15803d;">🌿 Material Extra Entre Semana</h3>
+        <p id="modal-extra-emp" style="font-weight:bold; margin-bottom:12px; color:#333;"></p>
+        <p style="font-size:12px; color:#6b7280; margin-bottom:12px;">El material extra queda como deuda. Gregorío puede descontarlo completo o parcialmente en los siguientes despachos.</p>
+
+        <label style="font-size:13px; font-weight:bold;">Material:</label>
+        <select id="extra-material" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px;">
+            <option value="capa">🍃 Capa</option>
+            <option value="capote">🌿 Capote</option>
+            <option value="picadura">🪴 Picadura</option>
+        </select>
+
+        <label style="font-size:13px; font-weight:bold;">Cantidad (kg):</label>
+        <input type="number" id="extra-kg" placeholder="Ej: 2" min="0.01" step="0.01"
+               style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Fecha:</label>
+        <input type="date" id="extra-fecha" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <label style="font-size:13px; font-weight:bold;">Motivo (opcional):</label>
+        <input type="text" id="extra-nota" placeholder="Ej: Capa salió mala, necesitó reemplazo"
+               style="width:100%; padding:8px; margin-bottom:18px; border:1px solid #d1d5db; border-radius:6px; font-size:14px; box-sizing:border-box;">
+
+        <div style="display:flex; gap:10px;">
+            <button onclick="guardarMaterialExtra()" style="flex:1; background:#15803d; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
+            <button onclick="cerrarModalExtra()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
+        </div>
+        <p id="extra-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
+    </div>
+</div>
+
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0; color: var(--text-main);">📅 Recepción Diaria de Fabriquines</h1>
+    <p style="color: var(--text-muted); margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Al liquidar se generará la nómina de la semana y el pago por vena/recorte.</p>
+</div>
+
+<div class="tabla-container">
+    <table class="tabla-grid">
+        <thead>
+            <tr>
+                <th rowspan="2" style="width: 14%;">FABRIQUÍN</th>
+                <th colspan="2">LUNES</th>
+                <th colspan="2">MARTES</th>
+                <th colspan="2">MIÉRCOLES</th>
+                <th colspan="2">JUEVES</th>
+                <th colspan="2">VIERNES</th>
+                <th colspan="2">SÁBADO</th>
+                <th colspan="3">SUBPRODUCTOS (SÁB)</th>
+                <th rowspan="2" style="width: 9%; background:#fef9c3; color:#92400e;">PRÉSTAMO</th>
+                <th rowspan="2" style="width: 11%;">ACCIONES</th>
+            </tr>
+            <tr>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th>Cest.</th><th>Tab.</th>
+                <th style="background:#fef3c7; color:#b45309;">Rec(kg)</th>
+                <th style="background:#e0e7ff; color:#4338ca;">Vena(kg)</th>
+                <th style="background:#dcfce3; color:#15803d;">Extras</th>
+            </tr>
+        </thead>
+        <tbody>
+            <% empleados.forEach(emp => { 
+                let reg = registros.find(r => r.empleado_id === emp.id) || {};
+                const prestamo = (prestamos || []).find(p => p.empleado_id === emp.id);
+                const histEmp  = (historialPrestamos || {})[emp.id] || [];
+                const totalRecibidoSemana = (reg.lun_tabacos||0)+(reg.mar_tabacos||0)+(reg.mie_tabacos||0)+(reg.jue_tabacos||0)+(reg.vie_tabacos||0)+(reg.sab_tabacos||0);
+                const pendiente = emp.deuda_tabacos - totalRecibidoSemana;
+            %>
+            <form action="/recepcion_diaria_guardar" method="POST">
+                <input type="hidden" name="empleado_id" value="<%= emp.id %>">
+                <input type="hidden" name="registro_id" value="<%= reg.id || '' %>">
+                <tr data-deuda="<%= emp.deuda_tabacos %>" data-emp-id="<%= emp.id %>">
+                    <!-- NOMBRE + DEUDA DINÁMICA -->
+                    <td style="text-align: left; padding-left: 10px; font-weight: bold; font-size:12px;">
+                        <%= emp.codigo %> - <%= emp.nombre %>
+                        <br>
+                        <span class="badge-pendiente <%= pendiente <= 0 ? 'verde' : 'rojo' %>" id="badge-<%= emp.id %>">
+                            <%= pendiente <= 0 ? '✅ Tarea Completa' : 'Pendiente: ' + pendiente.toLocaleString('es-CO') + ' tabs' %>
+                        </span>
+                    </td>
+                    <!-- Lunes -->
+                    <td><input type="number" name="lun_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.lun_cestas  || '' %>"></td>
+                    <td><input type="number" name="lun_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.lun_tabacos || '' %>"></td>
+                    <!-- Martes -->
+                    <td><input type="number" name="mar_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.mar_cestas  || '' %>"></td>
+                    <td><input type="number" name="mar_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.mar_tabacos || '' %>"></td>
+                    <!-- Miércoles -->
+                    <td><input type="number" name="mie_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.mie_cestas  || '' %>"></td>
+                    <td><input type="number" name="mie_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.mie_tabacos || '' %>"></td>
+                    <!-- Jueves -->
+                    <td><input type="number" name="jue_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.jue_cestas  || '' %>"></td>
+                    <td><input type="number" name="jue_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.jue_tabacos || '' %>"></td>
+                    <!-- Viernes -->
+                    <td><input type="number" name="vie_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.vie_cestas  || '' %>"></td>
+                    <td><input type="number" name="vie_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.vie_tabacos || '' %>"></td>
+                    <!-- Sábado -->
+                    <td><input type="number" name="sab_cestas"  class="inp-cestas"  data-emp="<%= emp.id %>" value="<%= reg.sab_cestas  || '' %>"></td>
+                    <td><input type="number" name="sab_tabacos" class="inp-tabacos" data-emp="<%= emp.id %>" value="<%= reg.sab_tabacos || '' %>"></td>
+                    <!-- Subproductos -->
+                    <td class="td-recorte"><input type="number" step="0.01" name="recorte_kg"    value="<%= reg.recorte_kg    || '' %>"></td>
+                    <td class="td-vena"   ><input type="number" step="0.01" name="vena_kg"       value="<%= reg.vena_kg       || '' %>"></td>
+                    <td class="td-extra"  ><input type="number"             name="extra_tabacos" value="<%= reg.extra_tabacos || '' %>"></td>
+
+                    <!-- PRÉSTAMO ACTIVO + ABONO INLINE -->
+                    <td class="td-prestamo-cell">
+                        <% if (prestamo) { %>
+                            <span style="display:block; font-size:11px; color:#92400e; font-weight:bold;" id="saldo-prest-<%= emp.id %>">
+                                $<%= parseInt(prestamo.saldo_pendiente).toLocaleString('es-CO') %> pend.
+                            </span>
+                            <input type="number" name="abono_prestamo" placeholder="Abono $"
+                                   style="width:80px; font-size:12px; border:1px solid #d97706; border-radius:4px; padding:2px;"
+                                   min="0" max="<%= prestamo.saldo_pendiente %>">
+                            <input type="hidden" name="prestamo_id" value="<%= prestamo.id %>">
+                        <% } else { %>
+                            <span style="color:#059669; font-size:11px;" id="saldo-prest-<%= emp.id %>">Sin deuda</span>
+                        <% } %>
+                    </td>
+
+
+                    <!-- ACCIONES -->
+                    <td style="min-width: 130px;">
+                        <button type="submit" class="btn-guardar" title="Guardar avance">💾 Guardar</button>
+                        <% if(reg.id) { %>
+                            <br>
+                            <button type="button" class="btn-liquidar" onclick="liquidarSemana('<%= reg.id %>')" title="Cerrar semana y generar nómina">💰 Liquidar</button>
+                        <% } %>
+                        <br>
+                        <button type="button" class="btn-extra"
+                                onclick="abrirModalExtra('<%= emp.id %>', '<%= emp.nombre %>')"
+                                title="Registrar material extra pedido entre semana">🌿 Extra</button>
+                        <br>
+                        <button type="button" class="btn-prestamo"
+                                onclick="abrirModalPrestamo('<%= emp.id %>', '<%= emp.nombre %>', '<%= prestamo ? prestamo.saldo_pendiente : 0 %>')"
+                                title="Registrar adelanto, préstamo o abono">💳 Préstamo</button>
+                        <% if(histEmp.length > 0) { %>
+                            <br>
+                            <button type="button" class="btn-historial" onclick="toggleHistorial('<%= emp.id %>')" title="Ver historial">📋 Historial</button>
+                        <% } %>
+                        <% if(despachoId == emp.id) { %>
+                            <br>
+                            <a href="/imprimir_despacho/<%= emp.id %>" target="_blank"
+                               style="display:inline-block; margin-top:4px; background:#7c3aed; color:white; padding:4px 8px; border-radius:4px; font-size:11px; text-decoration:none;">🖨️ Imprimir Orden</a>
+                        <% } %>
+                    </td>
+
+                </tr>
+            </form>
+
+            <!-- FILA HISTORIAL EXPANDIBLE -->
+            <% if(histEmp.length > 0) { %>
+            <tr class="fila-historial" id="hist-<%= emp.id %>">
+                <td colspan="20" style="background:#f8fafc; padding: 12px 20px;">
+                    <strong style="font-size:13px; color:#374151;">📋 Historial de Préstamos — <%= emp.nombre %></strong>
+                    <table class="historial-tabla" style="margin-top: 8px;">
+                        <thead>
+                            <tr>
+                                <th>Fecha</th>
+                                <th>Tipo</th>
+                                <th>Monto</th>
+                                <th>Nota</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <% histEmp.forEach(h => {
+                                const esCargo = h.monto_abono < 0;
+                                const tipoLabel = esCargo ? (h.tipo === 'prestamo' ? '💵 Préstamo' : h.tipo === 'descuento_sueldo' ? '✂️ Desc. Sueldo' : '📦 Cargo') : '💚 Abono';
+                            %>
+                            <tr>
+                                <td><%= h.fecha_abono %></td>
+                                <td><%= tipoLabel %></td>
+                                <td class="<%= esCargo ? 'cargo' : 'abono-row' %>">
+                                    <%= esCargo ? '−' : '+' %>$<%= Math.abs(h.monto_abono).toLocaleString('es-CO') %>
+                                </td>
+                                <td style="color:#6b7280;"><%= h.nota || h.semana_ref || '—' %></td>
+                            </tr>
+                            <% }) %>
+                        </tbody>
+                    </table>
+                </td>
+            </tr>
+            <% } %>
+
+            <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    // ─────────────────────────────────────────────
+    //  DEUDA DINÁMICA — se recalcula al escribir
+    // ─────────────────────────────────────────────
+    document.querySelectorAll('.inp-tabacos').forEach(inp => {
+        inp.addEventListener('input', () => {
+            const empId = inp.getAttribute('data-emp');
+            const fila  = document.querySelector(`tr[data-emp-id="${empId}"]`);
+            if (!fila) return;
+            const deuda = parseInt(fila.getAttribute('data-deuda')) || 0;
+            let total = 0;
+            fila.querySelectorAll('.inp-tabacos').forEach(i => total += parseInt(i.value) || 0);
+            const pendiente = deuda - total;
+            const badge = document.getElementById('badge-' + empId);
+            if (!badge) return;
+            if (pendiente <= 0) {
+                badge.textContent = '✅ Tarea Completa';
+                badge.className = 'badge-pendiente verde';
+            } else {
+                badge.textContent = 'Pendiente: ' + pendiente.toLocaleString('es-CO') + ' tabs';
+                badge.className = 'badge-pendiente rojo';
+            }
+        });
+    });
+
+    // ─────────────────────────────────────────────
+    //  LIQUIDAR
+    // ─────────────────────────────────────────────
+    function liquidarSemana(registroId) {
+        if(confirm("¿Liquidar la semana de este Fabriquín? Se cerrará la hoja, actualizará la deuda y generará la Nómina.")) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/liquidar_semana/" + registroId;
+            form.target = "_blank";
+            document.body.appendChild(form);
+            form.submit();
+            setTimeout(() => window.location.href = '/nomina', 2500);
+        }
+    }
+
+    // ─────────────────────────────────────────────
+    //  HISTORIAL EXPANDIBLE
+    // ─────────────────────────────────────────────
+    function toggleHistorial(empId) {
+        const fila = document.getElementById('hist-' + empId);
+        if (!fila) return;
+        fila.classList.toggle('visible');
+    }
+
+    // ─────────────────────────────────────────────
+    //  MODAL PRÉSTAMO
+    // ─────────────────────────────────────────────
+    let modalEmpId = null;
+
+    function abrirModalPrestamo(empId, nombre, saldoActual) {
+        modalEmpId = empId;
+        document.getElementById('modal-emp-nombre').textContent = nombre + (saldoActual > 0 ? ' — Deuda actual: $' + parseInt(saldoActual).toLocaleString('es-CO') : '');
+        document.getElementById('modal-monto').value = '';
+        document.getElementById('modal-nota').value  = '';
+        document.getElementById('modal-error').style.display = 'none';
+        // Fecha de hoy por defecto
+        const hoy = new Date().toISOString().slice(0,10);
+        document.getElementById('modal-fecha').value = hoy;
+        document.getElementById('modal-prestamo').classList.add('activo');
+    }
+
+    function cerrarModal() {
+        document.getElementById('modal-prestamo').classList.remove('activo');
+        modalEmpId = null;
+    }
+
+    async function guardarMovimientoPrestamo() {
+        const tipo   = document.getElementById('modal-tipo').value;
+        const monto  = document.getElementById('modal-monto').value;
+        const fecha  = document.getElementById('modal-fecha').value;
+        const nota   = document.getElementById('modal-nota').value;
+        const errEl  = document.getElementById('modal-error');
+
+        if (!monto || parseInt(monto) <= 0) {
+            errEl.textContent = 'Ingresa un monto mayor a 0.';
+            errEl.style.display = 'block';
+            return;
+        }
+
+        errEl.style.display = 'none';
+
+        try {
+            const resp = await fetch('/registrar_movimiento_prestamo', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ empleado_id: modalEmpId, tipo, monto, fecha, nota })
+            });
+            const data = await resp.json();
+
+            if (data.ok) {
+                cerrarModal();
+                // Actualizar saldo visible en la celda
+                const saldoEl = document.getElementById('saldo-prest-' + modalEmpId);
+                if (saldoEl) {
+                    if (data.nuevo_saldo > 0) {
+                        saldoEl.textContent = '$' + data.nuevo_saldo.toLocaleString('es-CO') + ' pend.';
+                        saldoEl.style.color = '#92400e';
+                    } else {
+                        saldoEl.textContent = 'Sin deuda';
+                        saldoEl.style.color = '#059669';
+                    }
+                }
+                // Recargar para actualizar historial
+                setTimeout(() => location.reload(), 800);
+            } else {
+                errEl.textContent = data.msg || 'Error al guardar.';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            errEl.textContent = 'Error de conexión.';
+            errEl.style.display = 'block';
+        }
+    }
+
+    // Click fuera del modal para cerrar
+    document.getElementById('modal-prestamo').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModal();
+    });
+
+    // ─────────────────────────────────────────────
+    //  MODAL MATERIAL EXTRA
+    // ─────────────────────────────────────────────
+    let extraEmpId = null;
+
+    function abrirModalExtra(empId, nombre) {
+        extraEmpId = empId;
+        document.getElementById('modal-extra-emp').textContent = nombre;
+        document.getElementById('extra-kg').value    = '';
+        document.getElementById('extra-nota').value  = '';
+        document.getElementById('extra-error').style.display = 'none';
+        document.getElementById('extra-fecha').value = new Date().toISOString().slice(0,10);
+        document.getElementById('modal-extra').classList.add('activo');
+    }
+
+    function cerrarModalExtra() {
+        document.getElementById('modal-extra').classList.remove('activo');
+        extraEmpId = null;
+    }
+
+    async function guardarMaterialExtra() {
+        const material = document.getElementById('extra-material').value;
+        const kg       = parseFloat(document.getElementById('extra-kg').value);
+        const fecha    = document.getElementById('extra-fecha').value;
+        const nota     = document.getElementById('extra-nota').value;
+        const errEl    = document.getElementById('extra-error');
+
+        if (!kg || kg <= 0) {
+            errEl.textContent = 'Ingresa una cantidad mayor a 0.';
+            errEl.style.display = 'block';
+            return;
+        }
+        errEl.style.display = 'none';
+
+        try {
+            const resp = await fetch('/registrar_material_extra', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ empleado_id: extraEmpId, material, kg, fecha, nota })
+            });
+            const data = await resp.json();
+            if (data.ok) {
+                cerrarModalExtra();
+                alert(`✅ ${data.msg}`);
+            } else {
+                errEl.textContent = data.msg || 'Error al guardar.';
+                errEl.style.display = 'block';
+            }
+        } catch(e) {
+            errEl.textContent = 'Error de conexión.';
+            errEl.style.display = 'block';
+        }
+    }
+
+    document.getElementById('modal-extra').addEventListener('click', function(e) {
+        if (e.target === this) cerrarModalExtra();
+    });
+
+    // ─────────────────────────────────────────────
+    //  TOAST DE ÉXITO (post-despacho)
+    // ─────────────────────────────────────────────
+    (function() {
+        const params = new URLSearchParams(window.location.search);
+        const ok        = params.get('ok');
+        const despId    = params.get('despacho_id');
+        if (!ok) return;
+        const toast = document.getElementById('toast-exito');
+        document.getElementById('toast-msg').textContent = decodeURIComponent(ok.replace(/\+/g,' '));
+        const linkContainer = document.getElementById('toast-link-container');
+        if (despId) {
+            linkContainer.innerHTML = `<a href="/imprimir_despacho/${despId}" target="_blank">🖨️ Imprimir Orden de Despacho</a>`;
+        }
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 12000);
+        // Limpiar URL sin recargar
+        history.replaceState({}, '', '/recepcion_diaria');
+    })();
+</script>
+
+<%- include('../partials/footer') %>

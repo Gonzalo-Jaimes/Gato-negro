@@ -1,0 +1,202 @@
+<%- include('../partials/header') %>
+
+<style>
+    .section-box { background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 24px; }
+    .tbl-env { width: 100%; border-collapse: collapse; min-width: 1300px; }
+    .tbl-env th, .tbl-env td { border: 1px solid #d1d5db; padding: 5px 7px; text-align: center; font-size: 13px; }
+    .tbl-env th { background: #f3f4f6; position: sticky; top: 0; z-index: 10; }
+    .tbl-env td input[type=number] { width: 52px; text-align: center; border: 1px solid #ccc; padding: 3px; border-radius: 4px; }
+    .btn-g  { background: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-lq { background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 3px; }
+    .papel-calc { background: #fefce8; border: 1px solid #fde68a; border-radius: 6px; padding: 8px; font-size: 12px; color: #92400e; margin-top: 5px; }
+</style>
+
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0;">🌯 Área Envolvedoras — Control Semanal</h1>
+    <p style="color: gray; margin-top: 5px;">
+        Asigna la semana a una envolvedora, pesan los 50 papelitos para calcular el papel, y registra diariamente las cestas que entran/salen con sobrante final.
+    </p>
+</div>
+
+<!-- PASO 1: DESPACHAR / ASIGNAR SEMANA -->
+<div class="section-box" style="border-top: 4px solid #10b981;">
+    <h2 style="margin-top: 0; color: #065f46;">➕ Asignar Semana a Envolvedora</h2>
+    <form action="/guardar_envoltedora" method="POST" id="form_despacho_env">
+        <input type="hidden" name="registro_id" value="">
+
+        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
+            <!-- BÚSQUEDA ENVOLVEDORA -->
+            <div style="flex: 2; min-width: 220px;">
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">1. Envolvedora:</label>
+                <input type="text" id="buscar_env" placeholder="Código o nombre..." autocomplete="off"
+                       oninput="filtrarEnv()" onfocus="mostrarDdEnv()" onblur="setTimeout(cerrarDdEnv,200)"
+                       style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:14px; box-sizing:border-box;">
+                <div id="dd_env" style="display:none; background:#1e1e1e; border:1px solid #10b981; border-radius:6px; max-height:180px; overflow-y:auto; position:relative; z-index:100;">
+                    <% empleados.forEach(emp => { %>
+                    <div class="env-op" data-id="<%= emp.id %>" data-texto="<%= emp.codigo %> - <%= emp.nombre %>"
+                         onclick="selEnv(this)"
+                         style="padding:8px 12px; cursor:pointer; color:#eee; border-bottom:1px solid #333; font-size:14px;">
+                        <strong><%= emp.codigo %></strong> – <%= emp.nombre %>
+                    </div>
+                    <% }) %>
+                </div>
+                <input type="hidden" name="empleado_id" id="env_id" required>
+            </div>
+
+            <!-- CESTAS PARA ENVOLVER -->
+            <div style="flex: 1; min-width: 130px;">
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">2. Cestas asignadas:</label>
+                <input type="number" name="cestas_asignadas" id="inp_cestas_env" min="1" placeholder="Ej: 4"
+                       oninput="calcPapel()"
+                       style="width:100%; padding:8px; border:2px solid #6b7280; border-radius:6px; font-size:16px; box-sizing:border-box;">
+            </div>
+
+            <!-- PESAJE 50 PAPELITOS -->
+            <div style="flex: 1; min-width: 160px;">
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">3. Peso de 50 papelitos (g):</label>
+                <input type="number" name="peso_50_papelitos" id="inp_p50" step="0.1" min="0" placeholder="Ej: 240"
+                       oninput="calcPapel()"
+                       style="width:100%; padding:8px; border:2px solid #d97706; border-radius:6px; font-size:16px; box-sizing:border-box;">
+            </div>
+
+            <!-- PAPEL A ENTREGAR (calculado, editable) -->
+            <div style="flex: 1; min-width: 160px;">
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">4. Papel a entregar (g):</label>
+                <input type="number" name="papel_trans_g" id="inp_papel_real" step="0.1" min="0" placeholder="Se calcula automático"
+                       style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:16px; box-sizing:border-box; font-weight:bold;">
+            </div>
+        </div>
+
+        <!-- RESULTADO DEL CÁLCULO -->
+        <div id="resultado_papel" class="papel-calc" style="display:none; margin-top:12px;">
+            📋 <span id="txt_papel_calc"></span>
+        </div>
+
+        <button type="submit" style="margin-top:16px; background:#10b981; color:white; padding:10px 24px; font-size:15px; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">
+            ✔ Crear Hoja Semanal
+        </button>
+    </form>
+</div>
+
+<!-- TABLA SEMANAL DE ENVOLVEDORAS ACTIVAS -->
+<% if (registros && registros.length > 0) { %>
+<div style="overflow-x: auto;">
+<table class="tbl-env">
+    <thead>
+        <tr>
+            <th rowspan="2" style="width:13%; text-align:left; padding-left:8px;">ENVOLVEDORA</th>
+            <th rowspan="2" style="background:#fef9c3; color:#92400e;">Papel<br>Asignado(g)</th>
+            <th colspan="6" style="background:#dbeafe; color:#1e40af;">LLEVAN PARA ENVOLVER (cestas IN)</th>
+            <th colspan="6" style="background:#d1fae5; color:#065f46;">TRAEN TABACO ENVUELTO (cestas OUT)</th>
+            <th colspan="6" style="background:#fee2e2; color:#991b1b;">EXTRA PAPEL DIARIO (+g)</th>
+            <th rowspan="2" style="background:#ede9fe; color:#5b21b6;">Sobrante<br>Final (g)</th>
+            <th rowspan="2" style="background:#f3f4f6;">ACCIONES</th>
+        </tr>
+        <tr>
+            <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
+            <th style="background:#d1fae5;">Lun</th><th style="background:#d1fae5;">Mar</th><th style="background:#d1fae5;">Mié</th><th style="background:#d1fae5;">Jue</th><th style="background:#d1fae5;">Vie</th><th style="background:#d1fae5;">Sáb</th>
+            <th style="background:#fee2e2;">Lun</th><th style="background:#fee2e2;">Mar</th><th style="background:#fee2e2;">Mié</th><th style="background:#fee2e2;">Jue</th><th style="background:#fee2e2;">Vie</th><th style="background:#fee2e2;">Sáb</th>
+        </tr>
+    </thead>
+    <tbody>
+        <% registros.forEach(reg => {
+            const emp = empleados.find(e => e.id === reg.empleado_id) || {};
+            const totalIn  = (reg.lun_cestas_in||0)+(reg.mar_cestas_in||0)+(reg.mie_cestas_in||0)+(reg.jue_cestas_in||0)+(reg.vie_cestas_in||0)+(reg.sab_cestas_in||0);
+            const totalOut = (reg.lun_cestas_out||0)+(reg.mar_cestas_out||0)+(reg.mie_cestas_out||0)+(reg.jue_cestas_out||0)+(reg.vie_cestas_out||0)+(reg.sab_cestas_out||0);
+            const pago = totalOut * (reg.precio_cesta || 11000);
+        %>
+        <form action="/guardar_envoltedora" method="POST">
+            <input type="hidden" name="empleado_id" value="<%= reg.empleado_id %>">
+            <input type="hidden" name="registro_id" value="<%= reg.id %>">
+            <input type="hidden" name="cestas_asignadas" value="<%= reg.cestas_asignadas || 0 %>">
+            <input type="hidden" name="papel_trans_g" value="<%= reg.papel_trans_g || 0 %>">
+            <input type="hidden" name="precio_cesta" value="<%= reg.precio_cesta || 11000 %>">
+        <tr>
+            <!-- NOMBRE + TOTALES -->
+            <td style="text-align:left; padding-left:8px; font-weight:bold; font-size:12px;">
+                <%= emp.codigo %> – <%= emp.nombre %>
+                <br><span style="font-weight:normal; color:#10b981; font-size:11px;">
+                    ✔ <%= totalOut %> cest. out | $<%= pago.toLocaleString('es-CO') %>
+                </span>
+            </td>
+            <!-- PAPEL BASE -->
+            <td style="background:#fef9c3; font-weight:bold;"><%= reg.papel_trans_g || 0 %>g</td>
+            <!-- IN -->
+            <td><input type="number" name="lun_cestas_in"  value="<%= reg.lun_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="mar_cestas_in"  value="<%= reg.mar_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="mie_cestas_in"  value="<%= reg.mie_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="jue_cestas_in"  value="<%= reg.jue_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="vie_cestas_in"  value="<%= reg.vie_cestas_in  || '' %>" min="0"></td>
+            <td><input type="number" name="sab_cestas_in"  value="<%= reg.sab_cestas_in  || '' %>" min="0"></td>
+            <!-- OUT -->
+            <td style="background:#f0fdf4;"><input type="number" name="lun_cestas_out" value="<%= reg.lun_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="mar_cestas_out" value="<%= reg.mar_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="mie_cestas_out" value="<%= reg.mie_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="jue_cestas_out" value="<%= reg.jue_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="vie_cestas_out" value="<%= reg.vie_cestas_out || '' %>" min="0"></td>
+            <td style="background:#f0fdf4;"><input type="number" name="sab_cestas_out" value="<%= reg.sab_cestas_out || '' %>" min="0"></td>
+            <!-- EXTRA PAPEL DIARIO -->
+            <td style="background:#fff1f2;"><input type="number" name="lun_papel_extra" value="<%= reg.lun_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fff1f2;"><input type="number" name="mar_papel_extra" value="<%= reg.mar_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fff1f2;"><input type="number" name="mie_papel_extra" value="<%= reg.mie_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fff1f2;"><input type="number" name="jue_papel_extra" value="<%= reg.jue_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fff1f2;"><input type="number" name="vie_papel_extra" value="<%= reg.vie_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <td style="background:#fff1f2;"><input type="number" name="sab_papel_extra" value="<%= reg.sab_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
+            <!-- SOBRANTE FINAL -->
+            <td style="background:#f5f3ff;"><input type="number" name="papel_sobrante_g" value="<%= reg.papel_sobrante_g || '' %>" min="0" step="0.1" style="width:60px;"></td>
+            <!-- ACCIONES -->
+            <td>
+                <button type="submit" class="btn-g">💾</button>
+                <% if (totalOut > 0) { %>
+                <form action="/liquidar_envolvedora/<%= reg.id %>" method="POST" style="display:inline; margin:0;" onsubmit="return confirm('¿Liquidar <%= emp.nombre %>? Pago: $<%= pago.toLocaleString('es-CO') %>')">
+                    <button type="submit" class="btn-lq">✅ Liq.</button>
+                </form>
+                <% } %>
+            </td>
+        </tr>
+        </form>
+        <% }); %>
+    </tbody>
+</table>
+</div>
+<% } else { %>
+<p style="color:gray; text-align:center; padding:30px;">No hay envolvedoras activas esta semana. Asigna una arriba ↑</p>
+<% } %>
+
+<script>
+    // Buscador envolvedoras
+    function mostrarDdEnv() { document.getElementById('dd_env').style.display = 'block'; }
+    function cerrarDdEnv()  { document.getElementById('dd_env').style.display = 'none'; }
+    function filtrarEnv() {
+        const q = document.getElementById('buscar_env').value.toLowerCase();
+        document.getElementById('dd_env').style.display = 'block';
+        document.querySelectorAll('.env-op').forEach(d => {
+            d.style.display = d.getAttribute('data-texto').toLowerCase().includes(q) ? 'block' : 'none';
+        });
+    }
+    function selEnv(div) {
+        document.getElementById('buscar_env').value = div.getAttribute('data-texto');
+        document.getElementById('env_id').value = div.getAttribute('data-id');
+        cerrarDdEnv();
+    }
+
+    // Cálculo de papel
+    function calcPapel() {
+        const cestas = parseFloat(document.getElementById('inp_cestas_env').value) || 0;
+        const p50    = parseFloat(document.getElementById('inp_p50').value) || 0;
+        if (cestas <= 0 || p50 <= 0) {
+            document.getElementById('resultado_papel').style.display = 'none';
+            return;
+        }
+        // Fórmula: (p50 gramos / 50 papeles) × papeles_por_cesta
+        // 1 cesta = 1250 tabacos. 50 papelitos pesa p50g → peso por papelito = p50/50
+        // Pero la empresa calcula: papel_necesario = cestas × p50 (los 50 papelitos equivalen a 1 cesta)
+        const papelCalc = Math.ceil(cestas * p50);
+        document.getElementById('inp_papel_real').value = papelCalc;
+        document.getElementById('txt_papel_calc').innerText =
+            `${cestas} cestas × ${p50}g (peso 50 papelitos) = ${papelCalc}g de papel a entregar`;
+        document.getElementById('resultado_papel').style.display = 'block';
+    }
+</script>
+
+<%- include('../partials/footer') %>
