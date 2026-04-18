@@ -14,7 +14,7 @@ const mainKeyboard = {
             { text: '🚚 Bodega / Material', callback_data: 'menu_bodega' }
         ],
         [
-            { text: '🤖 Preguntar a IA (Chat)', callback_data: 'menu_chat' }
+            { text: '🤖 Preguntar a IA (Chat)', callback_data: 'menu_ia' }
         ]
     ]
 };
