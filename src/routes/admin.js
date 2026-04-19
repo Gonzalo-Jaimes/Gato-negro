@@ -34,7 +34,7 @@ router.post('/login', async (req, res) => {
 });
 
 router.get('/logout', (req, res) => {
-    req.session.destroy(); 
+    req.session = null; // cookie-session no tiene .destroy() — esto borra la cookie
     res.redirect('/'); 
 });
 
