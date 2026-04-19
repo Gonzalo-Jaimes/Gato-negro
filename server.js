@@ -48,47 +48,21 @@ app.post('/api/bot', async (req, res) => {
     res.sendStatus(200);
 });
 
-// --- MONTAR RUTAS MODULARES ---
-const adminRoutes = require('./src/routes/admin');
+// --- MONTAR RUTAS MODULARES (raíz, sin prefijos) ---
+const adminRoutes    = require('./src/routes/admin');
 const produccionRoutes = require('./src/routes/produccion');
-const equiposRoutes = require('./src/routes/equipos');
+const equiposRoutes  = require('./src/routes/equipos');
 const finanzasRoutes = require('./src/routes/finanzas');
 const operarioRoutes = require('./src/routes/operario');
 
-// Rutas de raíz
 app.get('/', (req, res) => res.render('login'));
-app.use('/admin', adminRoutes);
-app.use('/produccion', produccionRoutes);
-app.use('/equipos', equiposRoutes);
-app.use('/finanzas', finanzasRoutes);
-app.use('/operarios', operarioRoutes);
 
-// Login/Logout: el router de admin ya expone /login y /logout internamente
-// Se accede como /admin/login y /admin/logout — usamos redirecciones de compatibilidad
-app.post('/login', (req, res, next) => { req.url = '/login'; adminRoutes(req, res, next); });
-app.get('/logout', (req, res, next) => { req.url = '/logout'; adminRoutes(req, res, next); });
-
-// --- CAPA DE REDIRECCIÓN (LEGACY) ---
-const legacyMap = {
-    '/despacho': '/produccion/despacho',
-    '/recepcion_diaria': '/produccion/recepcion_diaria',
-    '/entregas_historicas': '/produccion/entregas_historicas',
-    '/maquinas': '/equipos/lista',
-    '/mantenimiento': '/equipos/mantenimiento',
-    '/inventario': '/admin/inventario',
-    '/usuarios': '/admin/usuarios',
-    '/empleados': '/admin/empleados',
-    '/bodega': '/operarios/bodega',
-    '/analitica': '/finanzas/analitica',
-    '/nomina': '/finanzas/nomina',
-    '/recepcion_empaque': '/produccion/recepcion_empaque',
-    '/despacho_empaque': '/produccion/despacho_empaque',
-    '/pedidos': '/produccion/pedidos'
-};
-
-Object.entries(legacyMap).forEach(([oldPath, newPath]) => {
-    app.get(oldPath, (req, res) => res.redirect(newPath));
-});
+// Todos montados en raíz → /despacho, /anilladores, /inventario, etc.
+app.use('/', adminRoutes);
+app.use('/', produccionRoutes);
+app.use('/', equiposRoutes);
+app.use('/', finanzasRoutes);
+app.use('/', operarioRoutes);
 
 // --- MANEJO DE ERRORES 404 ---
 app.use((req, res) => {
