@@ -237,7 +237,7 @@ router.post('/recepcion_diaria_guardar', isAdmin, async (req, res) => {
         await supabase.from('recepcion_diaria').insert([dataObj]);
     }
 
-    res.redirect('/produccion/recepcion_diaria');
+    res.redirect('/recepcion_diaria');
 });
 
 // ---------------- HISTORIAL Y CIERRES ----------------

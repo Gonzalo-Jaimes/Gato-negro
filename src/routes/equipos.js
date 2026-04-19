@@ -33,6 +33,24 @@ router.get('/lista', isAuth, async (req, res) => {
     res.render('equipos/lista', { maquinas: maquinasProcesadas });
 });
 
+// Alias: /maquinas apunta al mismo handler que /lista
+router.get('/maquinas', isAuth, async (req, res) => {
+    const { data: maquinas } = await supabase.from('maquinas').select('*').order('nombre', { ascending: true });
+    const { data: mantenimientos } = await supabase.from('mantenimiento').select('*');
+    const maquinasProcesadas = (maquinas || []).map(m => {
+        const costo_total = (mantenimientos || [])
+            .filter(mt => mt.maquina === m.nombre && mt.estado === 'REALIZADO')
+            .reduce((a, mt) => a + (mt.costo_mo || 0) + (mt.costo_mat || 0), 0);
+        m.costo_historico = costo_total;
+        if (m.ultimo_mtto) {
+            const dias = Math.floor((new Date() - new Date(m.ultimo_mtto + 'T00:00:00')) / 86400000);
+            m.dias_para_mtto = (m.frecuencia_mtto_dias || 30) - dias;
+        } else { m.dias_para_mtto = "Sin Registro"; }
+        return m;
+    });
+    res.render('equipos/lista', { maquinas: maquinasProcesadas });
+});
+
 router.post('/agregar', isAdmin, async (req, res) => {
     const { error } = await supabase.from('maquinas').insert([{ 
         nombre: req.body.nombre,
@@ -47,7 +65,7 @@ router.post('/agregar', isAdmin, async (req, res) => {
         frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30
     }]);
     if (error) console.error("❌ ERROR AL GUARDAR MÁQUINA:", error);
-    res.redirect('/equipos/lista');
+    res.redirect('/lista');
 });
 
 router.post('/editar/:id', isAdmin, async (req, res) => {
@@ -66,12 +84,12 @@ router.post('/editar/:id', isAdmin, async (req, res) => {
     if (req.body.ultimo_mtto) datosActualizados.ultimo_mtto = req.body.ultimo_mtto;
 
     await supabase.from('maquinas').update(datosActualizados).eq('id', req.params.id);
-    res.redirect('/equipos/lista');
+    res.redirect('/lista');
 });
 
 router.get('/eliminar/:id', isAdmin, async (req, res) => {
     await supabase.from('maquinas').delete().eq('id', req.params.id);
-    res.redirect('/equipos/lista');
+    res.redirect('/lista');
 });
 
 // ---------------- FICHA TÉCNICA ----------------
@@ -128,7 +146,7 @@ router.post('/registrar_mantenimiento', isAuth, async (req, res) => {
         const tiempo = obtenerHoraColombia();
         await supabase.from('maquinas').update({ ultimo_mtto: req.body.fecha || tiempo.fecha }).eq('nombre', req.body.maquina);
     }
-    res.redirect('/equipos/mantenimiento');
+    res.redirect('/mantenimiento');
 });
 
 // ---------------- CÓDIGOS QR ----------------

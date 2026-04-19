@@ -25,10 +25,10 @@ router.post('/login', async (req, res) => {
     req.session.usuario = resultado.usuario;
     req.session.rol = resultado.rol;
 
-    if (resultado.rol === "admin") return res.redirect("/admin/inventario");
-    if (resultado.rol === "fabriquin" || resultado.rol === "fabricacion" || resultado.rol === "envolvedor") return res.redirect("/produccion/pedidos");
-    if (resultado.rol === "mantenimiento") return res.redirect("/equipos/mantenimiento");
-    if (resultado.rol === "anillador" || resultado.rol === "empacador") return res.redirect("/admin/cierre_diario");
+    if (resultado.rol === "admin") return res.redirect("/inventario");
+    if (resultado.rol === "fabriquin" || resultado.rol === "fabricacion" || resultado.rol === "envolvedor") return res.redirect("/pedidos");
+    if (resultado.rol === "mantenimiento") return res.redirect("/mantenimiento");
+    if (resultado.rol === "anillador" || resultado.rol === "empacador") return res.redirect("/cierre_diario");
     
     res.send("Rol no válido");
 });
@@ -95,7 +95,7 @@ router.post('/agregar_inventario', isAdmin, async (req, res) => {
         descripcion: descripcion || 'Ingreso manual'
     }]);
     
-    res.redirect('/admin/movimientos');
+    res.redirect('/movimientos');
 });
 
 router.post('/restar_inventario', isAdmin, async (req, res) => {
@@ -119,7 +119,7 @@ router.post('/restar_inventario', isAdmin, async (req, res) => {
             descripcion: descripcion_salida || 'Salida a producción / Despacho'
         }]);
     }
-    res.redirect('/admin/movimientos');
+    res.redirect('/movimientos');
 });
 
 router.get('/cierre_diario', isAdmin, async (req, res) => {
