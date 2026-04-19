@@ -36,13 +36,20 @@ router.get('/bodega', isAdmin, async (req, res) => {
 // ---------------- ANILLADORES Y TAREAS ----------------
 
 router.get('/anilladores', isAdmin, async (req, res) => {
-    const { data: usuariosAnilladores } = await supabase.from('usuarios').select('*').eq('rol', 'anillador');
-    const { data: tareasPendientes } = await supabase.from('tareas_anilladores').select('*').eq('estado', 'pendiente').order('fecha', { ascending: false });
-    res.render('produccion/anilladores', { 
-        session: req.session, 
-        usuariosAnilladores: usuariosAnilladores || [], 
-        tareasPendientes: tareasPendientes || [] 
-    });
+    try {
+        const { data: usuariosAnilladores } = await supabase.from('usuarios').select('*').eq('rol', 'anillador');
+        const { data: tareasPendientes } = await supabase.from('tareas_anilladores').select('*').eq('estado', 'pendiente').order('fecha', { ascending: false });
+        const { data: tareasValidadas } = await supabase.from('tareas_anilladores').select('*').eq('estado', 'validado').order('fecha_validacion', { ascending: false }).limit(20);
+        
+        res.render('produccion/anilladores', { 
+            usuariosAnilladores: usuariosAnilladores || [], 
+            tareasPendientes:    tareasPendientes || [],
+            tareasValidadas:     tareasValidadas  || []
+        });
+    } catch (err) {
+        console.error('Error en /anilladores:', err.message);
+        res.status(500).send('Error interno en Anilladores: ' + err.message);
+    }
 });
 
 // ---------------- ENVOLVEDORAS ----------------
