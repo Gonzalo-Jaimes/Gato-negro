@@ -156,6 +156,12 @@ router.get('/qrs', isAdmin, async (req, res) => {
     res.render('equipos/qrs', { maquinas: maquinas || [] });
 });
 
+// Alias compatible con el sidebar: /maquinas/qrs
+router.get('/maquinas/qrs', isAdmin, async (req, res) => {
+    const { data: maquinas } = await supabase.from('maquinas').select('*').order('nombre', { ascending: true });
+    res.render('equipos/qrs', { maquinas: maquinas || [] });
+});
+
 router.get('/:id/qr', async (req, res) => {
     const host = req.get('host');
     const protocol = req.protocol;
