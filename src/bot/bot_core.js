@@ -3,6 +3,7 @@ const { supabase, obtenerHoraColombia } = require('../lib/shared');
 const { GoogleGenAI } = require('@google/genai');
 const menus = require('./handlers/menu_handlers');
 const GatoNegroPDF = require('../lib/pdf_gen');
+const { Ollama } = require('ollama'); // 👈 Importamos Ollama
 
 // ============================================================
 // 🔧 CONFIGURACIÓN Y VALIDACIÓN DE VARIABLES DE ENTORNO
@@ -42,6 +43,9 @@ let ai = null;
 if (GEMINI_API_KEY) {
     ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 }
+
+// Instancia de Ollama apuntando a tu PC local (localhost:11434)
+const ollama = new Ollama();
 
 // ============================================================
 // 🤖 BOT DE TELEGRAM
@@ -393,40 +397,52 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
 // ============================================================
 // 🧠 DECLARACIÓN DE HERRAMIENTAS PARA GEMINI
 // ============================================================
-const herramientas = [
+const herramientasOllama = [
     {
-        name: 'consultar_deuda_empleado',
-        description: 'Consulta la deuda de un empleado específico por su nombre o código. Usar cuando el usuario pregunta por una persona en particular, ej: "¿cuánto debe Alcides?", "deuda de F11", "José me debe?"',
-        parameters: {
-            type: 'object',
-            properties: {
-                nombre_o_codigo: {
-                    type: 'string',
-                    description: 'Nombre parcial o código del empleado (ej: "Alcides", "Jose", "F11", "F22")'
-                }
-            },
-            required: ['nombre_o_codigo']
+        type: 'function',
+        function: {
+            name: 'consultar_deuda_empleado',
+            description: 'Consulta la deuda de un empleado específico por su nombre o código. Usar cuando el usuario pregunta por una persona en particular, ej: "¿cuánto debe Alcides?", "deuda de F11", "José me debe?"',
+            parameters: {
+                type: 'object',
+                properties: {
+                    nombre_o_codigo: {
+                        type: 'string',
+                        description: 'Nombre parcial o código del empleado (ej: "Alcides", "Jose", "F11", "F22")'
+                    }
+                },
+                required: ['nombre_o_codigo']
+            }
         }
     },
     {
-        name: 'listar_todos_los_deudores',
-        description: 'Lista todos los empleados que tienen deudas pendientes (tabacos o pesos). Usar cuando el usuario pregunta "¿quiénes me deben?", "lista de deudores", "todos los que deben".',
-        parameters: { type: 'object', properties: {} }
+        type: 'function',
+        function: {
+            name: 'listar_todos_los_deudores',
+            description: 'Lista todos los empleados que tienen deudas pendientes (tabacos o pesos). Usar cuando el usuario pregunta "¿quiénes me deben?", "lista de deudores", "todos los que deben".',
+            parameters: { type: 'object', properties: {} }
+        }
     },
     {
-        name: 'consultar_maquinaria',
-        description: 'Muestra el estado actual de la maquinaria de la fábrica: cuántas están operativas, con fallas, y cuáles necesitan mantenimiento urgente.',
-        parameters: { type: 'object', properties: {} }
+        type: 'function',
+        function: {
+            name: 'consultar_maquinaria',
+            description: 'Muestra el estado actual de la maquinaria de la fábrica: cuántas están operativas, con fallas, y cuáles necesitan mantenimiento urgente.',
+            parameters: { type: 'object', properties: {} }
+        }
     },
     {
-        name: 'consultar_produccion',
-        description: 'Consulta cuántos tabacos se han fabricado en un período dado. Usar para preguntas como "¿cuánto se hizo esta semana?", "producción del mes", "qué tanto producimos".',
-        parameters: {
-            type: 'object',
-            properties: {
-                dias: {
-                    type: 'number',
-                    description: 'Número de días hacia atrás para consultar. 7 = esta semana, 30 = este mes, 1 = hoy.'
+        type: 'function',
+        function: {
+            name: 'consultar_produccion',
+            description: 'Consulta cuántos tabacos se han fabricado en un período dado. Usar para preguntas como "¿cuantos tabacos nos entregaron hoy?", "producción del mes", "qué tanto producimos".',
+            parameters: {
+                type: 'object',
+                properties: {
+                    dias: {
+                        type: 'number',
+                        description: 'Número de días hacia atrás para consultar. 7 = esta semana, 30 = este mes, 1 = hoy.'
+                    }
                 }
             }
         }
@@ -439,7 +455,7 @@ const herramientas = [
 const conversaciones = {}; // { chatId: [ {role, parts}, ... ] }
 
 const SYSTEM_PROMPT = `Eres el "Black Cat Agent (BCA)", el asistente inteligente de la Fábrica de Tabacos Gato Negro, en Colombia.
-Tu personalidad es profesional pero cercana, usas un tono cálido y colombiano. Eres el asistente de Gonzalo Jaimes, el dueño.
+Tu personalidad es profesional pero cercana, usas un tono directo y amable. Eres el asistente de Gonzalo Jaimes.
 
 TUS REGLAS:
 1. Responde SIEMPRE en español.
@@ -465,111 +481,68 @@ async function ejecutarHerramienta(nombre, args) {
 }
 
 // ============================================================
-// 🤖 PROCESAR MENSAJE CON GEMINI (con Function Calling)
+// 🤖 PROCESAR MENSAJE CON OLLAMA (Local & Gratis)
 // ============================================================
-async function responderConGemini(chatId, textoUsuario) {
+async function responderConOllama(chatId, textoUsuario) {
     // Inicializar historial si no existe
     if (!conversaciones[chatId]) {
-        conversaciones[chatId] = [];
+        conversaciones[chatId] = [{ role: 'system', content: SYSTEM_PROMPT }];
     }
 
     // Agregar mensaje del usuario al historial
     conversaciones[chatId].push({
         role: 'user',
-        parts: [{ text: textoUsuario }]
+        content: textoUsuario
     });
 
-    // Limitar historial a últimas 20 interacciones para no gastar tokens
+    // Limitar historial a últimas 20 interacciones
     if (conversaciones[chatId].length > 20) {
-        conversaciones[chatId] = conversaciones[chatId].slice(-20);
+        const sys = conversaciones[chatId][0]; // Guardar el prompt
+        conversaciones[chatId] = [sys, ...conversaciones[chatId].slice(-19)];
     }
 
     try {
-        // Llamar a Gemini con el historial y las herramientas
-        let respuesta = await ai.models.generateContent({
-            model: 'gemini-2.0-flash-lite',
-            systemInstruction: SYSTEM_PROMPT,
-            contents: conversaciones[chatId],
-            tools: [{ functionDeclarations: herramientas }],
+        // 1. Llamar a Ollama
+        const response = await ollama.chat({
+            model: 'llama3.2', // El modelo ligero ideal para herramientas
+            messages: conversaciones[chatId],
+            tools: herramientasOllama,
         });
 
-        // Bucle de Function Calling (Gemini puede pedir varias herramientas)
-        let iteraciones = 0;
-        while (iteraciones < 5) {
-            iteraciones++;
+        // 2. ¿Ollama decidió que necesita usar una base de datos/herramienta?
+        if (response.message.tool_calls && response.message.tool_calls.length > 0) {
+            // Guardamos la decisión de Ollama en el historial
+            conversaciones[chatId].push(response.message);
 
-            const candidate = respuesta.candidates?.[0];
-            if (!candidate) break;
-
-            const partes = candidate.content?.parts || [];
-            const llamadas = partes.filter(p => p.functionCall);
-
-            // Si Gemini no pidió ninguna herramienta, salir del bucle
-            if (llamadas.length === 0) break;
-
-            // Agregar la respuesta de Gemini (con las llamadas) al historial
-            conversaciones[chatId].push({
-                role: 'model',
-                parts: partes
-            });
-
-            // Ejecutar cada herramienta y recopilar resultados
-            const resultados = [];
-            for (const parte of llamadas) {
-                const resultado = await ejecutarHerramienta(
-                    parte.functionCall.name,
-                    parte.functionCall.args || {}
-                );
-                resultados.push({
-                    functionResponse: {
-                        name: parte.functionCall.name,
-                        response: resultado
-                    }
+            // Ejecutamos las herramientas que pidió (Ej: consultar_produccion)
+            for (const tool of response.message.tool_calls) {
+                const resultadoDB = await ejecutarHerramienta(tool.function.name, tool.function.arguments);
+                
+                // Le devolvemos los datos de Supabase a Ollama
+                conversaciones[chatId].push({
+                    role: 'tool',
+                    name: tool.function.name,
+                    content: JSON.stringify(resultadoDB)
                 });
             }
 
-            // Agregar los resultados al historial
-            conversaciones[chatId].push({
-                role: 'user',
-                parts: resultados
+            // 3. Volvemos a llamar a Ollama para que lea los datos y redacte la respuesta final
+            const finalResponse = await ollama.chat({
+                model: 'llama3.2',
+                messages: conversaciones[chatId]
             });
-
-            // Pedir a Gemini que formule la respuesta final con los datos
-            respuesta = await ai.models.generateContent({
-                model: 'gemini-2.0-flash-lite',
-                systemInstruction: SYSTEM_PROMPT,
-                contents: conversaciones[chatId],
-                tools: [{ functionDeclarations: herramientas }],
-            }).catch(err => {
-                if (!err.message.includes('message is not modified')) {
-                    console.error("Error en editMessageText:", err.message);
-                }
-            });
+            
+            conversaciones[chatId].push(finalResponse.message);
+            return finalResponse.message.content;
         }
 
-        // Extraer el texto final de Gemini
-        const textoFinal = respuesta.candidates?.[0]?.content?.parts
-            ?.filter(p => p.text)
-            ?.map(p => p.text)
-            ?.join('') || '🐾 No supe qué responder. Intenta de nuevo.';
-
-        // Agregar respuesta de Gemini al historial
-        conversaciones[chatId].push({
-            role: 'model',
-            parts: [{ text: textoFinal }]
-        });
-
-        return textoFinal;
+        // Si no usó herramientas, simplemente respondemos lo que dijo
+        conversaciones[chatId].push(response.message);
+        return response.message.content;
 
     } catch (e) {
-        console.error('❌ Error con Gemini:', e.message);
-        if (e.message.includes('API_KEY') || e.message.includes('401')) {
-            return '__ERROR_APIKEY__';
-        }
-        if (e.message.includes('429') || e.message.includes('RESOURCE_EXHAUSTED') || e.message.includes('quota')) {
-            return '__ERROR_QUOTA__';
-        }
-        return '__ERROR_GENERAL__';
+        console.error('❌ Error con Ollama:', e.message);
+        return '🐾 Miau... Mi servidor de IA local (Ollama) parece estar apagado. Verifica que esté corriendo en tu PC.';
     }
 }
 
@@ -778,14 +751,12 @@ async function procesarMensajeSync(msg) {
             return;
         }
 
-        // 6. Fallback (IA Temporalmente Desactivada)
-        // Se desactiva Gemini por límite de cuota y para priorizar el menú táctil.
-        /* 
+        // 6. Fallback: Despachar a Ollama si no es un comando de menú
         bot.sendChatAction(chatId, 'typing');
-        const respuestaIA = await responderConGemini(chatId, text);
-        ... 
-        */
-        console.log(`🤖 IA en pausa. Usuario envió: "${text}"`);
+        const respuestaIA = await responderConOllama(chatId, text);
+        if (respuestaIA) {
+            bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' });
+        }
 
     } catch (globalErr) {
         console.error("❌ CRASH EVITADO en bot.on('message'):", globalErr);
@@ -1074,5 +1045,3 @@ bot.on('callback_query', async (query) => {
 // Exportamos el bot y la función síncrona
 bot.procesarMensajeSync = procesarMensajeSync;
 module.exports = bot;
-
-
