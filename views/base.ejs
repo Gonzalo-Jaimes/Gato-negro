@@ -124,20 +124,20 @@ background:#333;
 <h2>Menú</h2>
 
 <% if (session.rol == "admin") { %>
-    <a href="/admin/inventario">📦 Inventario</a>
-    <a href="/admin/movimientos">📊 Kardex</a>
-    <a href="/produccion/despacho">🚛 Despacho Tarea</a>
-    <a href="/produccion/recepcion_diaria">🧺 Recepción Diaria</a>
-    <a href="/produccion/pedidos">📋 Órdenes Prod.</a>
-    <a href="/produccion/mermas">⚠️ Mermas/Compras</a>
-    <a href="/produccion/recepcion_empaque">📦 Empaque</a>
-    <a href="/equipos/lista">⚙️ Maquinaria</a>
-    <a href="/finanzas/analitica">💰 Finanzas</a>
-    <a href="/admin/usuarios">👥 Usuarios</a>
+    <a href="/inventario">📦 Inventario</a>
+    <a href="/movimientos">📊 Kardex</a>
+    <a href="/despacho">🚛 Despacho Tarea</a>
+    <a href="/recepcion_diaria">🧰 Recepción Diaria</a>
+    <a href="/pedidos">📋 Órdenes Prod.</a>
+    <a href="/mermas">⚠️ Mermas/Compras</a>
+    <a href="/recepcion_empaque">📦 Empaque</a>
+    <a href="/maquinas">⚙️ Maquinaria</a>
+    <a href="/analitica">💰 Finanzas</a>
+    <a href="/usuarios">👥 Usuarios</a>
 <% } else if (session.rol == "fabricacion" || session.rol == "fabriquin") { %>
-    <a href="/produccion/pedidos">📋 Mis Órdenes</a>
+    <a href="/pedidos">📋 Mis Órdenes</a>
 <% } else if (session.rol == "mantenimiento") { %>
-    <a href="/equipos/mantenimiento">🔧 Mantenimiento</a>
+    <a href="/mantenimiento">🔧 Mantenimiento</a>
 <% } %>
 
 <a href="/logout">🚪 Cerrar sesión</a>

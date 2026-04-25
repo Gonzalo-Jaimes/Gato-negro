@@ -132,4 +132,126 @@ router.get('/empleados', isAdmin, async (req, res) => {
     res.render('admin/empleados', { empleados: empleados || [], prestamos: prestamos || [] });
 });
 
+// ---------------- CRUD USUARIOS ----------------
+
+router.post('/agregar_usuario', isAdmin, async (req, res) => {
+    const { usuario, password, rol } = req.body;
+    const hashedPassword = await bcrypt.hash(password, 10);
+    await supabase.from('usuarios').insert([{ usuario, password: hashedPassword, rol }]);
+    res.redirect('/usuarios');
+});
+
+router.get('/eliminar_usuario/:id', isAdmin, async (req, res) => {
+    await supabase.from('usuarios').delete().eq('id', req.params.id);
+    res.redirect('/usuarios');
+});
+
+// ---------------- CRUD EMPLEADOS ----------------
+
+router.post('/agregar_empleado', isAdmin, async (req, res) => {
+    await supabase.from('empleados_fabriquines').insert([{
+        codigo: req.body.codigo.toUpperCase(),
+        nombre: req.body.nombre,
+        cedula: req.body.cedula,
+        deuda_tabacos: 0
+    }]);
+    res.redirect('/empleados');
+});
+
+router.post('/eliminar_empleado/:id', isAdmin, async (req, res) => {
+    await supabase.from('empleados_fabriquines').delete().eq('id', req.params.id);
+    res.redirect('/empleados');
+});
+
+// ---------------- PRÉSTAMOS FABRIQUINES ----------------
+
+router.post('/nuevo_prestamo', isAdmin, async (req, res) => {
+    const empId = req.body.empleado_id;
+    const montoNuevo = parseInt(req.body.monto_total) || 0;
+    const concepto = req.body.concepto || '';
+    if (montoNuevo <= 0) return res.send(mostrarAlerta('Error', 'El monto debe ser mayor a cero.', 'warning'));
+
+    const { data: activo } = await supabase.from('prestamos_fabriquines')
+        .select('*').eq('empleado_id', empId).eq('estado', 'activo').single();
+
+    if (activo) {
+        const nuevoSaldo = activo.saldo_pendiente + montoNuevo;
+        await supabase.from('prestamos_fabriquines').update({
+            saldo_pendiente: nuevoSaldo,
+            monto_total: activo.monto_total + montoNuevo,
+            concepto: (activo.concepto || '') + ` + ${concepto}`
+        }).eq('id', activo.id);
+    } else {
+        await supabase.from('prestamos_fabriquines').insert([{
+            empleado_id: empId,
+            monto_total: montoNuevo,
+            saldo_pendiente: montoNuevo,
+            concepto: concepto,
+            fecha_prestamo: new Date().toISOString().split('T')[0],
+            estado: 'activo'
+        }]);
+    }
+    res.redirect('/empleados');
+});
+
+router.post('/abonar_prestamo/:id', isAdmin, async (req, res) => {
+    const prestamoId = req.params.id;
+    const abono = parseInt(req.body.monto_abono) || 0;
+    if (abono <= 0) return res.send(mostrarAlerta('Error', 'El abono debe ser mayor a cero.', 'warning'));
+
+    const { data: prestamo } = await supabase.from('prestamos_fabriquines').select('*').eq('id', prestamoId).single();
+    if (!prestamo) return res.send(mostrarAlerta('Error', 'Préstamo no encontrado.', 'error'));
+
+    const nuevoSaldo = Math.max(0, prestamo.saldo_pendiente - abono);
+    const nuevoEstado = nuevoSaldo === 0 ? 'pagado' : 'activo';
+
+    await supabase.from('prestamos_fabriquines').update({
+        saldo_pendiente: nuevoSaldo,
+        estado: nuevoEstado
+    }).eq('id', prestamoId);
+
+    const tiempo = obtenerHoraColombia();
+    await supabase.from('abonos_prestamo').insert([{
+        prestamo_id: prestamoId,
+        empleado_id: prestamo.empleado_id,
+        monto_abono: abono,
+        fecha_abono: tiempo.fecha,
+        semana_ref: `Semana del ${tiempo.fecha}`
+    }]);
+
+    res.redirect('/empleados');
+});
+
+// ---------------- INVENTARIO EXTRA ----------------
+
+router.get('/eliminar_inventario/:id', isAdmin, async (req, res) => {
+    await supabase.from('inventario').delete().eq('id', req.params.id);
+    res.redirect('/inventario');
+});
+
+router.post('/registrar_venta', isAdmin, async (req, res) => {
+    const { material_id, cantidad_vendida, valor_venta, nombre_material } = req.body;
+    const cantNum = parseFloat(cantidad_vendida);
+    const valorNum = parseInt(valor_venta) || 0;
+    
+    const { data: existente } = await supabase.from('inventario').select('*').eq('id', material_id).single();
+    
+    if (existente && existente.cantidad >= cantNum) {
+        await supabase.from('inventario').update({ cantidad: existente.cantidad - cantNum }).eq('id', existente.id);
+        
+        const tiempo = obtenerHoraColombia();
+        
+        await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha,
+            hora: tiempo.hora,
+            tipo_movimiento: 'SALIDA',
+            material: nombre_material,
+            cantidad: cantNum,
+            usuario: req.session.usuario || 'Admin',
+            descripcion: `[VENTA] $${valorNum.toLocaleString('es-CO')} COP`
+        }]);
+    }
+    res.redirect('/movimientos');
+});
+
 module.exports = router;

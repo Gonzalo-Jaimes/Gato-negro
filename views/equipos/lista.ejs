@@ -4,7 +4,7 @@
 <hr>
 
 <h2>Registrar Nuevo Equipo</h2>
-<form action="/agregar_maquina" method="POST" class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px;">
+<form action="/agregar" method="POST" class="card" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 30px;">
     
     <div><label><strong>Máquina / Equipo:</strong></label><br><input type="text" name="nombre" placeholder="Ej: Horno Gardai" required style="width: 100%;"></div>
     <div><label><strong>Área:</strong></label><br><input type="text" name="area" placeholder="Ej: Empaque, Producción..." style="width: 100%;"></div>
@@ -55,7 +55,7 @@
     <tr class="fila-maquina" data-id="<%= m.id %>">
         <td><strong><%= m.codigo %></strong></td>
         <td style="text-transform: capitalize;">
-            <a href="/ficha_maquina/<%= m.id %>" target="_blank"
+            <a href="/ficha/<%= m.id %>" target="_blank"
                style="color:#2563eb; font-weight:bold; text-decoration:none; font-size:15px;"
                title="Click para ver Ficha Técnica completa">
                 <%= m.nombre %> 🔗
@@ -82,12 +82,12 @@
             <% } %>
         </td>
         <td>
-            <a href="/ficha_maquina/<%= m.id %>" target="_blank" style="text-decoration:none;">
+            <a href="/ficha/<%= m.id %>" target="_blank" style="text-decoration:none;">
                 <button style="background:#7c3aed; padding:6px 10px; margin-bottom:5px; color:white; border-radius:4px; border:none; cursor:pointer; width:100%;">📋 Ver Ficha</button>
             </a>
             <button onclick="document.getElementById('modal-editar-<%= m.id %>').classList.add('activo')" style="background: var(--primary); padding: 6px 12px; margin-bottom: 5px; color:black; font-weight:bold; border-radius: 4px; border:none; cursor: pointer;">✏️ Editar</button>
             <br>
-            <a href="/eliminar_maquina/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">
+            <a href="/eliminar/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">
                 <button style="background: #ef4444; padding: 6px 12px; color:white; border-radius: 4px; border:none; cursor: pointer;">🗑 Borrar</button>
             </a>
         </td>
@@ -98,7 +98,7 @@
         <div class="modal-box-pic">
             <button onclick="document.getElementById('modal-editar-<%= m.id %>').classList.remove('activo')" style="position: absolute; top: 15px; right: 15px; background: none; color: var(--text-muted); font-size: 20px; border:none; cursor: pointer;">✖</button>
             <h2 style="margin-top: 0; color: var(--text-main);">✏️ Editar: <%= m.nombre %></h2>
-            <form action="/editar_maquina/<%= m.id %>" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
+            <form action="/editar/<%= m.id %>" method="POST" style="display: flex; flex-direction: column; gap: 12px;">
                 
                 <label>Manual de Identidad:</label>
                 <input type="text" name="nombre" value="<%= m.nombre %>" required placeholder="Nombre de la máquina">
@@ -269,7 +269,7 @@ html.dark-mode #modal-ficha [style*="color:#374151"] { color: #d1d5db !important
         document.getElementById('ft-fabricante').textContent = m.fabricante || '—';
         document.getElementById('ft-frec').textContent      = `Cada ${m.frecuencia_mtto_dias || 30} días`;
         document.getElementById('ft-obs').textContent       = m.observaciones || 'Sin observaciones';
-        document.getElementById('ft-link-full').href        = `/ficha_maquina/${m.id}`;
+        document.getElementById('ft-link-full').href        = `/ficha/${m.id}`;
 
         // Estado con color
         const estadoEl = document.getElementById('ft-estado');

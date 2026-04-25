@@ -65,7 +65,20 @@ router.post('/agregar', isAdmin, async (req, res) => {
         frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30
     }]);
     if (error) console.error("❌ ERROR AL GUARDAR MÁQUINA:", error);
-    res.redirect('/lista');
+    res.redirect('/maquinas');
+});
+
+// Alias: views reference /agregar_maquina
+router.post('/agregar_maquina', isAdmin, async (req, res) => {
+    const { error } = await supabase.from('maquinas').insert([{ 
+        nombre: req.body.nombre, area: req.body.area, marca: req.body.marca,
+        modelo: req.body.modelo, horas_dia: parseInt(req.body.horas_dia) || 8,
+        fabricante: req.body.fabricante, codigo: req.body.codigo, estado: req.body.estado,
+        observaciones: req.body.observaciones || 'Ninguna',
+        frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30
+    }]);
+    if (error) console.error("❌ ERROR:", error);
+    res.redirect('/maquinas');
 });
 
 router.post('/editar/:id', isAdmin, async (req, res) => {
@@ -84,12 +97,31 @@ router.post('/editar/:id', isAdmin, async (req, res) => {
     if (req.body.ultimo_mtto) datosActualizados.ultimo_mtto = req.body.ultimo_mtto;
 
     await supabase.from('maquinas').update(datosActualizados).eq('id', req.params.id);
-    res.redirect('/lista');
+    res.redirect('/maquinas');
+});
+
+// Alias: views reference /editar_maquina/:id
+router.post('/editar_maquina/:id', isAdmin, async (req, res) => {
+    const datosActualizados = {
+        nombre: req.body.nombre, area: req.body.area, marca: req.body.marca,
+        modelo: req.body.modelo, horas_dia: parseInt(req.body.horas_dia) || 8,
+        codigo: req.body.codigo, estado: req.body.estado, observaciones: req.body.observaciones,
+        fabricante: req.body.fabricante, frecuencia_mtto_dias: parseInt(req.body.frecuencia_mtto_dias) || 30
+    };
+    if (req.body.ultimo_mtto) datosActualizados.ultimo_mtto = req.body.ultimo_mtto;
+    await supabase.from('maquinas').update(datosActualizados).eq('id', req.params.id);
+    res.redirect('/maquinas');
 });
 
 router.get('/eliminar/:id', isAdmin, async (req, res) => {
     await supabase.from('maquinas').delete().eq('id', req.params.id);
-    res.redirect('/lista');
+    res.redirect('/maquinas');
+});
+
+// Alias: views reference /eliminar_maquina/:id
+router.get('/eliminar_maquina/:id', isAdmin, async (req, res) => {
+    await supabase.from('maquinas').delete().eq('id', req.params.id);
+    res.redirect('/maquinas');
 });
 
 // ---------------- FICHA TÉCNICA ----------------
@@ -149,6 +181,22 @@ router.post('/registrar_mantenimiento', isAuth, async (req, res) => {
     res.redirect('/mantenimiento');
 });
 
+// Alias: views reference /agregar_mantenimiento
+router.post('/agregar_mantenimiento', isAuth, async (req, res) => {
+    await supabase.from('mantenimiento').insert([{ 
+        fecha: req.body.fecha, hora: req.body.hora, maquina: req.body.maquina,
+        tipo: req.body.tipo, descripcion: req.body.descripcion,
+        tiempo_min: parseInt(req.body.tiempo_min) || 0,
+        costo_mo: parseFloat(req.body.costo_mo) || 0, costo_mat: parseFloat(req.body.costo_mat) || 0,
+        hecho_por: req.body.hecho_por, estado: req.body.estado
+    }]);
+    if (req.body.tipo === 'Preventivo' && req.body.estado === 'REALIZADO') {
+        const tiempo = obtenerHoraColombia();
+        await supabase.from('maquinas').update({ ultimo_mtto: req.body.fecha || tiempo.fecha }).eq('nombre', req.body.maquina);
+    }
+    res.redirect('/mantenimiento');
+});
+
 // ---------------- CÓDIGOS QR ----------------
 
 router.get('/qrs', isAdmin, async (req, res) => {
@@ -165,7 +213,7 @@ router.get('/maquinas/qrs', isAdmin, async (req, res) => {
 router.get('/:id/qr', async (req, res) => {
     const host = req.get('host');
     const protocol = req.protocol;
-    const urlDeLaFicha = `${protocol}://${host}/equipos/ficha/${req.params.id}`;
+    const urlDeLaFicha = `${protocol}://${host}/ficha/${req.params.id}`;
 
     try {
         const qrBuffer = await QRCode.toBuffer(urlDeLaFicha, { type: 'png', margin: 1, width: 250 });
@@ -174,6 +222,29 @@ router.get('/:id/qr', async (req, res) => {
     } catch (error) {
         res.status(500).send('Error QR.');
     }
+});
+
+// Alias: views reference /maquina/:id/qr
+router.get('/maquina/:id/qr', async (req, res) => {
+    const host = req.get('host');
+    const protocol = req.protocol;
+    const urlDeLaFicha = `${protocol}://${host}/ficha/${req.params.id}`;
+    try {
+        const qrBuffer = await QRCode.toBuffer(urlDeLaFicha, { type: 'png', margin: 1, width: 250 });
+        res.type('png');
+        res.send(qrBuffer);
+    } catch (error) {
+        res.status(500).send('Error QR.');
+    }
+});
+
+// Aliases: views reference /ficha_maquina/:id and /maquinas/ficha/:id
+router.get('/ficha_maquina/:id', isAuth, async (req, res) => {
+    res.redirect('/ficha/' + req.params.id);
+});
+
+router.get('/maquinas/ficha/:id', isAuth, async (req, res) => {
+    res.redirect('/ficha/' + req.params.id);
 });
 
 module.exports = router;

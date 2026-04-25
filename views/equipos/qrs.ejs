@@ -30,10 +30,10 @@
                 <p style="margin: 0 0 15px; font-size: 13px; color: #555; font-weight: bold; text-transform: uppercase;">Cód: <%= m.codigo %></p>
                 
                 <div style="border: 2px dashed #ccc; padding: 10px; margin-bottom: 15px; border-radius: 8px; background: #fafafa;">
-                    <img src="/maquina/<%= m.id %>/qr" alt="QR de <%= m.nombre %>" style="width: 100%; max-width: 180px; display: block; margin: auto;">
+                    <img src="/<%= m.id %>/qr" alt="QR de <%= m.nombre %>" style="width: 100%; max-width: 180px; display: block; margin: auto;">
                 </div>
                 
-                <a href="/maquinas/ficha/<%= m.id %>" class="btn-ficha" target="_blank" style="display: inline-block; padding: 8px 15px; background: #111; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; width: 80%; transition: background 0.2s;">📄 Abrir Ficha Técnica</a>
+                <a href="/ficha/<%= m.id %>" class="btn-ficha" target="_blank" style="display: inline-block; padding: 8px 15px; background: #111; color: white; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 14px; width: 80%; transition: background 0.2s;">📄 Abrir Ficha Técnica</a>
             </div>
         <% }); %>
     <% } %>
