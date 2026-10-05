@@ -1,6 +1,10 @@
 {
   "name": "gato-negro-erp",
   "version": "3.2.6",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
   "dependencies": {
     "@google/genai": "^1.49.0",
     "@google/generative-ai": "^0.24.1",

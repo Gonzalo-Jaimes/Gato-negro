@@ -33,6 +33,38 @@ router.post('/login', async (req, res) => {
     res.send("Rol no válido");
 });
 
+// ---------------- LOGIN NFC ----------------
+router.get('/login/nfc', async (req, res) => {
+    const token = req.query.token;
+    if (!token) return res.send(mostrarAlerta('Error', 'No se proporcionó token NFC.', 'error', '/'));
+
+    try {
+        const { data: resultado, error } = await supabase
+            .from('usuarios')
+            .select('*')
+            .eq('nfc_token', token)
+            .single();
+
+        if (error || !resultado) {
+            return res.send(mostrarAlerta('Acceso Denegado', 'Tarjeta NFC no reconocida.', 'error', '/'));
+        }
+
+        // Si existe, iniciar sesión automáticamente
+        req.session.usuario = resultado.usuario;
+        req.session.rol = resultado.rol;
+        
+        // Redirigir según el rol con un saludo
+        const redirectPath = (resultado.rol === "admin") ? "/inventario" : 
+                             (resultado.rol === "mantenimiento") ? "/mantenimiento" :
+                             (resultado.rol === "anillador" || resultado.rol === "empacador") ? "/cierre_diario" : "/pedidos";
+
+        res.send(mostrarAlerta('¡Bienvenido!', `Hola de nuevo, ${resultado.usuario}.`, 'success', redirectPath));
+    } catch (e) {
+        console.error(e);
+        res.send(mostrarAlerta('Error', 'Fallo al validar NFC', 'error', '/'));
+    }
+});
+
 router.get('/logout', (req, res) => {
     req.session = null; // cookie-session no tiene .destroy() — esto borra la cookie
     res.redirect('/'); 

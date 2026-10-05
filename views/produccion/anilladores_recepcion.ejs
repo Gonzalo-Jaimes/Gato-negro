@@ -1,53 +1,169 @@
 <%- include('../partials/header') %>
 
 <style>
-    .section-box { background: white; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.08); padding: 20px; margin-bottom: 24px; }
-    html.dark-mode .section-box { background: var(--bg-card); border: 1px solid var(--border-color); }
+    .btn-guardar   { background: #3b82f6; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-liquidar  { background: #10b981; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
+    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
+    .inp-dia:focus { outline: 2px solid #3b82f6; }
 </style>
 
 <div style="margin-bottom: 20px;">
-    <h1 style="margin: 0;">⚖️ Recepción de Anilladores</h1>
-    <p style="color: gray; margin-top: 5px;">Recibe los tabacos ya anillados y registra las mermas o daños.</p>
+    <h1 style="margin: 0; color: var(--text-main);">📅 Recepción Diaria de Anilladores</h1>
+    <p style="color: var(--text-muted); margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Los tabacos se calculan automáticamente (Cestas × 1500).</p>
 </div>
 
-<div class="section-box" style="border-top: 4px solid #10b981;">
-    <h2 style="margin-top: 0; color: #065f46;">✔ Liquidación de Trabajo</h2>
+<!-- BARRA DE BÚSQUEDA -->
+<div style="margin-bottom: 20px;">
+    <input type="text" id="buscar-anil" placeholder="🔍 Buscar anillador por nombre..."
+           oninput="filtrarTarjetas('buscar-anil', '.tarjeta-anil')"
+           style="width: 100%; max-width: 460px; padding: 10px 16px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; background: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+    <span id="contador-anil" style="margin-left: 12px; font-size: 13px; color: var(--text-muted);"></span>
+</div>
+
+<% if (empleados && empleados.length > 0) { %>
+
+<% empleados.forEach(emp => { 
+    // Buscar si hay un registro de esta semana pendiente
+    let reg = registros.find(r => r.empleado_id === emp.id);
     
-    <form action="/api/anilladores/recibir" method="POST">
-        <div style="display: flex; gap: 20px; flex-wrap: wrap; align-items: flex-end;">
-            
-            <div style="flex: 2; min-width: 220px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">1. Seleccionar Anillador:</label>
-                <select name="empleado_id" style="width: 100%; padding: 8px; border: 2px solid #10b981; border-radius: 6px; font-size: 14px;" required>
-                    <option value="">-- Elige un Empleado --</option>
-                    <% empleados.forEach(e => { %>
-                        <% if (e.estado && e.deuda_tabacos > 0) { %>
-                            <option value="<%= e.id %>"><%= e.nombre %> (Debe: <%= e.deuda_tabacos %> Tabacos)</option>
-                        <% } %>
-                    <% }) %>
-                </select>
-            </div>
-            
-            <div style="flex: 1; min-width: 150px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px; color: #065f46;">2. Tabacos Anillados (OK):</label>
-                <input type="number" name="tabacos_anillados" style="width: 100%; padding: 8px; border: 2px solid #10b981; border-radius: 6px; font-size: 16px; font-weight: bold; background: #f0fdf4;" required placeholder="Ej. 1000">
-            </div>
+    // Si no tiene registro pendiente Y NO tiene deuda, no lo mostramos en recepción
+    if (!reg && emp.deuda_tabacos <= 0) return;
+    
+    // Si no lo encontró, lo inicializamos vacío para el form
+    if (!reg) reg = {};
+    
+    // Tabacos recibidos hasta ahora en la semana
+    const totalRecibido = (reg.lun_tabacos||0) + (reg.mar_tabacos||0) + (reg.mie_tabacos||0) + (reg.jue_tabacos||0) + (reg.vie_tabacos||0) + (reg.sab_tabacos||0);
+    // Para simplificar, la deuda que mostramos es la que está en la tabla empleados_anilladores
+    const pendiente = emp.deuda_tabacos; 
+%>
 
-            <div style="flex: 1; min-width: 150px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px; color: #b91c1c;">3. Merma de Anillos:</label>
-                <input type="number" name="merma_anillos" style="width: 100%; padding: 8px; border: 2px solid #fca5a5; border-radius: 6px; font-size: 16px; background: #fef2f2;" value="0">
-            </div>
+<div class="card tarjeta-anil" data-nombre="<%= emp.nombre.toLowerCase() %>" style="margin-bottom: 24px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? '#10b981' : '#f59e0b' %>;">
 
-            <div style="flex: 1; min-width: 150px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px; color: #b91c1c;">4. Merma de Tabacos:</label>
-                <input type="number" name="merma_tabacos" style="width: 100%; padding: 8px; border: 2px solid #fca5a5; border-radius: 6px; font-size: 16px; background: #fef2f2;" value="0">
-            </div>
+    <!-- CABECERA -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+        <div>
+            <strong style="font-size: 15px; color: var(--text-main);">👤 <%= emp.nombre %></strong>
+            <br>
+            <span class="badge-pendiente <%= pendiente <= 0 ? 'verde' : 'rojo' %>" style="margin-top: 4px;">
+                <%= pendiente <= 0 ? '✅ Tarea Completa' : '⏳ Pendiente: ' + pendiente.toLocaleString('es-CO') + ' tabs' %>
+            </span>
         </div>
-        
-        <button type="submit" style="margin-top: 16px; background: #10b981; color: white; padding: 10px 24px; font-size: 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
-            ✔ Guardar Recepción
-        </button>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 12px; color: #b91c1c; font-weight: bold; background: #fee2e2; padding: 4px 10px; border-radius: 6px;">
+                🔖 Deuda Anillos: <%= emp.deuda_anillos.toLocaleString('es-CO') %>
+            </span>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DIARIO -->
+    <form action="/anilladores/recepcion_guardar" method="POST" style="padding: 16px;">
+        <input type="hidden" name="empleado_id" value="<%= emp.id %>">
+        <input type="hidden" name="registro_id" value="<%= reg.id || '' %>">
+        <input type="hidden" name="precio_tabaco" value="11"> <!-- 11 pesos por tabaco = 11000 millar -->
+
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr) 200px; gap: 12px; align-items: start;">
+
+            <% const dias = [
+                { label: 'Lunes',     cKey: 'lun_cestas', tKey: 'lun_tabacos' },
+                { label: 'Martes',    cKey: 'mar_cestas', tKey: 'mar_tabacos' },
+                { label: 'Miércoles', cKey: 'mie_cestas', tKey: 'mie_tabacos' },
+                { label: 'Jueves',    cKey: 'jue_cestas', tKey: 'jue_tabacos' },
+                { label: 'Viernes',   cKey: 'vie_cestas', tKey: 'vie_tabacos' },
+                { label: 'Sábado',    cKey: 'sab_cestas', tKey: 'sab_tabacos' }
+            ]; %>
+
+            <% dias.forEach(d => { %>
+            <div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; text-align: center;"><%= d.label %></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div>
+                        <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px;">Cestas</div>
+                        <input type="number" name="<%= d.cKey %>" 
+                               class="inp-dia inp-cestas"
+                               data-regid="<%= emp.id %>"
+                               data-dia="<%= d.label.substring(0,3).toLowerCase() %>"
+                               value="<%= reg[d.cKey] || '' %>"
+                               min="0" placeholder="0">
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px;">Tabacos</div>
+                        <input type="number" name="<%= d.tKey %>" 
+                               id="tab_<%= emp.id %>_<%= d.label.substring(0,3).toLowerCase() %>"
+                               class="inp-dia inp-tabacos"
+                               value="<%= reg[d.tKey] || '' %>"
+                               placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+
+            <!-- COLUMNA MERMAS Y BOTONES -->
+            <div>
+                <div style="font-size: 11px; font-weight: bold; color: #b91c1c; margin-bottom: 4px;">❌ Merma Anillos</div>
+                <input type="number" name="merma_anillos" min="0" value="<%= reg.merma_anillos || '' %>" class="inp-dia" style="border-color: #fca5a5; background: #fef2f2;" placeholder="0">
+
+                <div style="font-size: 11px; font-weight: bold; color: #b91c1c; margin-top: 6px; margin-bottom: 4px;">❌ Merma Tabacos</div>
+                <input type="number" name="merma_tabacos" min="0" value="<%= reg.merma_tabacos || '' %>" class="inp-dia" style="border-color: #fca5a5; background: #fef2f2;" placeholder="0">
+
+                <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+                    <button type="submit" class="btn-guardar" style="width:100%;">💾 Guardar</button>
+                    <% if (reg.id) { %>
+                    <button type="button" class="btn-liquidar" style="width:100%;" onclick="liquidarSemana('<%= reg.id %>')">💰 Liquidar</button>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
     </form>
 </div>
+
+<% }); %>
+<% } else { %>
+    <p style="color: var(--text-muted);">No hay anilladores registrados o con tareas pendientes.</p>
+<% } %>
+
+<script>
+    // ── Auto-calcular tabacos al escribir cestas (× 1500 para Anilladores) ──
+    document.querySelectorAll('.inp-cestas').forEach(inp => {
+        inp.addEventListener('input', function() {
+            const val = parseFloat(this.value) || 0;
+            const empId = this.getAttribute('data-regid');
+            const dia   = this.getAttribute('data-dia');
+            const tabInput = document.getElementById('tab_' + empId + '_' + dia);
+            if (tabInput) tabInput.value = val > 0 ? val * 1500 : '';
+        });
+    });
+
+    // ── Filtrado en tiempo real ──
+    function filtrarTarjetas(inputId, selector) {
+        const q = document.getElementById(inputId).value.toLowerCase().trim();
+        const tarjetas = document.querySelectorAll(selector);
+        let visibles = 0;
+        tarjetas.forEach(card => {
+            const nombre = card.getAttribute('data-nombre') || '';
+            const mostrar = !q || nombre.includes(q);
+            card.style.display = mostrar ? '' : 'none';
+            if (mostrar) visibles++;
+        });
+        const counterId = inputId.replace('buscar-', 'contador-');
+        const counter = document.getElementById(counterId);
+        if (counter) counter.textContent = q ? `${visibles} resultado(s)` : '';
+    }
+
+    // ── Liquidar ──
+    function liquidarSemana(registroId) {
+        if (confirm("¿Liquidar la semana de este Anillador? Se actualizará la deuda y el inventario global.")) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/anilladores/liquidar_semana/" + registroId;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
 
 <%- include('../partials/footer') %>

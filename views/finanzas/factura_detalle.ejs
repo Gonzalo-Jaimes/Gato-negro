@@ -104,7 +104,7 @@
                 <% produccion.forEach(p => { %>
                     <tr>
                         <td><%= p.fecha %></td>
-                        <td>Fabricación de Tabacos</td>
+                        <td>Fabricación de Tabacos <%= p.marca ? '(' + p.marca + ')' : '' %></td>
                         <td><%= p.cantidad_producida.toLocaleString('es-CO') %> UND</td>
                         <td>$<%= parseFloat(p.precio_por_unidad).toLocaleString('es-CO') %></td>
                         <td style="font-weight: bold;">$<%= parseFloat(p.total_ganado).toLocaleString('es-CO') %></td>

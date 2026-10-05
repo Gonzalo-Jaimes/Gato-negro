@@ -57,17 +57,12 @@ router.get('/anilladores', isAdmin, async (req, res) => {
 router.get('/envolvedoras', isAdmin, (req, res) => res.redirect('/envolvedoras/despacho'));
 
 router.get('/envolvedoras/despacho', isAdmin, async (req, res) => {
-    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
+    const { data: empleados } = await supabase.from('empleados_envolvedoras').select('*').order('nombre');
     res.render('produccion/envolvedoras_despacho', { empleados: empleados || [] });
 });
 
-router.get('/envolvedoras/recepcion', isAdmin, async (req, res) => {
-    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
-    res.render('produccion/envolvedoras_recepcion', { empleados: empleados || [] });
-});
-
 router.get('/envolvedoras/control', isAdmin, async (req, res) => {
-    const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
+    const { data: empleados } = await supabase.from('empleados_envolvedoras').select('*').order('nombre');
     const { data: registros }  = await supabase.from('recepcion_envolvedoras').select('*').eq('estado', 'pendiente');
     res.render('produccion/envolvedoras_control', { empleados: empleados || [], registros: registros || [] });
 });
@@ -106,35 +101,6 @@ router.post('/anilladores/validar_tarea/:id', isAdmin, async (req, res) => {
 
 // ---------------- ENVOLVEDORAS POST ----------------
 
-router.post('/api/envolvedoras/recibir', isAdmin, async (req, res) => {
-    const { empleado_id, tabacos_envueltos, merma_papel, merma_tabacos } = req.body;
-    const tabacos_ok = parseInt(tabacos_envueltos) || 0;
-    
-    if (!empleado_id || tabacos_ok <= 0) {
-        return res.send(mostrarAlerta('Error', 'Datos inválidos', 'error', '/envolvedoras'));
-    }
-
-    try {
-        const tiempo = obtenerHoraColombia();
-        
-        // Aquí eventualmente se descontará la deuda de la envolvedora
-        // Por ahora, registramos la entrada de tabacos envueltos al inventario
-        const { data: invEnvuelto } = await supabase.from('inventario').select('*').ilike('material', '%tabaco%envuelto%').single();
-        if (invEnvuelto) {
-            await supabase.from('inventario').update({ cantidad: invEnvuelto.cantidad + tabacos_ok }).eq('id', invEnvuelto.id);
-            await supabase.from('movimientos').insert([{
-                fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA',
-                material: 'Tabacos Envueltos', cantidad: tabacos_ok, 
-                usuario: req.session.usuario || 'Admin', 
-                descripcion: `Recepción de Envolvedora (Merma Papel: ${merma_papel || 0}, Merma Tabaco: ${merma_tabacos || 0})`
-            }]);
-        }
-        res.send(mostrarAlerta('✅ Éxito', `Se recibieron ${tabacos_ok} tabacos envueltos.`, 'success', '/envolvedoras'));
-    } catch(err) {
-        res.send(mostrarAlerta('Error', 'Hubo un error al procesar la recepción.', 'error', '/envolvedoras'));
-    }
-});
-
 router.post('/guardar_envoltedora', isAdmin, async (req, res) => {
     const empId = req.body.empleado_id;
     const regId = req.body.registro_id;
@@ -147,6 +113,9 @@ router.post('/guardar_envoltedora', isAdmin, async (req, res) => {
         lun_cestas_out: parseInt(req.body.lun_cestas_out) || 0, mar_cestas_out: parseInt(req.body.mar_cestas_out) || 0,
         mie_cestas_out: parseInt(req.body.mie_cestas_out) || 0, jue_cestas_out: parseInt(req.body.jue_cestas_out) || 0,
         vie_cestas_out: parseInt(req.body.vie_cestas_out) || 0, sab_cestas_out: parseInt(req.body.sab_cestas_out) || 0,
+        lun_tabacos_out: parseInt(req.body.lun_tabacos_out) || 0, mar_tabacos_out: parseInt(req.body.mar_tabacos_out) || 0,
+        mie_tabacos_out: parseInt(req.body.mie_tabacos_out) || 0, jue_tabacos_out: parseInt(req.body.jue_tabacos_out) || 0,
+        vie_tabacos_out: parseInt(req.body.vie_tabacos_out) || 0, sab_tabacos_out: parseInt(req.body.sab_tabacos_out) || 0,
         papel_trans_g: parseFloat(req.body.papel_trans_g) || 0,
         lun_papel_extra: parseFloat(req.body.lun_papel_extra) || 0, mar_papel_extra: parseFloat(req.body.mar_papel_extra) || 0,
         mie_papel_extra: parseFloat(req.body.mie_papel_extra) || 0, jue_papel_extra: parseFloat(req.body.jue_papel_extra) || 0,
@@ -154,9 +123,37 @@ router.post('/guardar_envoltedora', isAdmin, async (req, res) => {
         papel_sobrante_g: parseFloat(req.body.papel_sobrante_g) || 0,
         precio_cesta: parseInt(req.body.precio_cesta) || 11000, estado: 'pendiente'
     };
-    if (regId && regId !== '') { await supabase.from('recepcion_envolvedoras').update(campos).eq('id', regId); }
-    else { campos.semana_inicio = tiempo.fecha; await supabase.from('recepcion_envolvedoras').insert([campos]); }
-    res.redirect('/envolvedoras');
+    
+    if (req.body.marca) campos.marca = req.body.marca;
+
+    if (regId && regId !== '') { 
+        await supabase.from('recepcion_envolvedoras').update(campos).eq('id', regId); 
+    } else { 
+        campos.semana_inicio = tiempo.fecha; 
+        await supabase.from('recepcion_envolvedoras').insert([campos]); 
+        
+        // Descontar Tabacos Anillados y Papel del inventario
+        if (campos.marca) {
+            const mat = `Tabacos Anillados (${campos.marca})`;
+            const cant_tabacos = campos.cestas_asignadas * 1250;
+            const { data: invT } = await supabase.from('inventario').select('*').eq('material', mat).single();
+            if (invT) {
+                await supabase.from('inventario').update({ cantidad: invT.cantidad - cant_tabacos }).eq('id', invT.id);
+                await supabase.from('movimientos').insert([{ fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: mat, cantidad: cant_tabacos, usuario: req.session.usuario || 'Admin', descripcion: `Despacho a Envolvedora` }]);
+            }
+            
+            // Descontar Papel de Envoltura (Es único y transparente para todas las marcas)
+            const papelMat = `Papel de Envoltura`;
+            if (campos.papel_trans_g > 0) {
+                const { data: invPapel } = await supabase.from('inventario').select('*').eq('material', papelMat).single();
+                if (invPapel) {
+                    await supabase.from('inventario').update({ cantidad: invPapel.cantidad - campos.papel_trans_g }).eq('id', invPapel.id);
+                    await supabase.from('movimientos').insert([{ fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: papelMat, cantidad: campos.papel_trans_g, usuario: req.session.usuario || 'Admin', descripcion: `Despacho a Envolvedora (Papel)` }]);
+                }
+            }
+        }
+    }
+    res.redirect('/envolvedoras/control');
 });
 
 router.post('/liquidar_envolvedora/:id', isAdmin, async (req, res) => {
@@ -166,7 +163,25 @@ router.post('/liquidar_envolvedora/:id', isAdmin, async (req, res) => {
     const totalCestasOut = reg.lun_cestas_out + reg.mar_cestas_out + reg.mie_cestas_out + reg.jue_cestas_out + reg.vie_cestas_out + reg.sab_cestas_out;
     const pago = totalCestasOut * reg.precio_cesta;
     const tiempo = obtenerHoraColombia();
-    await supabase.from('produccion_fabriquines').insert([{ fecha: tiempo.fecha, usuario: String(reg.empleado_id), cantidad_producida: totalCestasOut, precio_por_unidad: reg.precio_cesta, total_ganado: pago, estado: 'PENDIENTE' }]);
+    // Liquidar: Añadir los tabacos envueltos al inventario global
+    const marca = reg.marca || 'Gato';
+    const matEnvueltos = `Tabacos Envueltos (${marca})`;
+    const totalTabacosOut = totalCestasOut * 1250;
+    const { data: invEnv } = await supabase.from('inventario').select('*').eq('material', matEnvueltos).single();
+    if (invEnv) {
+        await supabase.from('inventario').update({ cantidad: invEnv.cantidad + totalTabacosOut }).eq('id', invEnv.id);
+        await supabase.from('movimientos').insert([{ fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: matEnvueltos, cantidad: totalTabacosOut, usuario: req.session.usuario || 'Admin', descripcion: `Liquidación Envolvedora` }]);
+    }
+
+    await supabase.from('produccion_fabriquines').insert([{ 
+        fecha: tiempo.fecha, 
+        usuario: String(reg.empleado_id), 
+        cantidad_producida: totalCestasOut, 
+        precio_por_unidad: reg.precio_cesta, 
+        total_ganado: pago, 
+        estado: 'PENDIENTE',
+        marca: marca
+    }]);
     await supabase.from('recepcion_envolvedoras').update({ estado: 'pagado' }).eq('id', regId);
     res.send(mostrarAlerta('✅ Liquidada', `Total: $${pago.toLocaleString('es-CO')} COP por ${totalCestasOut} cestas.`, 'success'));
 });
@@ -207,18 +222,27 @@ router.get('/recepcion_empaque', isAdmin, async (req, res) => {
 
 router.post('/recibir_empaque/:id', isAdmin, async (req, res) => {
     const idPedido = req.params.id;
-    const { rol, usuario, cestas_anilladas, bultos_50, bultos_25, cajas_50_sueltas, cajas_25_sueltas } = req.body;
+    const { rol, usuario, cestas_anilladas, bultos_50, bultos_25, cajas_50_sueltas, cajas_25_sueltas, marca } = req.body;
     const tiempo = obtenerHoraColombia();
     const TARIFA_ANILLADO = 12000, TARIFA_BULTO50 = 10000, TARIFA_BULTO25 = 7000;
     const TARIFA_CAJA50 = TARIFA_BULTO50 / 25, TARIFA_CAJA25 = TARIFA_BULTO25 / 50;
     async function invAdd(matName, cant, cat) { const { data: i } = await supabase.from('inventario').select('*').eq('material', matName).single(); if (i) await supabase.from('inventario').update({ cantidad: i.cantidad + cant }).eq('id', i.id); else await supabase.from('inventario').insert([{ material: matName, cantidad: cant, categoria: cat }]); }
-    async function pagar(user, cant, precio, t) { await supabase.from('produccion_fabriquines').insert([{ fecha: t.fecha, usuario: user, cantidad_producida: cant, precio_por_unidad: precio, total_ganado: cant * precio, estado: 'PENDIENTE' }]); }
-    if (rol === 'anillador') { let n = parseInt(cestas_anilladas) || 0; if (n > 0) { await invAdd('Tabacos Anillados', n * 1500, 'Producto Terminado'); await pagar(usuario, n, TARIFA_ANILLADO, tiempo); } }
-    else { let n50 = parseInt(bultos_50) || 0, n25 = parseInt(bultos_25) || 0, c50 = parseInt(cajas_50_sueltas) || 0, c25 = parseInt(cajas_25_sueltas) || 0;
-        if (n50 > 0) { await invAdd('Bultos de 50', n50, 'Producto Terminado'); await pagar(usuario, n50, TARIFA_BULTO50, tiempo); }
-        if (n25 > 0) { await invAdd('Bultos de 25', n25, 'Producto Terminado'); await pagar(usuario, n25, TARIFA_BULTO25, tiempo); }
-        if (c50 > 0) { await invAdd('Cajas de 50', c50, 'Producto Terminado'); await pagar(usuario, c50, TARIFA_CAJA50, tiempo); }
-        if (c25 > 0) { await invAdd('Cajas de 25', c25, 'Producto Terminado'); await pagar(usuario, c25, TARIFA_CAJA25, tiempo); }
+    async function pagar(user, cant, precio, t, m) { await supabase.from('produccion_fabriquines').insert([{ fecha: t.fecha, usuario: user, cantidad_producida: cant, precio_por_unidad: precio, total_ganado: cant * precio, estado: 'PENDIENTE', marca: m }]); }
+    
+    if (rol === 'anillador') { 
+        let n = parseInt(cestas_anilladas) || 0; 
+        if (n > 0) { 
+            await invAdd(`Tabacos Anillados (${marca || 'Gato'})`, n * 1500, 'Producto Terminado'); 
+            await pagar(usuario, n, TARIFA_ANILLADO, tiempo, marca || 'Gato'); 
+        } 
+    }
+    else { 
+        let n50 = parseInt(bultos_50) || 0, n25 = parseInt(bultos_25) || 0, c50 = parseInt(cajas_50_sueltas) || 0, c25 = parseInt(cajas_25_sueltas) || 0;
+        const m = marca || 'Gato';
+        if (n50 > 0) { await invAdd(`Bultos de 50 (${m})`, n50, 'Producto Terminado'); await pagar(usuario, n50, TARIFA_BULTO50, tiempo, m); }
+        if (n25 > 0) { await invAdd(`Bultos de 25 (${m})`, n25, 'Producto Terminado'); await pagar(usuario, n25, TARIFA_BULTO25, tiempo, m); }
+        if (c50 > 0) { await invAdd(`Cajas de 50 (${m})`, c50, 'Producto Terminado'); await pagar(usuario, c50, TARIFA_CAJA50, tiempo, m); }
+        if (c25 > 0) { await invAdd(`Cajas de 25 (${m})`, c25, 'Producto Terminado'); await pagar(usuario, c25, TARIFA_CAJA25, tiempo, m); }
     }
     await supabase.from('pedidos').update({ estado: 'completado' }).eq('id', idPedido);
     res.redirect('/recepcion_empaque');

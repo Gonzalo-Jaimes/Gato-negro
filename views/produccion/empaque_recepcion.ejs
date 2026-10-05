@@ -1,62 +1,162 @@
 <%- include('../partials/header') %>
 
-<h1>📥 Recepción de Anillado y Empaque</h1>
-<hr>
+<style>
+    .btn-guardar   { background: #3b82f6; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-liquidar  { background: #10b981; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
+    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
+    .inp-dia:focus { outline: 2px solid #3b82f6; }
+</style>
 
-<p style="color: gray;">Liquida el trabajo devuelto por los anilladores y empacadores. El sistema calculará automáticamente sus ganancias en Nómina.</p>
+<div style="margin-bottom: 20px;">
+    <h1 style="margin: 0; color: var(--text-main);">📦 Recepción Diaria de Empacadores</h1>
+    <p style="color: var(--text-muted); margin-top: 5px;">Guarda los avances diarios. 1 Bulto = 2,100 tabacos | 1 Caja 25 = 25 tabacos | 1 Caja 50 = 50 tabacos.</p>
+</div>
 
-<table>
-    <tr>
-        <th>ID Despacho</th>
-        <th>Trabajador</th>
-        <th>Cargo</th>
-        <th>Materia Prima Asignada</th>
-        <th style="width: 350px;">Liquidación de Trabajo (Entregas)</th>
-    </tr>
+<!-- BARRA DE BÚSQUEDA -->
+<div style="margin-bottom: 20px;">
+    <input type="text" id="buscar-emp" placeholder="🔍 Buscar empacador por nombre..."
+           oninput="filtrarTarjetas('buscar-emp', '.tarjeta-emp')"
+           style="width: 100%; max-width: 460px; padding: 10px 16px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; background: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+    <span id="contador-emp" style="margin-left: 12px; font-size: 13px; color: var(--text-muted);"></span>
+</div>
 
-    <% if ((locals.despachos_pendientes || []).length === 0) { %>
-        <tr><td colspan="5" style="padding: 20px; color: gray;">No hay tareas de empaque o anillado pendientes.</td></tr>
-    <% } %>
+<% if (empleados && empleados.length > 0) { %>
 
-    <% (locals.despachos_pendientes || []).forEach(function(p) { 
-        let rol = p.rol_usuario; 
-    %>
-    <tr class="fila-pedido">
-        <td><%= p.id %></td>
-        <td style="text-transform: capitalize;"><strong><%= p.usuario %></strong></td>
-        <td>
-            <% if (rol === 'anillador') { %>
-                <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; font-weight: bold; padding: 4px 12px; border-radius: 20px; font-size: 11px; border: 1px solid rgba(245, 158, 11, 0.2);">💍 Anillador</span>
-            <% } else { %>
-                <span style="background: rgba(59, 130, 246, 0.1); color: #3b82f6; font-weight: bold; padding: 4px 12px; border-radius: 20px; font-size: 11px; border: 1px solid rgba(59, 130, 246, 0.2);">📦 Empacador</span>
-            <% } %>
-        </td>
-        <td><strong style="color: blue;"><%= p.cantidad %></strong> unidades de <br> <em><%= p.material %></em></td>
-        
-        <td style="text-align: left; background: var(--bg-card); border: 1px solid var(--border-color); padding: 15px;">
-            <form action="/recibir_empaque/<%= p.id %>" method="POST" style="margin: 0; display: flex; flex-direction: column; gap: 8px;">
-                <input type="hidden" name="rol" value="<%= rol %>">
-                <input type="hidden" name="usuario" value="<%= p.usuario %>">
-                
-                <% if (rol === 'anillador') { %>
-                    <div style="font-size: 12px; font-weight: bold; color: #555;">Producción Entregada:</div>
-                    <label style="font-size: 13px;"><input type="number" name="cestas_anilladas" min="0" value="0" style="width: 80px; padding: 4px;"> Cestas de Tabaco Anillado</label>
-                <% } else { %>
-                    <div style="font-size: 12px; font-weight: bold; color: #555;">Producción Entregada (Bultos y Cajas):</div>
-                    <label style="font-size: 13px;"><input type="number" name="bultos_50" min="0" value="0" style="width: 60px; padding: 2px;"> Bultos de 50</label>
-                    <label style="font-size: 13px;"><input type="number" name="bultos_25" min="0" value="0" style="width: 60px; padding: 2px;"> Bultos de 25</label>
-                    <label style="font-size: 13px;"><input type="number" name="cajas_50_sueltas" min="0" value="0" style="width: 60px; padding: 2px;"> Cajas 50 Sueltas</label>
-                    <label style="font-size: 13px;"><input type="number" name="cajas_25_sueltas" min="0" value="0" style="width: 60px; padding: 2px;"> Cajas 25 Sueltas</label>
-                <% } %>
-                
-                <button type="submit" class="premium-btn" style="background: #10b981; color: black; font-weight: bold; width: 100%; margin-top: 5px;">
-                    ✅ Recibir y Liquidar
-                </button>
-                <div style="font-size: 10px; color: gray; text-align: center; margin-top: 5px;">(Las facturas de pago se imprimen desde el panel "Nómina y Pagos")</div>
-            </form>
-        </td>
-    </tr>
-    <% }); %>
-</table>
+<% empleados.forEach(emp => { 
+    // Buscar si hay un registro de esta semana pendiente
+    let reg = registros.find(r => r.empleado_id === emp.id) || {};
+    
+    const totalBultos25 = (reg.lun_bultos_25||0) + (reg.mar_bultos_25||0) + (reg.mie_bultos_25||0) + (reg.jue_bultos_25||0) + (reg.vie_bultos_25||0) + (reg.sab_bultos_25||0);
+    const totalBultos50 = (reg.lun_bultos_50||0) + (reg.mar_bultos_50||0) + (reg.mie_bultos_50||0) + (reg.jue_bultos_50||0) + (reg.vie_bultos_50||0) + (reg.sab_bultos_50||0);
+    
+    const totalCajas25 = (reg.lun_cajas_25||0) + (reg.mar_cajas_25||0) + (reg.mie_cajas_25||0) + (reg.jue_cajas_25||0) + (reg.vie_cajas_25||0) + (reg.sab_cajas_25||0);
+    const totalCajas50 = (reg.lun_cajas_50||0) + (reg.mar_cajas_50||0) + (reg.mie_cajas_50||0) + (reg.jue_cajas_50||0) + (reg.vie_cajas_50||0) + (reg.sab_cajas_50||0);
+    
+    const totalTabacos = (totalBultos25 * 2100) + (totalBultos50 * 2100) + (totalCajas25 * 25) + (totalCajas50 * 50);
+%>
+
+<div class="card tarjeta-emp" data-nombre="<%= emp.nombre.toLowerCase() %>" style="margin-bottom: 24px; padding: 0; overflow: hidden; border-left: 5px solid #3b82f6;">
+
+    <!-- CABECERA -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+        <div>
+            <strong style="font-size: 15px; color: var(--text-main);">👤 <%= emp.nombre %></strong>
+        </div>
+        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+            <span style="font-size: 12px; color: #1e3a8a; font-weight: bold; background: #dbeafe; padding: 4px 10px; border-radius: 6px;" id="total_tabs_<%= emp.id %>">
+                📦 Tabacos Empacados: <%= totalTabacos.toLocaleString('es-CO') %>
+            </span>
+        </div>
+    </div>
+
+    <!-- FORMULARIO DIARIO -->
+    <form action="/empacadores/recepcion_guardar" method="POST" style="padding: 16px;">
+        <input type="hidden" name="empleado_id" value="<%= emp.id %>">
+        <input type="hidden" name="registro_id" value="<%= reg.id || '' %>">
+        <input type="hidden" name="precio_bulto_25" value="11"> <!-- Equivalente 11000 millar -->
+        <input type="hidden" name="precio_bulto_50" value="11">
+
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr) 150px; gap: 12px; align-items: start;">
+
+            <% const dias = [
+                { label: 'Lunes',     b25: 'lun_bultos_25', b50: 'lun_bultos_50', c25: 'lun_cajas_25', c50: 'lun_cajas_50' },
+                { label: 'Martes',    b25: 'mar_bultos_25', b50: 'mar_bultos_50', c25: 'mar_cajas_25', c50: 'mar_cajas_50' },
+                { label: 'Miércoles', b25: 'mie_bultos_25', b50: 'mie_bultos_50', c25: 'mie_cajas_25', c50: 'mie_cajas_50' },
+                { label: 'Jueves',    b25: 'jue_bultos_25', b50: 'jue_bultos_50', c25: 'jue_cajas_25', c50: 'jue_cajas_50' },
+                { label: 'Viernes',   b25: 'vie_bultos_25', b50: 'vie_bultos_50', c25: 'vie_cajas_25', c50: 'vie_cajas_50' },
+                { label: 'Sábado',    b25: 'sab_bultos_25', b50: 'sab_bultos_50', c25: 'sab_cajas_25', c50: 'sab_cajas_50' }
+            ]; %>
+
+            <% dias.forEach(d => { %>
+            <div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; text-align: center;"><%= d.label %></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div>
+                        <div style="font-size: 9px; color: #1e3a8a; text-align: center; margin-bottom: 2px;">Bulto 25</div>
+                        <input type="number" name="<%= d.b25 %>" class="inp-dia inp-bulto bulto25" data-emp="<%= emp.id %>" data-factor="2100" value="<%= reg[d.b25] || '' %>" min="0" placeholder="0" style="background: #eff6ff;">
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; color: #047857; text-align: center; margin-bottom: 2px;">Bulto 50</div>
+                        <input type="number" name="<%= d.b50 %>" class="inp-dia inp-bulto bulto50" data-emp="<%= emp.id %>" data-factor="2100" value="<%= reg[d.b50] || '' %>" min="0" placeholder="0" style="background: #ecfdf5;">
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; color: #b45309; text-align: center; margin-bottom: 2px;">Cajas 25</div>
+                        <input type="number" name="<%= d.c25 %>" class="inp-dia inp-bulto caja25" data-emp="<%= emp.id %>" data-factor="25" value="<%= reg[d.c25] || '' %>" min="0" placeholder="0" style="background: #fffbeb; border-color: #fde68a;">
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; color: #9333ea; text-align: center; margin-bottom: 2px;">Cajas 50</div>
+                        <input type="number" name="<%= d.c50 %>" class="inp-dia inp-bulto caja50" data-emp="<%= emp.id %>" data-factor="50" value="<%= reg[d.c50] || '' %>" min="0" placeholder="0" style="background: #faf5ff; border-color: #e9d5ff;">
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+
+            <!-- BOTONES -->
+            <div>
+                <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
+                    <button type="submit" class="btn-guardar" style="width:100%;">💾 Guardar</button>
+                    <% if (reg.id) { %>
+                    <button type="button" class="btn-liquidar" style="width:100%;" onclick="liquidarSemana('<%= reg.id %>')">💰 Liquidar</button>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
+    </form>
+</div>
+
+<% }); %>
+<% } else { %>
+    <p style="color: var(--text-muted);">No hay empacadores registrados. Verifica la lista de empleados.</p>
+<% } %>
+
+<script>
+    // ── Calcular total en tiempo real ──
+    document.querySelectorAll('.inp-bulto').forEach(inp => {
+        inp.addEventListener('input', function() {
+            const empId = this.getAttribute('data-emp');
+            let total = 0;
+            document.querySelectorAll(`.inp-bulto[data-emp="${empId}"]`).forEach(i => {
+                const val = parseInt(i.value) || 0;
+                const factor = parseInt(i.getAttribute('data-factor')) || 0;
+                total += (val * factor);
+            });
+            const totalEl = document.getElementById('total_tabs_' + empId);
+            if (totalEl) {
+                totalEl.textContent = '📦 Tabacos Empacados: ' + total.toLocaleString('es-CO');
+            }
+        });
+    });
+
+    // ── Filtrado en tiempo real ──
+    function filtrarTarjetas(inputId, selector) {
+        const q = document.getElementById(inputId).value.toLowerCase().trim();
+        const tarjetas = document.querySelectorAll(selector);
+        let visibles = 0;
+        tarjetas.forEach(card => {
+            const nombre = card.getAttribute('data-nombre') || '';
+            const mostrar = !q || nombre.includes(q);
+            card.style.display = mostrar ? '' : 'none';
+            if (mostrar) visibles++;
+        });
+        const counterId = inputId.replace('buscar-', 'contador-');
+        const counter = document.getElementById(counterId);
+        if (counter) counter.textContent = q ? `${visibles} resultado(s)` : '';
+    }
+
+    // ── Liquidar ──
+    function liquidarSemana(registroId) {
+        if (confirm("¿Liquidar la semana de este Empacador? Se cerrará la hoja de recepción.")) {
+            const form = document.createElement("form");
+            form.method = "POST";
+            form.action = "/empacadores/liquidar_semana/" + registroId;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    }
+</script>
 
 <%- include('../partials/footer') %>

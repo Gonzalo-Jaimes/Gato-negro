@@ -11,10 +11,14 @@
             "id": "cb0b9b8bd7fc6f49",
             "type": "leaf",
             "state": {
-              "type": "graph",
-              "state": {},
-              "icon": "lucide-git-fork",
-              "title": "Vista gráfica"
+              "type": "markdown",
+              "state": {
+                "file": "anilladores.md",
+                "mode": "source",
+                "source": false
+              },
+              "icon": "lucide-file",
+              "title": "anilladores"
             }
           }
         ]
@@ -70,8 +74,7 @@
               "title": "Marcadores"
             }
           }
-        ],
-        "currentTab": 2
+        ]
       }
     ],
     "direction": "horizontal",
@@ -177,22 +180,29 @@
       "bases:Crear nueva base": false
     }
   },
-  "active": "c547cb89012ae7d6",
+  "active": "cb0b9b8bd7fc6f49",
   "lastOpenFiles": [
+    "src/routes/empacadores.js",
+    "test_db.js",
+    "documentacion/2026-07-17.md",
+    "Pasted image 20260717081257.png",
+    "Pasted image 20260717081416.png",
+    "Desarrollo ERP Gato Negro.pdf",
+    "2026-07-17.md",
+    "2026-07-16.md",
+    "anilladores.md",
+    "scripts/init_marcas.js",
+    "Sin título.base",
+    "Sin título.canvas",
+    "documentacion/Módulo Envolvedoras.md",
     "views/produccion/envolvedoras_control.ejs",
     "views/produccion/envolvedoras_recepcion.ejs",
     "views/produccion/envolvedoras_despacho.ejs",
-    "documentacion/Módulo Envolvedoras.md",
     "scripts/update_insumos.js",
     "scripts",
     "views/produccion/anilladores_inventario.ejs",
-    "views/produccion/anilladores_recepcion.ejs",
-    "views/produccion/anilladores_despacho.ejs",
-    "views/produccion/anilladores_dashboard.ejs",
-    "src/routes/anilladores.js",
     "documentacion/Módulo Anilladores.md",
     "documentacion/PERSONAL_Y_ORGANIGRAMA.md",
-    "Sin título 2.base",
     "documentacion/FINANZAS_Y_FORMULAS.md",
     "documentacion/DICCIONARIO_FABRICA.md",
     "documentacion/EMPRESA_GATO_NEGRO.md",
@@ -203,7 +213,6 @@
     "documentacion/registro_bugfix_ollama.md",
     "documentacion/registro_avances_gemini_audio.md",
     "Módulo Anilladores.md",
-    "Sin título.canvas",
     "documentacion/PENDIENTES_TECNICOS.md",
     "documentacion/Supabase.md",
     "2026-07-14.md",

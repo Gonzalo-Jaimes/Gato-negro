@@ -8,7 +8,7 @@
 
 <div style="margin-bottom: 20px;">
     <h1 style="margin: 0;">🌯 Envolvedoras — Asignar Semana</h1>
-    <p style="color: gray; margin-top: 5px;">Asigna la semana a una envolvedora y calcula el papel necesario.</p>
+    <p style="color: gray; margin-top: 5px;">Asigna la semana a una envolvedora y calcula el papel necesario en kilogramos.</p>
 </div>
 
 <div class="section-box" style="border-top: 4px solid #10b981;">
@@ -33,24 +33,31 @@
                 </div>
                 <input type="hidden" name="empleado_id" id="env_id" required>
             </div>
+            <div style="flex: 1; min-width: 130px;">
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">2. Marca:</label>
+                <select name="marca" style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:14px;" required>
+                    <option value="Gato">Gato</option>
+                    <option value="Intabaca">Intabaca</option>
+                </select>
+            </div>
 
             <div style="flex: 1; min-width: 130px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">2. Cestas asignadas:</label>
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">3. Cestas asignadas:</label>
                 <input type="number" name="cestas_asignadas" id="inp_cestas_env" min="1" placeholder="Ej: 4"
                        oninput="calcPapel()"
                        style="width:100%; padding:8px; border:2px solid #6b7280; border-radius:6px; font-size:16px; box-sizing:border-box;">
             </div>
 
             <div style="flex: 1; min-width: 160px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">3. Peso de 50 papelitos (g):</label>
-                <input type="number" name="peso_50_papelitos" id="inp_p50" step="0.1" min="0" placeholder="Ej: 240"
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">4. Peso de 50 tabacos (kg):</label>
+                <input type="number" name="peso_50_tabacos" id="inp_p50" step="0.001" min="0" placeholder="Ej: 0.010"
                        oninput="calcPapel()"
                        style="width:100%; padding:8px; border:2px solid #d97706; border-radius:6px; font-size:16px; box-sizing:border-box;">
             </div>
 
             <div style="flex: 1; min-width: 160px;">
-                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">4. Papel a entregar (g):</label>
-                <input type="number" name="papel_trans_g" id="inp_papel_real" step="0.1" min="0" placeholder="Calculo automático"
+                <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">5. Papel a entregar (kg):</label>
+                <input type="number" name="papel_trans_g" id="inp_papel_real" step="0.001" min="0" placeholder="Calculo automático"
                        style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:16px; box-sizing:border-box; font-weight:bold;">
             </div>
         </div>
@@ -88,10 +95,11 @@
             document.getElementById('resultado_papel').style.display = 'none';
             return;
         }
-        const papelCalc = Math.ceil(cestas * p50);
+        // 1 cesta = 1250 tabacos = 25 grupos de 50 tabacos
+        const papelCalc = (cestas * p50 * 25).toFixed(3);
         document.getElementById('inp_papel_real').value = papelCalc;
         document.getElementById('txt_papel_calc').innerText =
-            `${cestas} cestas × ${p50}g (peso 50 papelitos) = ${papelCalc}g de papel a entregar`;
+            `${cestas} cestas × 25 grupos/cesta × ${p50} kg = ${papelCalc} kg de papel a entregar`;
         document.getElementById('resultado_papel').style.display = 'block';
     }
 </script>

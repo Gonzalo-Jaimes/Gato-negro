@@ -310,11 +310,10 @@
 
             <a href="#" class="nav-item" onclick="toggleSub('submenu-envolvedoras')">🌯 Envolvedoras</a>
             <div id="submenu-envolvedoras" class="submenu">
-                <a href="/envolvedoras/despacho" class="sub-item">📄 Asignar Semana</a>
-                <a href="/envolvedoras/recepcion" class="sub-item">⚖️ Recepción</a>
-                <a href="/envolvedoras/control" class="sub-item">📊 Control Semanal</a>
+                <a href="/envolvedoras/despacho" class="nav-item-sub <%= locals.currentUrl === '/envolvedoras/despacho' ? 'active' : '' %>">📄 Asignar Semana</a>
+                <a href="/envolvedoras/control" class="nav-item-sub <%= locals.currentUrl === '/envolvedoras/control' ? 'active' : '' %>">📅 Recepción Diaria</a>
             </div>
-            <a href="/recepcion_empaque" class="nav-item">📦 Empacado</a>
+            <a href="/empacadores/recepcion" class="nav-item">📦 Empacado</a>
         </div>
 
         <!-- ⚙️ TÉCNICO -->

@@ -1,92 +1,167 @@
 <%- include('../partials/header') %>
 
 <style>
-    .tbl-env { width: 100%; border-collapse: collapse; min-width: 1300px; }
-    .tbl-env th, .tbl-env td { border: 1px solid #d1d5db; padding: 5px 7px; text-align: center; font-size: 13px; }
-    .tbl-env th { background: #f3f4f6; position: sticky; top: 0; z-index: 10; }
-    .tbl-env td input[type=number] { width: 52px; text-align: center; border: 1px solid #ccc; padding: 3px; border-radius: 4px; }
-    .btn-g  { background: #3b82f6; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; }
-    .btn-lq { background: #10b981; color: white; padding: 5px 10px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; font-size: 12px; margin-top: 3px; }
+    .btn-guardar  { background-color: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
+    .btn-liquidar { background-color: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; margin-top: 6px; }
+    .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
+    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
+    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
+    .inp-dia:focus { outline: 2px solid #3b82f6; }
 </style>
 
 <div style="margin-bottom: 20px;">
-    <h1 style="margin: 0;">📊 Control Semanal de Envolvedoras</h1>
-    <p style="color: gray; margin-top: 5px;">Registra las cestas que entran y salen cada día de la semana.</p>
+    <h1 style="margin: 0; color: var(--text-main);">📅 Recepción Diaria de Envolvedoras</h1>
+    <p style="color: var(--text-muted); margin-top: 5px;">Guarda los avances diarios de Lunes a Sábado. Los tabacos se calculan automáticamente (Cestas × 1250).</p>
+</div>
+
+<!-- BARRA DE BÚSQUEDA -->
+<div style="margin-bottom: 20px;">
+    <input type="text" id="buscar-env" placeholder="🔍 Buscar envolvedora por nombre o código..."
+           oninput="filtrarTarjetas('buscar-env', '.tarjeta-env')"
+           style="width: 100%; max-width: 460px; padding: 10px 16px; border: 2px solid var(--border-color); border-radius: 10px; font-size: 14px; background: var(--bg-card); color: var(--text-main); box-sizing: border-box;">
+    <span id="contador-env" style="margin-left: 12px; font-size: 13px; color: var(--text-muted);"></span>
 </div>
 
 <% if (registros && registros.length > 0) { %>
-<div style="overflow-x: auto;">
-<table class="tbl-env">
-    <thead>
-        <tr>
-            <th rowspan="2" style="width:13%; text-align:left; padding-left:8px;">ENVOLVEDORA</th>
-            <th rowspan="2" style="background:#fef9c3; color:#92400e;">Papel<br>Asignado(g)</th>
-            <th colspan="6" style="background:#dbeafe; color:#1e40af;">LLEVAN PARA ENVOLVER (cestas IN)</th>
-            <th colspan="6" style="background:#d1fae5; color:#065f46;">TRAEN TABACO ENVUELTO (cestas OUT)</th>
-            <th colspan="6" style="background:#fee2e2; color:#991b1b;">EXTRA PAPEL DIARIO (+g)</th>
-            <th rowspan="2" style="background:#ede9fe; color:#5b21b6;">Sobrante<br>Final (g)</th>
-            <th rowspan="2" style="background:#f3f4f6;">ACCIONES</th>
-        </tr>
-        <tr>
-            <th>Lun</th><th>Mar</th><th>Mié</th><th>Jue</th><th>Vie</th><th>Sáb</th>
-            <th style="background:#d1fae5;">Lun</th><th style="background:#d1fae5;">Mar</th><th style="background:#d1fae5;">Mié</th><th style="background:#d1fae5;">Jue</th><th style="background:#d1fae5;">Vie</th><th style="background:#d1fae5;">Sáb</th>
-            <th style="background:#fee2e2;">Lun</th><th style="background:#fee2e2;">Mar</th><th style="background:#fee2e2;">Mié</th><th style="background:#fee2e2;">Jue</th><th style="background:#fee2e2;">Vie</th><th style="background:#fee2e2;">Sáb</th>
-        </tr>
-    </thead>
-    <tbody>
-        <% registros.forEach(reg => {
-            const emp = empleados.find(e => e.id === reg.empleado_id) || {};
-            const totalIn  = (reg.lun_cestas_in||0)+(reg.mar_cestas_in||0)+(reg.mie_cestas_in||0)+(reg.jue_cestas_in||0)+(reg.vie_cestas_in||0)+(reg.sab_cestas_in||0);
-            const totalOut = (reg.lun_cestas_out||0)+(reg.mar_cestas_out||0)+(reg.mie_cestas_out||0)+(reg.jue_cestas_out||0)+(reg.vie_cestas_out||0)+(reg.sab_cestas_out||0);
-            const pago = totalOut * (reg.precio_cesta || 11000);
-        %>
-        <form action="/guardar_envoltedora" method="POST">
-            <input type="hidden" name="empleado_id" value="<%= reg.empleado_id %>">
-            <input type="hidden" name="registro_id" value="<%= reg.id %>">
-            <input type="hidden" name="cestas_asignadas" value="<%= reg.cestas_asignadas || 0 %>">
-            <input type="hidden" name="papel_trans_g" value="<%= reg.papel_trans_g || 0 %>">
-            <input type="hidden" name="precio_cesta" value="<%= reg.precio_cesta || 11000 %>">
-        <tr>
-            <td style="text-align:left; padding-left:8px; font-weight:bold; font-size:12px;">
-                <%= emp.codigo %> – <%= emp.nombre %>
-                <br><span style="font-weight:normal; color:#10b981; font-size:11px;">
-                    ✔ <%= totalOut %> cest. out | $<%= pago.toLocaleString('es-CO') %>
-                </span>
-            </td>
-            <td style="background:#fef9c3; font-weight:bold;"><%= reg.papel_trans_g || 0 %>g</td>
-            <td><input type="number" name="lun_cestas_in"  value="<%= reg.lun_cestas_in  || '' %>" min="0"></td>
-            <td><input type="number" name="mar_cestas_in"  value="<%= reg.mar_cestas_in  || '' %>" min="0"></td>
-            <td><input type="number" name="mie_cestas_in"  value="<%= reg.mie_cestas_in  || '' %>" min="0"></td>
-            <td><input type="number" name="jue_cestas_in"  value="<%= reg.jue_cestas_in  || '' %>" min="0"></td>
-            <td><input type="number" name="vie_cestas_in"  value="<%= reg.vie_cestas_in  || '' %>" min="0"></td>
-            <td><input type="number" name="sab_cestas_in"  value="<%= reg.sab_cestas_in  || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="lun_cestas_out" value="<%= reg.lun_cestas_out || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="mar_cestas_out" value="<%= reg.mar_cestas_out || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="mie_cestas_out" value="<%= reg.mie_cestas_out || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="jue_cestas_out" value="<%= reg.jue_cestas_out || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="vie_cestas_out" value="<%= reg.vie_cestas_out || '' %>" min="0"></td>
-            <td style="background:#f0fdf4;"><input type="number" name="sab_cestas_out" value="<%= reg.sab_cestas_out || '' %>" min="0"></td>
-            <td style="background:#fff1f2;"><input type="number" name="lun_papel_extra" value="<%= reg.lun_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#fff1f2;"><input type="number" name="mar_papel_extra" value="<%= reg.mar_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#fff1f2;"><input type="number" name="mie_papel_extra" value="<%= reg.mie_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#fff1f2;"><input type="number" name="jue_papel_extra" value="<%= reg.jue_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#fff1f2;"><input type="number" name="vie_papel_extra" value="<%= reg.vie_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#fff1f2;"><input type="number" name="sab_papel_extra" value="<%= reg.sab_papel_extra || '' %>" min="0" step="0.1" style="width:55px;"></td>
-            <td style="background:#f5f3ff;"><input type="number" name="papel_sobrante_g" value="<%= reg.papel_sobrante_g || '' %>" min="0" step="0.1" style="width:60px;"></td>
-            <td>
-                <button type="submit" class="btn-g">💾</button>
-                <% if (totalOut > 0) { %>
-                <button type="submit" formaction="/liquidar_envolvedora/<%= reg.id %>" class="btn-lq" onclick="return confirm('¿Liquidar <%= emp.nombre %>? Pago: $<%= pago.toLocaleString('es-CO') %>')">✅ Liq.</button>
-                <% } %>
-            </td>
-        </tr>
-        </form>
-        <% }); %>
-    </tbody>
-</table>
+
+<% registros.forEach(reg => {
+    const emp = empleados.find(e => e.id === reg.empleado_id) || {};
+    const totalOut = (reg.lun_cestas_out||0)+(reg.mar_cestas_out||0)+(reg.mie_cestas_out||0)+(reg.jue_cestas_out||0)+(reg.vie_cestas_out||0)+(reg.sab_cestas_out||0);
+    const asignadas = reg.cestas_asignadas || 0;
+    const pendiente = asignadas - totalOut;
+    const pago = totalOut * (reg.precio_cesta || 11000);
+    const extraTotal = (reg.lun_papel_extra||0)+(reg.mar_papel_extra||0)+(reg.mie_papel_extra||0)+(reg.jue_papel_extra||0)+(reg.vie_papel_extra||0)+(reg.sab_papel_extra||0);
+%>
+
+<div class="card tarjeta-env" data-nombre="<%= (emp.codigo + ' ' + emp.nombre).toLowerCase() %>" style="margin-bottom: 24px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? '#10b981' : '#f59e0b' %>;">
+
+    <!-- CABECERA -->
+    <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
+        <div>
+            <strong style="font-size: 15px; color: var(--text-main);"><%= emp.codigo %> — <%= emp.nombre %></strong>
+            <span style="margin-left: 12px; font-size: 12px; color: #6b7280;">🌯 <%= reg.marca || 'Gato' %></span>
+            <br>
+            <span class="badge-pendiente <%= pendiente <= 0 ? 'verde' : 'rojo' %>" style="margin-top: 4px;">
+                <%= pendiente <= 0 ? '✅ Completó ' + totalOut + ' cestas' : '⏳ Faltan: ' + pendiente + ' cestas' %>
+            </span>
+        </div>
+        <div style="text-align: right; font-size: 13px; color: #10b981; font-weight: bold;">
+            $<%= pago.toLocaleString('es-CO') %> COP
+            <br><span style="color: var(--text-muted); font-size: 11px;">
+                Papel — Asig: <strong><%= reg.papel_trans_g || 0 %> kg</strong> |
+                Extra: <strong><%= extraTotal || 0 %> kg</strong> |
+                Sobrante: <strong><%= reg.papel_sobrante_g || 0 %> kg</strong>
+            </span>
+        </div>
+    </div>
+
+    <!-- FORMULARIO COMPLETO INDEPENDIENTE -->
+    <form action="/guardar_envoltedora" method="POST" style="padding: 16px;">
+        <input type="hidden" name="empleado_id"     value="<%= reg.empleado_id %>">
+        <input type="hidden" name="registro_id"     value="<%= reg.id %>">
+        <input type="hidden" name="cestas_asignadas" value="<%= reg.cestas_asignadas || 0 %>">
+        <input type="hidden" name="papel_trans_g"   value="<%= reg.papel_trans_g || 0 %>">
+        <input type="hidden" name="precio_cesta"    value="<%= reg.precio_cesta || 11000 %>">
+
+        <div style="display: grid; grid-template-columns: repeat(6, 1fr) 160px; gap: 12px; align-items: start;">
+
+            <% const dias = [
+                { label: 'Lunes',     pre: 'lun' },
+                { label: 'Martes',    pre: 'mar' },
+                { label: 'Miércoles', pre: 'mie' },
+                { label: 'Jueves',    pre: 'jue' },
+                { label: 'Viernes',   pre: 'vie' },
+                { label: 'Sábado',    pre: 'sab' }
+            ]; %>
+
+            <% dias.forEach(d => { %>
+            <div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--text-muted); margin-bottom: 6px; text-align: center;"><%= d.label %></div>
+                <div style="display: flex; flex-direction: column; gap: 4px;">
+                    <div>
+                        <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px;">Cestas</div>
+                        <input type="number" name="<%= d.pre %>_cestas_out"
+                               class="inp-dia inp-cestas"
+                               data-regid="<%= reg.id %>"
+                               data-dia="<%= d.pre %>"
+                               value="<%= reg[d.pre + '_cestas_out'] || '' %>"
+                               min="0" placeholder="0">
+                    </div>
+                    <div>
+                        <div style="font-size: 9px; color: var(--text-muted); text-align: center; margin-bottom: 2px;">Tabacos</div>
+                        <input type="number" name="<%= d.pre %>_tabacos_out"
+                               id="tab_<%= reg.id %>_<%= d.pre %>"
+                               class="inp-dia"
+                               value="<%= reg[d.pre + '_tabacos_out'] || '' %>"
+                               placeholder="0">
+                    </div>
+                </div>
+            </div>
+            <% }); %>
+
+            <!-- COLUMNA DE PAPEL + BOTONES -->
+            <div>
+                <div style="font-size: 11px; font-weight: bold; color: #b45309; margin-bottom: 4px;">📄 Papel Extra (kg)</div>
+                <input type="number" name="lun_papel_extra" step="0.001" min="0"
+                       value="<%= extraTotal || '' %>"
+                       class="inp-dia"
+                       style="border-color: #fca5a5; background: #fef2f2;" placeholder="0.000">
+
+                <div style="font-size: 11px; font-weight: bold; color: #5b21b6; margin-top: 8px; margin-bottom: 4px;">🔄 Sobrante (kg)</div>
+                <input type="number" name="papel_sobrante_g" step="0.001" min="0"
+                       value="<%= reg.papel_sobrante_g || '' %>"
+                       class="inp-dia"
+                       style="border-color: #c4b5fd; background: #f5f3ff;" placeholder="0.000">
+
+                <div style="margin-top: 12px;">
+                    <button type="submit" class="btn-guardar">💾 Guardar</button>
+                    <% if (totalOut > 0) { %>
+                    <button type="submit"
+                            formaction="/liquidar_envolvedora/<%= reg.id %>"
+                            class="btn-liquidar"
+                            onclick="return confirm('¿Liquidar a <%= emp.nombre %>?\nPago: $<%= pago.toLocaleString('es-CO') %> por <%= totalOut %> cestas.')">
+                        ✅ Liquidar
+                    </button>
+                    <% } %>
+                </div>
+            </div>
+
+        </div>
+    </form>
 </div>
+
+<% }); %>
+
 <% } else { %>
-<p style="color:gray; text-align:center; padding:30px;">No hay envolvedoras activas esta semana. Asigna una en la pantalla de Asignar Semana.</p>
+<p style="color:gray; text-align:center; padding:40px;">No hay envolvedoras activas esta semana. Asigna una en la pantalla de <a href="/envolvedoras/despacho">Asignar Semana</a>.</p>
 <% } %>
+
+<script>
+    document.querySelectorAll('.inp-cestas').forEach(inp => {
+        inp.addEventListener('input', function() {
+            const val = parseFloat(this.value) || 0;
+            const regId = this.getAttribute('data-regid');
+            const dia   = this.getAttribute('data-dia');
+            const tabInput = document.getElementById('tab_' + regId + '_' + dia);
+            if (tabInput) tabInput.value = val > 0 ? val * 1250 : '';
+        });
+    });
+
+    function filtrarTarjetas(inputId, selector) {
+        const q = document.getElementById(inputId).value.toLowerCase().trim();
+        const tarjetas = document.querySelectorAll(selector);
+        let visibles = 0;
+        tarjetas.forEach(card => {
+            const nombre = card.getAttribute('data-nombre') || '';
+            const mostrar = !q || nombre.includes(q);
+            card.style.display = mostrar ? '' : 'none';
+            if (mostrar) visibles++;
+        });
+        const counterId = inputId.replace('buscar-', 'contador-');
+        const counter = document.getElementById(counterId);
+        if (counter) counter.textContent = q ? `${visibles} resultado(s)` : '';
+    }
+</script>
 
 <%- include('../partials/footer') %>

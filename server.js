@@ -55,6 +55,7 @@ const equiposRoutes  = require('./src/routes/equipos');
 const finanzasRoutes = require('./src/routes/finanzas');
 const operarioRoutes = require('./src/routes/operario');
 const anilladoresRoutes = require('./src/routes/anilladores');
+const empacadoresRoutes = require('./src/routes/empacadores');
 
 app.get('/', (req, res) => res.render('login'));
 
@@ -65,6 +66,7 @@ app.use('/', equiposRoutes);
 app.use('/', finanzasRoutes);
 app.use('/', operarioRoutes);
 app.use('/', anilladoresRoutes);
+app.use('/', empacadoresRoutes);
 
 // --- MANEJO DE ERRORES 404 ---
 app.use((req, res) => {
