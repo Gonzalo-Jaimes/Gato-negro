@@ -57,7 +57,7 @@ const operarioRoutes = require('./src/routes/operario');
 const anilladoresRoutes = require('./src/routes/anilladores');
 const empacadoresRoutes = require('./src/routes/empacadores');
 
-app.get('/', (req, res) => res.render('login'));
+app.get('/', (req, res) => res.render('landing'));
 
 // Todos montados en raíz → /despacho, /anilladores, /inventario, etc.
 app.use('/', adminRoutes);

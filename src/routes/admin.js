@@ -16,11 +16,11 @@ router.post('/login', async (req, res) => {
         .eq('usuario', usuario)
         .single(); 
 
-    if (error || !resultado) return res.send(mostrarAlerta('Oops...', 'Usuario no encontrado.', 'error', '/'));
+    if (error || !resultado) return res.send(mostrarAlerta('Oops...', 'Usuario no encontrado.', 'error', '/login'));
     
     const passwordMatch = await bcrypt.compare(password, resultado.password);
     
-    if (!passwordMatch) return res.send(mostrarAlerta('Acceso Denegado', 'La contraseña es incorrecta.', 'error', '/'));
+    if (!passwordMatch) return res.send(mostrarAlerta('Acceso Denegado', 'La contraseña es incorrecta.', 'error', '/login'));
     
     req.session.usuario = resultado.usuario;
     req.session.rol = resultado.rol;
@@ -36,7 +36,7 @@ router.post('/login', async (req, res) => {
 // ---------------- LOGIN NFC ----------------
 router.get('/login/nfc', async (req, res) => {
     const token = req.query.token;
-    if (!token) return res.send(mostrarAlerta('Error', 'No se proporcionó token NFC.', 'error', '/'));
+    if (!token) return res.send(mostrarAlerta('Error', 'No se proporcionó token NFC.', 'error', '/login'));
 
     try {
         const { data: resultado, error } = await supabase
@@ -46,28 +46,28 @@ router.get('/login/nfc', async (req, res) => {
             .single();
 
         if (error || !resultado) {
-            return res.send(mostrarAlerta('Acceso Denegado', 'Tarjeta NFC no reconocida.', 'error', '/'));
+            return res.send(mostrarAlerta('Acceso Denegado', 'Tarjeta NFC no reconocida.', 'error', '/login'));
         }
 
         // Si existe, iniciar sesión automáticamente
         req.session.usuario = resultado.usuario;
         req.session.rol = resultado.rol;
         
-        // Redirigir según el rol con un saludo
+        // Redirigir según el rol
         const redirectPath = (resultado.rol === "admin") ? "/inventario" : 
                              (resultado.rol === "mantenimiento") ? "/mantenimiento" :
                              (resultado.rol === "anillador" || resultado.rol === "empacador") ? "/cierre_diario" : "/pedidos";
 
-        res.send(mostrarAlerta('¡Bienvenido!', `Hola de nuevo, ${resultado.usuario}.`, 'success', redirectPath));
+        res.render('splash_nfc', { usuario: resultado.usuario, redirectPath });
     } catch (e) {
         console.error(e);
-        res.send(mostrarAlerta('Error', 'Fallo al validar NFC', 'error', '/'));
+        res.send(mostrarAlerta('Error', 'Fallo al validar NFC', 'error', '/login'));
     }
 });
 
 router.get('/logout', (req, res) => {
     req.session = null; // cookie-session no tiene .destroy() — esto borra la cookie
-    res.redirect('/'); 
+    res.redirect('/login'); 
 });
 
 // ---------------- GESTIÓN DE USUARIOS ----------------
