@@ -4,121 +4,153 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Don Gato | Software de Gestión Tabaquera</title>
-    <!-- Incluimos Tailwind CSS por CDN para hacer un landing moderno rápidamente -->
+    <!-- Incluimos Tailwind CSS por CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #f8fafc;
-            color: #1e293b;
+            background-color: #0f172a; /* Fondo oscuro Gato Negro */
+            color: #f8fafc;
+            overflow-x: hidden;
+            cursor: default;
+        }
+
+        /* Ocultar scrollbar para estética */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0f172a; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #334155; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #475569; 
+        }
+
+        /* Filtro para Neko98: El gato por defecto es blanco, esto lo vuelve negro */
+        #oneko {
+            filter: invert(1) hue-rotate(180deg);
+        }
+
+        /* Gradiente de fondo similar al de la imagen */
+        .bg-gradient-dark {
+            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
         }
     </style>
 </head>
-<body class="antialiased">
+<body class="antialiased bg-gradient-dark">
+
+    <!-- Se eliminó el cursor estático para usar oneko.js -->
 
     <!-- Navegación -->
-    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
-        <div class="text-2xl font-extrabold text-blue-600">
-            🐈 Don Gato<span class="text-slate-800">SaaS</span>
+    <nav class="container mx-auto px-6 py-6 flex justify-between items-center relative z-10">
+        <div class="text-2xl font-extrabold text-orange-500 flex items-center gap-2">
+            <img src="/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full" onerror="this.style.display='none'"> 
+            Don Gato<span class="text-white">SaaS</span>
         </div>
         <div>
-            <a href="/login" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
-                Iniciar Sesión ERP
+            <a href="/login" class="px-6 py-2 bg-orange-500 text-black font-extrabold rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition">
+                INICIAR SESIÓN
             </a>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <header class="container mx-auto px-6 py-16 text-center">
-        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
-            Control total para tu <span class="text-blue-600">Fábrica de Tabaco</span>
+    <header class="container mx-auto px-6 py-20 text-center relative z-10">
+        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 drop-shadow-lg">
+            Control total para tu <br/><span class="text-orange-500">Fábrica de Tabaco</span>
         </h1>
-        <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
-            Descubre Gato Negro, la plataforma ERP definitiva creada por Don Gato. Gestiona el inventario, supervisa a tus anilladores y empacadores, y mantén el control de tus finanzas en tiempo real.
+        <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
+            Descubre Gato Negro, la plataforma ERP definitiva creada por Don Gato. Gestiona el inventario, supervisa a tus trabajadores y mantén el control de tus finanzas en tiempo real.
         </p>
-        <div class="flex justify-center gap-4">
-            <a href="/login" class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition text-lg">
-                Ingresar al Sistema
+        <div class="flex flex-col sm:flex-row justify-center gap-4">
+            <a href="/login" class="px-8 py-4 bg-orange-500 text-black font-extrabold rounded-xl shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition text-lg tracking-wide">
+                ACCEDER AL SISTEMA
             </a>
-            <a href="#caracteristicas" class="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl shadow border border-slate-200 hover:bg-slate-50 transition text-lg">
+            <a href="#caracteristicas" class="px-8 py-4 bg-slate-800 text-white font-bold rounded-xl shadow border border-slate-700 hover:bg-slate-700 transition text-lg">
                 Ver Características
             </a>
         </div>
     </header>
 
     <!-- Características Completas del ERP -->
-    <section id="caracteristicas" class="bg-white py-20 border-t border-slate-100">
+    <section id="caracteristicas" class="py-24 border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm relative z-10">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl font-extrabold text-center mb-4">Módulos y Funcionalidades del Sistema</h2>
-            <p class="text-center text-slate-500 mb-16 max-w-2xl mx-auto">Gato Negro ERP está diseñado para abarcar toda la cadena de valor de la producción tabaquera, desde la hoja de tabaco hasta la venta final.</p>
+            <h2 class="text-4xl font-extrabold text-center text-white mb-4">Módulos y Funcionalidades del Sistema</h2>
+            <p class="text-center text-slate-400 mb-16 max-w-2xl mx-auto">Gato Negro ERP está diseñado para abarcar toda la cadena de valor de la producción tabaquera, desde la hoja de tabaco hasta la venta final.</p>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Inventario -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📦</div>
-                    <h3 class="text-xl font-bold mb-3">Gestión de Inventario (Kardex)</h3>
-                    <p class="text-slate-600 text-sm">Control estricto de Entradas y Salidas en tiempo real. Gestión de Materia Prima (Capa, Picadura), Insumos (Anillos, Papel), Tabacos en proceso y Producto Terminado. Todo con historial trazable.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">📦</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Gestión de Inventario</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Control estricto de Entradas y Salidas en tiempo real. Gestión de Materia Prima (Capa, Picadura), Insumos (Anillos, Papel), Tabacos en proceso y Producto Terminado.</p>
                 </div>
                 
                 <!-- Fabriquines -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 text-2xl">🌱</div>
-                    <h3 class="text-xl font-bold mb-3">Módulo Fabriquines</h3>
-                    <p class="text-slate-600 text-sm">Despacho de hojas, pesaje de materia prima y recepción diaria de tabacos elaborados. Controla la "Deuda" de material de cada torcedor y calcula la merma exacta de forma automatizada.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🌱</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Módulo Fabriquines</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Despacho de hojas, pesaje de materia prima y recepción diaria de tabacos elaborados. Controla la "Deuda" de material de cada torcedor automatizadamente.</p>
                 </div>
                 
                 <!-- Envolvedoras y Anilladores -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 text-2xl">🌯</div>
-                    <h3 class="text-xl font-bold mb-3">Envolvedoras y Anilladores</h3>
-                    <p class="text-slate-600 text-sm">Despacho inteligente que descuenta papel e insumos automáticamente. Sistema de recepción con tarjetas visuales semanales. Liquidación por cestas, paquetes o unidades exactas.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🌯</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Envolvedoras y Anilladores</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Despacho inteligente que descuenta papel e insumos automáticamente. Sistema de recepción con tarjetas visuales semanales y liquidación exacta.</p>
                 </div>
 
                 <!-- Empacadores -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📦</div>
-                    <h3 class="text-xl font-bold mb-3">Control de Empaque Avanzado</h3>
-                    <p class="text-slate-600 text-sm">Registro de producción de empacadores soportando bultos completos (25/50 unidades) y la flexibilidad de sumar "cajas sueltas", arrojando el cálculo total exacto de tabacos terminados.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🏷️</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Control de Empaque</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Registro de producción de empacadores soportando bultos completos (25/50 unidades) y cajas sueltas, arrojando el cálculo total exacto de tabacos.</p>
                 </div>
 
                 <!-- Finanzas -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-6 text-2xl">💰</div>
-                    <h3 class="text-xl font-bold mb-3">Finanzas y Nómina (Cierre)</h3>
-                    <p class="text-slate-600 text-sm">Cierre diario y liquidación semanal automatizada. El sistema cruza la producción registrada con las tarifas de cada rol, generando el monto exacto a pagar a cada empleado y evitando pérdidas financieras.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">💰</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Finanzas y Nómina</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Cierre diario y liquidación semanal automatizada. El sistema cruza la producción con las tarifas de cada rol, generando el pago exacto a cada empleado.</p>
                 </div>
 
                 <!-- NFC & Tech -->
-                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
-                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📲</div>
-                    <h3 class="text-xl font-bold mb-3">Seguridad NFC y Bot Telegram</h3>
-                    <p class="text-slate-600 text-sm">Autenticación súper rápida mediante tecnología de tarjetas NFC físicas. Además, integración directa con un Bot de Telegram para consultas operativas remotas desde cualquier dispositivo móvil.</p>
+                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                    <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">📲</div>
+                    <h3 class="text-xl font-bold text-white mb-3">Seguridad NFC</h3>
+                    <p class="text-slate-400 text-sm leading-relaxed">Autenticación rápida mediante tarjetas NFC físicas e integración directa con un Bot de Telegram para consultas operativas desde cualquier lugar.</p>
                 </div>
             </div>
         </div>
     </section>
 
     <!-- Footer y Contacto -->
-    <footer class="bg-slate-900 text-slate-400 py-12 text-center">
+    <footer class="bg-slate-950 text-slate-400 py-12 text-center border-t border-slate-800 relative z-10">
         <div class="container mx-auto px-6">
             <h3 class="text-white text-2xl font-bold mb-6">¿Interesado en implementar Don Gato SaaS en tu fábrica?</h3>
-            <p class="mb-8">Contáctanos para obtener más información y agendar una demostración.</p>
+            <p class="mb-8 text-slate-500">Contáctanos para obtener más información y agendar una demostración.</p>
             
             <div class="flex flex-col sm:flex-row justify-center items-center gap-6 mb-10">
-                <a href="mailto:gonzaloandres577@gmail.com" class="flex items-center gap-2 text-slate-300 hover:text-white transition">
+                <a href="mailto:gonzaloandres577@gmail.com" class="flex items-center gap-2 text-slate-400 hover:text-orange-500 transition font-medium">
                     ✉️ gonzaloandres577@gmail.com
                 </a>
-                <a href="https://wa.me/573108034925?text=Hola Gonzalo! estoy interesado en el saas, me podrias dar mas informacion!" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-full shadow hover:bg-green-500 transition">
+                <a href="https://wa.me/573108034925?text=Hola Gonzalo! estoy interesado en el saas, me podrias dar mas informacion!" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-[#25D366] text-white font-bold rounded-full shadow-[0_0_15px_rgba(37,211,102,0.3)] hover:bg-[#20bd5a] transition">
                     💬 Escríbenos por WhatsApp
                 </a>
             </div>
 
-            <div class="border-t border-slate-800 pt-8 text-sm">
+            <div class="border-t border-slate-800 pt-8 text-sm text-slate-600">
                 <p>&copy; 2026 Don Gato SaaS Solutions. Todos los derechos reservados.</p>
             </div>
         </div>
     </footer>
 
+    <!-- Script interactivo de Oneko (Neko98 adaptado) servido desde CDN -->
+    <script src="https://cdn.jsdelivr.net/gh/adryd325/oneko.js/oneko.js" data-cat="https://raw.githubusercontent.com/adryd325/oneko.js/main/oneko.gif"></script>
 </body>
 </html>
