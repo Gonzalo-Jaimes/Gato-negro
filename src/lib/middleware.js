@@ -4,14 +4,14 @@ const isAdmin = (req, res, next) => {
     if (req.session && req.session.rol === 'admin') {
         return next();
     }
-    res.redirect('/');
+    res.redirect('/login');
 };
 
 const isAuth = (req, res, next) => {
     if (req.session && req.session.usuario) {
         return next();
     }
-    res.redirect('/');
+    res.redirect('/login');
 };
 
 module.exports = {

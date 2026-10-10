@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Don Gato | Software de Gestión Tabaquera</title>
+    <!-- Incluimos Tailwind CSS por CDN para hacer un landing moderno rápidamente -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+            color: #1e293b;
+        }
+    </style>
+</head>
+<body class="antialiased">
+
+    <!-- Navegación -->
+    <nav class="container mx-auto px-6 py-4 flex justify-between items-center">
+        <div class="text-2xl font-extrabold text-blue-600">
+            🐈 Don Gato<span class="text-slate-800">SaaS</span>
+        </div>
+        <div>
+            <a href="/login" class="px-6 py-2 bg-blue-600 text-white font-semibold rounded-lg shadow-md hover:bg-blue-700 transition">
+                Iniciar Sesión ERP
+            </a>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <header class="container mx-auto px-6 py-16 text-center">
+        <h1 class="text-5xl md:text-6xl font-extrabold tracking-tight text-slate-900 mb-6">
+            Control total para tu <span class="text-blue-600">Fábrica de Tabaco</span>
+        </h1>
+        <p class="text-xl text-slate-600 mb-10 max-w-2xl mx-auto">
+            Descubre Gato Negro, la plataforma ERP definitiva creada por Don Gato. Gestiona el inventario, supervisa a tus anilladores y empacadores, y mantén el control de tus finanzas en tiempo real.
+        </p>
+        <div class="flex justify-center gap-4">
+            <a href="/login" class="px-8 py-4 bg-slate-900 text-white font-bold rounded-xl shadow-lg hover:bg-slate-800 transition text-lg">
+                Ingresar al Sistema
+            </a>
+            <a href="#caracteristicas" class="px-8 py-4 bg-white text-slate-700 font-bold rounded-xl shadow border border-slate-200 hover:bg-slate-50 transition text-lg">
+                Ver Características
+            </a>
+        </div>
+    </header>
+
+    <!-- Características Completas del ERP -->
+    <section id="caracteristicas" class="bg-white py-20 border-t border-slate-100">
+        <div class="container mx-auto px-6">
+            <h2 class="text-4xl font-extrabold text-center mb-4">Módulos y Funcionalidades del Sistema</h2>
+            <p class="text-center text-slate-500 mb-16 max-w-2xl mx-auto">Gato Negro ERP está diseñado para abarcar toda la cadena de valor de la producción tabaquera, desde la hoja de tabaco hasta la venta final.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10">
+                <!-- Inventario -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📦</div>
+                    <h3 class="text-xl font-bold mb-3">Gestión de Inventario (Kardex)</h3>
+                    <p class="text-slate-600 text-sm">Control estricto de Entradas y Salidas en tiempo real. Gestión de Materia Prima (Capa, Picadura), Insumos (Anillos, Papel), Tabacos en proceso y Producto Terminado. Todo con historial trazable.</p>
+                </div>
+                
+                <!-- Fabriquines -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-xl flex items-center justify-center mb-6 text-2xl">🌱</div>
+                    <h3 class="text-xl font-bold mb-3">Módulo Fabriquines</h3>
+                    <p class="text-slate-600 text-sm">Despacho de hojas, pesaje de materia prima y recepción diaria de tabacos elaborados. Controla la "Deuda" de material de cada torcedor y calcula la merma exacta de forma automatizada.</p>
+                </div>
+                
+                <!-- Envolvedoras y Anilladores -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-amber-100 text-amber-600 rounded-xl flex items-center justify-center mb-6 text-2xl">🌯</div>
+                    <h3 class="text-xl font-bold mb-3">Envolvedoras y Anilladores</h3>
+                    <p class="text-slate-600 text-sm">Despacho inteligente que descuenta papel e insumos automáticamente. Sistema de recepción con tarjetas visuales semanales. Liquidación por cestas, paquetes o unidades exactas.</p>
+                </div>
+
+                <!-- Empacadores -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-indigo-100 text-indigo-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📦</div>
+                    <h3 class="text-xl font-bold mb-3">Control de Empaque Avanzado</h3>
+                    <p class="text-slate-600 text-sm">Registro de producción de empacadores soportando bultos completos (25/50 unidades) y la flexibilidad de sumar "cajas sueltas", arrojando el cálculo total exacto de tabacos terminados.</p>
+                </div>
+
+                <!-- Finanzas -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-rose-100 text-rose-600 rounded-xl flex items-center justify-center mb-6 text-2xl">💰</div>
+                    <h3 class="text-xl font-bold mb-3">Finanzas y Nómina (Cierre)</h3>
+                    <p class="text-slate-600 text-sm">Cierre diario y liquidación semanal automatizada. El sistema cruza la producción registrada con las tarifas de cada rol, generando el monto exacto a pagar a cada empleado y evitando pérdidas financieras.</p>
+                </div>
+
+                <!-- NFC & Tech -->
+                <div class="bg-slate-50 rounded-2xl p-8 border border-slate-100 hover:shadow-lg transition">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-xl flex items-center justify-center mb-6 text-2xl">📲</div>
+                    <h3 class="text-xl font-bold mb-3">Seguridad NFC y Bot Telegram</h3>
+                    <p class="text-slate-600 text-sm">Autenticación súper rápida mediante tecnología de tarjetas NFC físicas. Además, integración directa con un Bot de Telegram para consultas operativas remotas desde cualquier dispositivo móvil.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer y Contacto -->
+    <footer class="bg-slate-900 text-slate-400 py-12 text-center">
+        <div class="container mx-auto px-6">
+            <h3 class="text-white text-2xl font-bold mb-6">¿Interesado en implementar Don Gato SaaS en tu fábrica?</h3>
+            <p class="mb-8">Contáctanos para obtener más información y agendar una demostración.</p>
+            
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-6 mb-10">
+                <a href="mailto:gonzaloandres577@gmail.com" class="flex items-center gap-2 text-slate-300 hover:text-white transition">
+                    ✉️ gonzaloandres577@gmail.com
+                </a>
+                <a href="https://wa.me/573108034925?text=Hola Gonzalo! estoy interesado en el saas, me podrias dar mas informacion!" target="_blank" class="flex items-center gap-2 px-6 py-3 bg-green-600 text-white font-bold rounded-full shadow hover:bg-green-500 transition">
+                    💬 Escríbenos por WhatsApp
+                </a>
+            </div>
+
+            <div class="border-t border-slate-800 pt-8 text-sm">
+                <p>&copy; 2026 Don Gato SaaS Solutions. Todos los derechos reservados.</p>
+            </div>
+        </div>
+    </footer>
+
+</body>
+</html>
