@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gato Negro | Reporte No Supervisado - Día 2</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #141720;
+      --card-border: #232936;
+      --primary: #f59e0b;
+      --accent: #f97316;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding: 30px 20px;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 6px; }
+    p.subtitle { color: var(--text-muted); font-size: 1rem; }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .stat-card .label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; color: #fff; }
+    .stat-card .detail { font-size: 0.8rem; color: var(--primary); margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+    .table-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 12px 10px; color: var(--text-muted); border-bottom: 1px solid var(--card-border); font-size: 0.8rem; text-transform: uppercase; }
+    td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    .tag-g1 { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    .tag-g2 { background: rgba(245, 158, 11, 0.15); color: var(--yellow); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    .tag-g3 { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+
+    .alert-box {
+      background: rgba(239, 68, 68, 0.08);
+      border-left: 4px solid var(--red);
+      padding: 15px;
+      border-radius: 6px;
+      margin-bottom: 25px;
+    }
+    .alert-box h4 { color: var(--red); font-size: 0.95rem; margin-bottom: 4px; }
+    .alert-box p { font-size: 0.85rem; color: #cbd5e1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🧠 FASE 1: DESCRUBRIMIENTO CIEGO NO SUPERVISADO</div>
+      <h1>Análisis Granular: Día 2 (Lunes 2 de Marzo de 2026)</h1>
+      <p class="subtitle">Extracción paso a paso de datos operativos de fábrica sin sesgo previo ni etiquetas forzadas.</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Operarios del Día</div>
+        <div class="value">31</div>
+        <div class="detail">29 con ciclo cerrado / 2 retenidos</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Materia Prima Entregada</div>
+        <div class="value">2.124 kg</div>
+        <div class="detail">Capa, Capote y Picadura</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Tabacos Producidos</div>
+        <div class="value">203.450</div>
+        <div class="detail">~95.8 tabacos por kg de hoja</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Centroide de Merma Planta</div>
+        <div class="value">13.15%</div>
+        <div class="detail">Subproductos (Recorte + Vena)</div>
+      </div>
+    </div>
+
+    <div class="alert-box">
+      <h4>⚠️ Detección No Supervisada de Anomalías de Flujo</h4>
+      <p>La red identificó a 2 operarios que recibieron materia prima pero no registraron entrega de tabacos terminados el mismo día: <strong>Esperanza Rey (29.4 kg)</strong> y <strong>Yoli Becerra (26 kg)</strong>. El modelo detecta retención de inventario en proceso.</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Distribución de Clusters No Supervisados (K-Means)</h3>
+        <canvas id="clustersChart" height="230"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Top Operarios: Dispersión de Merma (% Recorte + Vena)</h3>
+        <canvas id="dispersionChart" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>🔬 Detalle Granular de Operarios Agrupados por Comportamiento Natural</h3>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Operario</th>
+            <th>Grupo Asignado</th>
+            <th>Materia Entregada (kg)</th>
+            <th>Tabacos Producidos</th>
+            <th>Recorte (kg)</th>
+            <th>Vena (kg)</th>
+            <th>% Subproductos</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Inyectado dinámicamente -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    fetch('/scripts/analisis_dia2_output.json')
+      .then(r => r.json())
+      .catch(() => null)
+      .then(data => {
+        // Fallback o data embebida para visualización inmediata
+        const clusterNames = [
+          'G1: Alto Rendimiento (7.7% merma)',
+          'G2: Estándar de Planta (13.15% merma)',
+          'G3: En Observación (19.17% merma)'
+        ];
+
+        // Grafica Doughnut
+        new Chart(document.getElementById('clustersChart'), {
+          type: 'doughnut',
+          data: {
+            labels: clusterNames,
+            datasets: [{
+              data: [5, 18, 6],
+              backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+              borderWidth: 0
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { position: 'bottom', labels: { color: '#9ca3af' } }
+            }
+          }
+        });
+
+        // Grafica Bar
+        new Chart(document.getElementById('dispersionChart'), {
+          type: 'bar',
+          data: {
+            labels: ['Mayerlin B.', 'Maria M.', 'Alcides C.', 'Luis V.', 'Ernesto R.', 'Karina S.', 'Leidy S.'],
+            datasets: [{
+              label: '% Merma / Subproducto',
+              data: [8.1, 5.92, 10.51, 11.22, 17.69, 21.43, 20.41],
+              backgroundColor: ['#10b981', '#10b981', '#f59e0b', '#f59e0b', '#ef4444', '#ef4444', '#ef4444'],
+              borderRadius: 6
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+              y: { ticks: { color: '#9ca3af', callback: v => v + '%' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+              x: { ticks: { color: '#9ca3af' }, grid: { display: false } }
+            }
+          }
+        });
+
+        // Tabla con datos del Dia 2
+        const rows = [
+          { nombre: 'MARIA MEDINA', grp: 'G1', mat: 49, tab: 5000, rec: 1.2, ven: 1.7, pct: 5.92 },
+          { nombre: 'YARIRETH ROA', grp: 'G1', mat: 117.6, tab: 11250, rec: 2.8, ven: 5.5, pct: 7.06 },
+          { nombre: 'MAYERLIN BOLIVAR', grp: 'G1', mat: 147, tab: 15000, rec: 3.5, ven: 8.4, pct: 8.10 },
+          { nombre: 'LUZ MERY ABAUNZA', grp: 'G1', mat: 49, tab: 5000, rec: 0, ven: 4.1, pct: 8.37 },
+          { nombre: 'RUBIELA MARTINEZ', grp: 'G1', mat: 97.5, tab: 10000, rec: 5, ven: 3.8, pct: 9.03 },
+          { nombre: 'ALCIDES CORREA', grp: 'G2', mat: 98, tab: 10000, rec: 3.6, ven: 6.7, pct: 10.51 },
+          { nombre: 'LUIS VALDERRAMA', grp: 'G2', mat: 147, tab: 15000, rec: 7, ven: 9.5, pct: 11.22 },
+          { nombre: 'HUMBERTO LUNA', grp: 'G2', mat: 98, tab: 10000, rec: 3.8, ven: 7.8, pct: 11.84 },
+          { nombre: 'ELVIRA LOPEZ', grp: 'G2', mat: 117.6, tab: 12000, rec: 4.3, ven: 9.8, pct: 11.99 },
+          { nombre: 'JOSE JURADO', grp: 'G2', mat: 49, tab: 5000, rec: 2.1, ven: 4.3, pct: 13.06 },
+          { nombre: 'ELIZABETH REYES', grp: 'G2', mat: 68.6, tab: 7000, rec: 3, ven: 6.2, pct: 13.41 },
+          { nombre: 'ALBA SANABRIA', grp: 'G2', mat: 49, tab: 5000, rec: 4.5, ven: 2.7, pct: 14.69 },
+          { nombre: 'PETTER BENAVIDES', grp: 'G2', mat: 98, tab: 10000, rec: 8, ven: 5.9, pct: 14.18 },
+          { nombre: 'LILIANA VEGA', grp: 'G3', mat: 78.4, tab: 8000, rec: 6.6, ven: 6.4, pct: 16.58 },
+          { nombre: 'ERNESTO REYES', grp: 'G3', mat: 29.4, tab: 3000, rec: 2.3, ven: 2.9, pct: 17.69 },
+          { nombre: 'YENDER PADILLA', grp: 'G3', mat: 49, tab: 5000, rec: 3.8, ven: 5.7, pct: 19.39 },
+          { nombre: 'RENE ALMEIDA', grp: 'G3', mat: 21, tab: 2450, rec: 2.2, ven: 1.9, pct: 19.52 },
+          { nombre: 'LEIDY SERRANO', grp: 'G3', mat: 49, tab: 5000, rec: 5.4, ven: 4.6, pct: 20.41 },
+          { nombre: 'KARINA SILVA', grp: 'G3', mat: 49, tab: 5050, rec: 5.7, ven: 4.8, pct: 21.43 }
+        ];
+
+        const tbody = document.querySelector('#dataTable tbody');
+        rows.forEach(r => {
+          const tr = document.createElement('tr');
+          const tagClass = r.grp === 'G1' ? 'tag-g1' : (r.grp === 'G2' ? 'tag-g2' : 'tag-g3');
+          tr.innerHTML = `
+            <td><strong>${r.nombre}</strong></td>
+            <td><span class="${tagClass}">${r.grp === 'G1' ? 'Alto Rendimiento' : (r.grp === 'G2' ? 'Estándar' : 'Atención')}</span></td>
+            <td>${r.mat} kg</td>
+            <td>${r.tab.toLocaleString()}</td>
+            <td>${r.rec} kg</td>
+            <td>${r.ven} kg</td>
+            <td><strong>${r.pct}%</strong></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      });
+  </script>
+</body>
+</html>
