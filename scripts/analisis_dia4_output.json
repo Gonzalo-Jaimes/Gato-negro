@@ -1,0 +1,208 @@
+{
+  "fecha_analisis": "2026-10-12T18:21:16.522Z",
+  "total_operarios_custodia": 21,
+  "total_kilos_en_talleres": 962.71,
+  "total_tabacos_proyectados": 94343,
+  "centroides": [
+    8.95,
+    40,
+    101.85
+  ],
+  "clusters": [
+    [
+      {
+        "nombre": "ALBA SANABRIA",
+        "capa_kg": 0.25,
+        "capote_kg": 0.45000000000000107,
+        "picadura_kg": 12.249999999999993,
+        "total_retenido_kg": 12.95,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 1269
+      },
+      {
+        "nombre": "MARTHA SILVA",
+        "capa_kg": 0.09999999999999964,
+        "capote_kg": 0.17999999999999972,
+        "picadura_kg": 12.000000000000021,
+        "total_retenido_kg": 12.28,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 1203
+      },
+      {
+        "nombre": "HILDA SERRANO",
+        "capa_kg": 1,
+        "capote_kg": 1.8000000000000007,
+        "picadura_kg": 7,
+        "total_retenido_kg": 9.8,
+        "cestas": 1,
+        "tabacos_pendientes_estimados": 960
+      },
+      {
+        "nombre": "KARINA SILVA",
+        "capa_kg": 0.25,
+        "capote_kg": 0.45000000000000107,
+        "picadura_kg": 9.100000000000001,
+        "total_retenido_kg": 9.8,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 960
+      },
+      {
+        "nombre": "SULAY ALMEIDA",
+        "capa_kg": 1,
+        "capote_kg": 1.8099999999999996,
+        "picadura_kg": 6.950000000000003,
+        "total_retenido_kg": 9.76,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 956
+      },
+      {
+        "nombre": "JOSE EBLAN GIRON",
+        "capa_kg": 0.7000000000000002,
+        "capote_kg": 1.2599999999999998,
+        "picadura_kg": 4.899999999999999,
+        "total_retenido_kg": 6.86,
+        "cestas": 1,
+        "tabacos_pendientes_estimados": 672
+      },
+      {
+        "nombre": "GUILLERMO ZAMBRANO",
+        "capa_kg": 0.34999999999999964,
+        "capote_kg": 1.6300000000000008,
+        "picadura_kg": 4.450000000000003,
+        "total_retenido_kg": 6.43,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 630
+      },
+      {
+        "nombre": "MAYERLIN BOLIVAR",
+        "capa_kg": 0.3000000000000007,
+        "capote_kg": 1.3399999999999963,
+        "picadura_kg": 2.09999999999998,
+        "total_retenido_kg": 3.74,
+        "cestas": 0,
+        "tabacos_pendientes_estimados": 367
+      }
+    ],
+    [
+      {
+        "nombre": "ROSMIRA DURAN",
+        "capa_kg": 4.996,
+        "capote_kg": 9,
+        "picadura_kg": 35,
+        "total_retenido_kg": 49,
+        "cestas": 4,
+        "tabacos_pendientes_estimados": 4802
+      },
+      {
+        "nombre": "YENDER PADILLA",
+        "capa_kg": 5,
+        "capote_kg": 9,
+        "picadura_kg": 35,
+        "total_retenido_kg": 49,
+        "cestas": 4,
+        "tabacos_pendientes_estimados": 4802
+      },
+      {
+        "nombre": "YEFERSON CONTRERAS",
+        "capa_kg": 5,
+        "capote_kg": 9,
+        "picadura_kg": 35,
+        "total_retenido_kg": 49,
+        "cestas": 4,
+        "tabacos_pendientes_estimados": 4802
+      },
+      {
+        "nombre": "STELLA SILVA",
+        "capa_kg": 4,
+        "capote_kg": 7.2,
+        "picadura_kg": 28,
+        "total_retenido_kg": 39.2,
+        "cestas": 3,
+        "tabacos_pendientes_estimados": 3842
+      },
+      {
+        "nombre": "RENE ALMEIDA",
+        "capa_kg": 3.8999999999999995,
+        "capote_kg": 4.5200000000000005,
+        "picadura_kg": 24.6,
+        "total_retenido_kg": 33.02,
+        "cestas": 2,
+        "tabacos_pendientes_estimados": 3236
+      },
+      {
+        "nombre": "ERNESTO REYES",
+        "capa_kg": 3.2,
+        "capote_kg": 5.760000000000002,
+        "picadura_kg": 22.4,
+        "total_retenido_kg": 31.36,
+        "cestas": 3,
+        "tabacos_pendientes_estimados": 3073
+      },
+      {
+        "nombre": "ESPERANZA REY",
+        "capa_kg": 3,
+        "capote_kg": 5.4,
+        "picadura_kg": 21,
+        "total_retenido_kg": 29.4,
+        "cestas": 3,
+        "tabacos_pendientes_estimados": 2881
+      }
+    ],
+    [
+      {
+        "nombre": "RUBIELA MARTINEZ",
+        "capa_kg": 11,
+        "capote_kg": 20.36,
+        "picadura_kg": 76.99799999999999,
+        "total_retenido_kg": 108.36,
+        "cestas": 9,
+        "tabacos_pendientes_estimados": 10619
+      },
+      {
+        "nombre": "ROSALBA MATAGIRA",
+        "capa_kg": 11,
+        "capote_kg": 19.8,
+        "picadura_kg": 77,
+        "total_retenido_kg": 107.8,
+        "cestas": 9,
+        "tabacos_pendientes_estimados": 10564
+      },
+      {
+        "nombre": "SANDRA MORENO",
+        "capa_kg": 10.75,
+        "capote_kg": 18.450000000000003,
+        "picadura_kg": 71.75,
+        "total_retenido_kg": 100.95,
+        "cestas": 8,
+        "tabacos_pendientes_estimados": 9893
+      },
+      {
+        "nombre": "ALCIDES CORREA",
+        "capa_kg": 10,
+        "capote_kg": 18,
+        "picadura_kg": 70,
+        "total_retenido_kg": 98,
+        "cestas": 8,
+        "tabacos_pendientes_estimados": 9604
+      },
+      {
+        "nombre": "PETTER BENAVIDES",
+        "capa_kg": 10,
+        "capote_kg": 18,
+        "picadura_kg": 70,
+        "total_retenido_kg": 98,
+        "cestas": 8,
+        "tabacos_pendientes_estimados": 9604
+      },
+      {
+        "nombre": "SANDRA MILENA ANTOLINES",
+        "capa_kg": 10,
+        "capote_kg": 18,
+        "picadura_kg": 70,
+        "total_retenido_kg": 98,
+        "cestas": 8,
+        "tabacos_pendientes_estimados": 9604
+      }
+    ]
+  ]
+}
