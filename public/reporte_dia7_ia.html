@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gato Negro | Reporte No Supervisado - Día 7</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #141720;
+      --card-border: #232936;
+      --primary: #f59e0b;
+      --accent: #f97316;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding: 30px 20px;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 6px; }
+    p.subtitle { color: var(--text-muted); font-size: 1rem; }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .stat-card .label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; color: #fff; }
+    .stat-card .detail { font-size: 0.8rem; color: var(--primary); margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+    .table-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 12px 10px; color: var(--text-muted); border-bottom: 1px solid var(--card-border); font-size: 0.8rem; text-transform: uppercase; }
+    td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    .tag-aurea { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    .tag-desvio { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+
+    .discovery-card {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 4px solid var(--primary);
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    .discovery-card h4 { color: var(--primary); font-size: 1rem; margin-bottom: 6px; }
+    .discovery-card p { font-size: 0.9rem; color: #cbd5e1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🧠 FASE 6: EL SÁBADO DE ABASTECIMIENTO GENERAL (DÍA 7)</div>
+      <h1>La "Receta Áurea" de Fábrica y Auditoría de Mezcla</h1>
+      <p class="subtitle">Descubrimiento automático de la proporción fundamental de manufactura: 1 kg Capa por cada 1.8 kg Capote y 7.0 kg Picadura.</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Materia Despachada</div>
+        <div class="value">2.074 kg</div>
+        <div class="detail">Abastecimiento del sábado</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Proporción Picadura</div>
+        <div class="value">71.4%</div>
+        <div class="detail">1.481.6 kg de picadura pura</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Cumplimiento de Receta</div>
+        <div class="value">87.1%</div>
+        <div class="detail">27 de 31 operarios en norma</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Mezclas Atípicas</div>
+        <div class="value">4 casos</div>
+        <div class="detail">Desbalance en capote o picadura</div>
+      </div>
+    </div>
+
+    <div class="discovery-card">
+      <h4>🌿 Hallazgo Matemático: La Fórmula de Ensamblaje Descubierta a Ciegas</h4>
+      <p>La IA identificó que el <strong>87.1% de los despachos de los sábados</strong> cumple una razón geométrica estricta de <strong>1 : 1.8 : 7.0</strong> (10.2% Capa, 18.4% Capote y 71.4% Picadura). Además, detectó 4 operarios (René Almeida, Rosmira Durán, Rubiela Martínez y Yoli Becerra) que recibieron proporciones alteradas de capote o picadura, lo cual explica por qué estos operarios sufrieron mayores mermas en los días posteriores.</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Distribución de Masa por Tipo de Hoja de Tabaco</h3>
+        <canvas id="mixPie" height="230"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Top 8 Operarios con Mayor Volumen de Materia Suministrada (kg)</h3>
+        <canvas id="volumeBars" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>🔬 Auditoría de Proporción y Calibración de Despacho</h3>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Operario</th>
+            <th>Diagnóstico de Mezcla</th>
+            <th>Capa (kg)</th>
+            <th>Capote (kg)</th>
+            <th>Picadura (kg)</th>
+            <th>Total Suministrado</th>
+            <th>Proporción Real (1 : X : Y)</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Inyectado vía script -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const items = [
+      { nombre: 'LUIS VALDERRAMA', c: 15, cp: 27, p: 105, tot: 147, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'MAYERLIN BOLIVAR', c: 15, cp: 27, p: 105, tot: 147, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ELVIRA LOPEZ', c: 12, cp: 21.6, p: 84, tot: 117.6, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'YARIRETH ROA', c: 12, cp: 21.6, p: 84, tot: 117.6, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ROSALBA MATAGIRA', c: 11, cp: 19.8, p: 77, tot: 107.8, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ALCIDES CORREA', c: 10, cp: 18, p: 70, tot: 98, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'HUMBERTO LUNA', c: 10, cp: 18, p: 70, tot: 98, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'PETTER BENAVIDES', c: 10, cp: 18, p: 70, tot: 98, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'RUBIELA MARTINEZ', c: 10, cp: 17.5, p: 70, tot: 97.5, r: '1 : 1.75 : 7.00', status: 'MEZCLA ATÍPICA' },
+      { nombre: 'LILIANA VEGA', c: 8, cp: 14.4, p: 56, tot: 78.4, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'LUIS ERNESTO ALMEIDA', c: 8, cp: 14.4, p: 56, tot: 78.4, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ELIZABETH REYES', c: 7, cp: 12.6, p: 49, tot: 68.6, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'HILDA SERRANO', c: 7, cp: 12.6, p: 49, tot: 68.6, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ALBA SANABRIA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'HUGO ALMEIDA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'JOSE JURADO', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'KARINA SILVA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'LUZ MERY ABAUNZA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'LEIDY SERRANO', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'MARIA MEDINA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'RAMON PARRA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'SANDRA ANTOLINES', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'SANDRA MORENO', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'YENDER PADILLA', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'STELLA SILVA', c: 4, cp: 7.2, p: 28, tot: 39.2, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'JOSE EBLAN GIRON', c: 5, cp: 9, p: 35, tot: 49, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ERNESTO REYES', c: 3, cp: 5.4, p: 21, tot: 29.4, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'ESPERANZA REY', c: 3, cp: 5.4, p: 21, tot: 29.4, r: '1 : 1.80 : 7.00', status: 'RECETA ÁUREA EXACTA' },
+      { nombre: 'YOLI BECERRA', c: 3, cp: 5.4, p: 17.6, tot: 26, r: '1 : 1.80 : 5.87', status: 'MEZCLA ATÍPICA' },
+      { nombre: 'RENE ALMEIDA', c: 2.5, cp: 3.5, p: 15, tot: 21, r: '1 : 1.40 : 6.00', status: 'MEZCLA ATÍPICA' },
+      { nombre: 'ROSMIRA DURAN', c: 2, cp: 3, p: 14, tot: 19, r: '1 : 1.50 : 7.00', status: 'MEZCLA ATÍPICA' }
+    ];
+
+    // Gráfico de Pie de Masa
+    new Chart(document.getElementById('mixPie'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Picadura (71.4%)', 'Capote (18.3%)', 'Capa (10.2%)'],
+        datasets: [{
+          data: [1481.6, 380.4, 212.5],
+          backgroundColor: ['#f59e0b', '#f97316', '#10b981'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+      }
+    });
+
+    // Gráfico de Barras de Mayor Volumen
+    const topVol = items.slice(0, 8);
+    new Chart(document.getElementById('volumeBars'), {
+      type: 'bar',
+      data: {
+        labels: topVol.map(d => d.nombre.split(' ')[0] + ' ' + (d.nombre.split(' ')[1] || '')),
+        datasets: [{
+          label: 'Total Despachado (kg)',
+          data: topVol.map(d => d.tot),
+          backgroundColor: '#f59e0b',
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: '#9ca3af', callback: v => v + ' kg' }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+
+    // Llenar tabla
+    const tbody = document.querySelector('#dataTable tbody');
+    items.forEach(d => {
+      const tr = document.createElement('tr');
+      const tagClass = d.status === 'RECETA ÁUREA EXACTA' ? 'tag-aurea' : 'tag-desvio';
+      tr.innerHTML = `
+        <td><strong>${d.nombre}</strong></td>
+        <td><span class="${tagClass}">${d.status}</span></td>
+        <td>${d.c} kg</td>
+        <td>${d.cp} kg</td>
+        <td>${d.p} kg</td>
+        <td><strong>${d.tot} kg</strong></td>
+        <td><strong>${d.r}</strong></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>
