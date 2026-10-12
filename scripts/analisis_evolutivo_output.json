@@ -1,0 +1,240 @@
+{
+  "fecha_analisis": "2026-10-12T18:09:18.844Z",
+  "total_comparados": 16,
+  "operarios_estables": [
+    {
+      "nombre": "ELVIRA LOPEZ",
+      "materia_p1_kg": 117.6,
+      "tabacos_p1": 12000,
+      "merma_p1_pct": 11.99,
+      "materia_p2_kg": 117.6,
+      "tabacos_p2": 12000,
+      "merma_p2_pct": 12.33,
+      "delta_pct": 0.34,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "HUMBERTO LUNA",
+      "materia_p1_kg": 98,
+      "tabacos_p1": 10000,
+      "merma_p1_pct": 11.84,
+      "materia_p2_kg": 127.4,
+      "tabacos_p2": 13000,
+      "merma_p2_pct": 11.07,
+      "delta_pct": -0.77,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "KARINA SILVA",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5050,
+      "merma_p1_pct": 21.43,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5050,
+      "merma_p2_pct": 21.43,
+      "delta_pct": 0,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "LUIS VALDERRAMA",
+      "materia_p1_kg": 147,
+      "tabacos_p1": 15000,
+      "merma_p1_pct": 11.22,
+      "materia_p2_kg": 176.4,
+      "tabacos_p2": 18000,
+      "merma_p2_pct": 11.56,
+      "delta_pct": 0.34,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "LUIS ERNESTO ALMEIDA",
+      "materia_p1_kg": 78.4,
+      "tabacos_p1": 8000,
+      "merma_p1_pct": 11.99,
+      "materia_p2_kg": 78.4,
+      "tabacos_p2": 8000,
+      "merma_p2_pct": 12.76,
+      "delta_pct": 0.77,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "LEIDY SERRANO",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 20.41,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 18.78,
+      "delta_pct": -1.63,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    },
+    {
+      "nombre": "MARIA MEDINA",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 5.92,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 4.29,
+      "delta_pct": -1.63,
+      "patron_descubierto": "REPLICABILIDAD ALTA (Consistente)"
+    }
+  ],
+  "operarios_desviados": [
+    {
+      "nombre": "ELIZABETH REYES SERRANO",
+      "materia_p1_kg": 68.6,
+      "tabacos_p1": 7000,
+      "merma_p1_pct": 13.41,
+      "materia_p2_kg": 68.6,
+      "tabacos_p2": 7000,
+      "merma_p2_pct": 17.64,
+      "delta_pct": 4.23,
+      "patron_descubierto": "DESVIACIÓN / MAYOR MERMA"
+    },
+    {
+      "nombre": "HUGO ALMEIDA",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 14.49,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 24.69,
+      "delta_pct": 10.2,
+      "patron_descubierto": "DESVIACIÓN / MAYOR MERMA"
+    },
+    {
+      "nombre": "HILDA SERRANO",
+      "materia_p1_kg": 68.6,
+      "tabacos_p1": 7000,
+      "merma_p1_pct": 13.41,
+      "materia_p2_kg": 68.6,
+      "tabacos_p2": 7000,
+      "merma_p2_pct": 19.97,
+      "delta_pct": 6.56,
+      "patron_descubierto": "DESVIACIÓN / MAYOR MERMA"
+    },
+    {
+      "nombre": "JOSE EBLAN GIRON",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 4000,
+      "merma_p1_pct": 12.86,
+      "materia_p2_kg": 39.2,
+      "tabacos_p2": 4500,
+      "merma_p2_pct": 20.92,
+      "delta_pct": 8.06,
+      "patron_descubierto": "DESVIACIÓN / MAYOR MERMA"
+    },
+    {
+      "nombre": "LUZ MERY ABAUNZA",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 8.37,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 12.65,
+      "delta_pct": 4.28,
+      "patron_descubierto": "DESVIACIÓN / MAYOR MERMA"
+    }
+  ],
+  "operarios_mejoras": [
+    {
+      "nombre": "ALBA SANABRIA",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 14.69,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 12.65,
+      "delta_pct": -2.04,
+      "patron_descubierto": "MEJORA EN EFICIENCIA"
+    },
+    {
+      "nombre": "JOSE JURADO",
+      "materia_p1_kg": 49,
+      "tabacos_p1": 5000,
+      "merma_p1_pct": 13.06,
+      "materia_p2_kg": 49,
+      "tabacos_p2": 5000,
+      "merma_p2_pct": 8.78,
+      "delta_pct": -4.28,
+      "patron_descubierto": "MEJORA EN EFICIENCIA"
+    },
+    {
+      "nombre": "LILIANA  VEGA",
+      "materia_p1_kg": 78.4,
+      "tabacos_p1": 8000,
+      "merma_p1_pct": 16.58,
+      "materia_p2_kg": 98,
+      "tabacos_p2": 10000,
+      "merma_p2_pct": 12.86,
+      "delta_pct": -3.72,
+      "patron_descubierto": "MEJORA EN EFICIENCIA"
+    },
+    {
+      "nombre": "MAYERLIN BOLIVAR",
+      "materia_p1_kg": 147,
+      "tabacos_p1": 15000,
+      "merma_p1_pct": 8.1,
+      "materia_p2_kg": 147,
+      "tabacos_p2": 15000,
+      "merma_p2_pct": 5.24,
+      "delta_pct": -2.86,
+      "patron_descubierto": "MEJORA EN EFICIENCIA"
+    }
+  ],
+  "retenciones": [
+    {
+      "nombre": "ALCIDES CORREA",
+      "materia_kg": 98
+    },
+    {
+      "nombre": "ERNESTO REYES",
+      "materia_kg": 29.4
+    },
+    {
+      "nombre": "PETTER BENAVIDES",
+      "materia_kg": 98
+    },
+    {
+      "nombre": "RAMON PARRA",
+      "materia_kg": 49
+    },
+    {
+      "nombre": "RENE ALMEIDA",
+      "materia_kg": 20.5
+    },
+    {
+      "nombre": "RUBIELA MARTINEZ",
+      "materia_kg": 107.3
+    },
+    {
+      "nombre": "ROSMIRA DURAN",
+      "materia_kg": 49
+    },
+    {
+      "nombre": "ROSALBA MATAGIRA",
+      "materia_kg": 107.8
+    },
+    {
+      "nombre": "STELLA SILVA",
+      "materia_kg": 39.2
+    },
+    {
+      "nombre": "SANDRA MILENA ANTOLINES",
+      "materia_kg": 98
+    },
+    {
+      "nombre": "SANDRA MORENO",
+      "materia_kg": 98
+    },
+    {
+      "nombre": "YENDER PADILLA",
+      "materia_kg": 49
+    },
+    {
+      "nombre": "YEFERSON CONTRERAS",
+      "materia_kg": 49
+    }
+  ]
+}
