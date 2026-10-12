@@ -1,0 +1,355 @@
+{
+  "fecha_analisis": "2026-10-12T18:47:21.246Z",
+  "total_despachados": 31,
+  "masa_total_despachada_kg": 2074.5,
+  "proporciones_globales": {
+    "capa_kg": 212.5,
+    "capote_kg": 380.3999999999999,
+    "picadura_kg": 1481.6
+  },
+  "conformes_receta": [
+    {
+      "nombre": "LUIS VALDERRAMA",
+      "capa_kg": 15,
+      "capote_kg": 27,
+      "picadura_kg": 105,
+      "total_despachado_kg": 147,
+      "cestas": 12,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "MAYERLIN BOLIVAR",
+      "capa_kg": 15,
+      "capote_kg": 27,
+      "picadura_kg": 105,
+      "total_despachado_kg": 147,
+      "cestas": 12,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ELVIRA LOPEZ",
+      "capa_kg": 12,
+      "capote_kg": 21.6,
+      "picadura_kg": 84,
+      "total_despachado_kg": 117.6,
+      "cestas": 10,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "YARIRETH ROA",
+      "capa_kg": 12,
+      "capote_kg": 21.6,
+      "picadura_kg": 84,
+      "total_despachado_kg": 117.6,
+      "cestas": 10,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ROSALBA MATAGIRA",
+      "capa_kg": 11,
+      "capote_kg": 19.8,
+      "picadura_kg": 77,
+      "total_despachado_kg": 107.8,
+      "cestas": 9,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ALCIDES CORREA",
+      "capa_kg": 10,
+      "capote_kg": 18,
+      "picadura_kg": 70,
+      "total_despachado_kg": 98,
+      "cestas": 8,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "HUMBERTO LUNA",
+      "capa_kg": 10,
+      "capote_kg": 18,
+      "picadura_kg": 70,
+      "total_despachado_kg": 98,
+      "cestas": 8,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "PETTER BENAVIDES",
+      "capa_kg": 10,
+      "capote_kg": 18,
+      "picadura_kg": 70,
+      "total_despachado_kg": 98,
+      "cestas": 8,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "LILIANA  VEGA",
+      "capa_kg": 8,
+      "capote_kg": 14.4,
+      "picadura_kg": 56,
+      "total_despachado_kg": 78.4,
+      "cestas": 6,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "LUIS ERNESTO ALMEIDA",
+      "capa_kg": 8,
+      "capote_kg": 14.4,
+      "picadura_kg": 56,
+      "total_despachado_kg": 78.4,
+      "cestas": 7,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ELIZABETH REYES SERRANO",
+      "capa_kg": 7,
+      "capote_kg": 12.6,
+      "picadura_kg": 49,
+      "total_despachado_kg": 68.6,
+      "cestas": 6,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "HILDA SERRANO",
+      "capa_kg": 7,
+      "capote_kg": 12.6,
+      "picadura_kg": 49,
+      "total_despachado_kg": 68.6,
+      "cestas": 7,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ALBA SANABRIA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "HUGO ALMEIDA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "JOSE EBLAN GIRON",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "JOSE JURADO",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "KARINA SILVA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "LUZ MERY ABAUNZA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "LEIDY SERRANO",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "MARIA MEDINA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "RAMON PARRA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "SANDRA MILENA ANTOLINES",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "SANDRA MORENO",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "YENDER PADILLA",
+      "capa_kg": 5,
+      "capote_kg": 9,
+      "picadura_kg": 35,
+      "total_despachado_kg": 49,
+      "cestas": 4,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "STELLA SILVA",
+      "capa_kg": 4,
+      "capote_kg": 7.2,
+      "picadura_kg": 28,
+      "total_despachado_kg": 39.2,
+      "cestas": 3,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ESPERANZA REY",
+      "capa_kg": 3,
+      "capote_kg": 5.4,
+      "picadura_kg": 21,
+      "total_despachado_kg": 29.4,
+      "cestas": 3,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    },
+    {
+      "nombre": "ERNESTO REYES",
+      "capa_kg": 3,
+      "capote_kg": 5.4,
+      "picadura_kg": 21,
+      "total_despachado_kg": 29.4,
+      "cestas": 3,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "RECETA ÁUREA EXACTA"
+    }
+  ],
+  "anomalos_receta": [
+    {
+      "nombre": "RUBIELA MARTINEZ",
+      "capa_kg": 10,
+      "capote_kg": 17.5,
+      "picadura_kg": 70,
+      "total_despachado_kg": 97.5,
+      "cestas": 8,
+      "ratio_capote_capa": 1.75,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "MEZCLA ATÍPICA / DESVIADA"
+    },
+    {
+      "nombre": "YOLI BECERRA",
+      "capa_kg": 3,
+      "capote_kg": 5.4,
+      "picadura_kg": 17.6,
+      "total_despachado_kg": 26,
+      "cestas": 3,
+      "ratio_capote_capa": 1.8,
+      "ratio_picadura_capa": 5.87,
+      "calibracion_receta": "MEZCLA ATÍPICA / DESVIADA"
+    },
+    {
+      "nombre": "RENE ALMEIDA",
+      "capa_kg": 2.5,
+      "capote_kg": 3.5,
+      "picadura_kg": 15,
+      "total_despachado_kg": 21,
+      "cestas": 2,
+      "ratio_capote_capa": 1.4,
+      "ratio_picadura_capa": 6,
+      "calibracion_receta": "MEZCLA ATÍPICA / DESVIADA"
+    },
+    {
+      "nombre": "ROSMIRA DURAN",
+      "capa_kg": 2,
+      "capote_kg": 3,
+      "picadura_kg": 14,
+      "total_despachado_kg": 19,
+      "cestas": 2,
+      "ratio_capote_capa": 1.5,
+      "ratio_picadura_capa": 7,
+      "calibracion_receta": "MEZCLA ATÍPICA / DESVIADA"
+    }
+  ]
+}

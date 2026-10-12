@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gato Negro | Reporte No Supervisado - Día 5</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0c10;
+      --card-bg: #141720;
+      --card-border: #232936;
+      --primary: #f59e0b;
+      --accent: #f97316;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --green: #10b981;
+      --yellow: #f59e0b;
+      --red: #ef4444;
+      --blue: #3b82f6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Outfit', sans-serif;
+      padding: 30px 20px;
+      line-height: 1.5;
+    }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header {
+      margin-bottom: 25px;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 20px;
+    }
+    .badge {
+      display: inline-block;
+      background: rgba(245, 158, 11, 0.15);
+      color: var(--primary);
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    h1 { font-size: 2rem; color: #fff; margin-bottom: 6px; }
+    p.subtitle { color: var(--text-muted); font-size: 1rem; }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 15px;
+      margin-bottom: 25px;
+    }
+    .stat-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 18px;
+    }
+    .stat-card .label { font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-card .value { font-size: 1.8rem; font-weight: 700; margin-top: 6px; color: #fff; }
+    .stat-card .detail { font-size: 0.8rem; color: var(--primary); margin-top: 4px; }
+
+    .charts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(480px, 1fr));
+      gap: 20px;
+      margin-bottom: 25px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+    }
+    .chart-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+
+    .table-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 25px;
+      overflow-x: auto;
+    }
+    .table-card h3 { font-size: 1.1rem; margin-bottom: 15px; color: #fff; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    th { text-align: left; padding: 12px 10px; color: var(--text-muted); border-bottom: 1px solid var(--card-border); font-size: 0.8rem; text-transform: uppercase; }
+    td { padding: 10px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+    tr:hover { background: rgba(255,255,255,0.02); }
+
+    .tag-g1 { background: rgba(16, 185, 129, 0.15); color: var(--green); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    .tag-g2 { background: rgba(245, 158, 11, 0.15); color: var(--yellow); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+    .tag-g3 { background: rgba(239, 68, 68, 0.15); color: var(--red); padding: 3px 8px; border-radius: 6px; font-weight: 600; font-size: 0.75rem; }
+
+    .insight-card {
+      background: rgba(245, 158, 11, 0.08);
+      border-left: 4px solid var(--primary);
+      padding: 18px;
+      border-radius: 8px;
+      margin-bottom: 25px;
+    }
+    .insight-card h4 { color: var(--primary); font-size: 1rem; margin-bottom: 6px; }
+    .insight-card p { font-size: 0.9rem; color: #cbd5e1; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🧠 FASE 4: ANÁLISIS NO SUPERVISADO ECONÓMICO (DÍA 5)</div>
+      <h1>Cierre Económico: Dispersión de Costo Unitario Efectivo</h1>
+      <p class="subtitle">Segmentación del costo real por tabaco producido cruzando nómina liquidada, deducciones y bonos de subproducto.</p>
+    </header>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="label">Operarios Liquidados</div>
+        <div class="value">29</div>
+        <div class="detail">Cierre de nómina del ciclo</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Producción Liquidada</div>
+        <div class="value">205.450</div>
+        <div class="detail">Tabacos físicos recibidos</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Masa Salarial Total</div>
+        <div class="value">$17.32M COP</div>
+        <div class="detail">Promedio: $597.277 / operario</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Costo Medio Ponderado</div>
+        <div class="value">$84.31 COP</div>
+        <div class="detail">Por cada tabaco terminado</div>
+      </div>
+    </div>
+
+    <div class="insight-card">
+      <h4>💡 Descubrimiento de la IA: La "Tarifa Teórica" ($75) vs el Costo Real ($84.31)</h4>
+      <p>Mientras la gerencia asume una tarifa base de <strong>$75 COP por tabaco ($75.000 por millar)</strong>, el algoritmo reveló que los pagos por recorte, vena y diferencias cambiarias elevan el costo real a <strong>$84.31 COP</strong>. Además, detectó a <strong>Leidy Serrano disparándose a $119.74 COP/tabaco</strong> (+59.6% sobre la tarifa base) debido a un desbalance entre su volumen entregado y las compensaciones liquidadas.</p>
+    </div>
+
+    <div class="charts-grid">
+      <div class="chart-card">
+        <h3>Segmentación K-Means por Costo Unitario Efectivo</h3>
+        <canvas id="clustersChart" height="230"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Dispersión: Costo Efectivo por Tabaco (COP/unidad)</h3>
+        <canvas id="costBarsChart" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="table-card">
+      <h3>🔬 Auditoría Económica Detallada por Torcedor</h3>
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th>Operario</th>
+            <th>Grupo K-Means</th>
+            <th>Tabacos Producidos</th>
+            <th>Pago Base ($)</th>
+            <th>Total Liquidado ($)</th>
+            <th>Costo Efectivo / Tabaco</th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Inyectado vía script -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const items = [
+      { nombre: 'MAYERLIN BOLIVAR', grp: 'G1', tab: 15000, base: 1125000, tot: 1177150, unit: 78.48 },
+      { nombre: 'ROSALBA MATAGIRA', grp: 'G1', tab: 11000, base: 825000, tot: 905700, unit: 82.34 },
+      { nombre: 'YARIRETH ROA', grp: 'G1', tab: 11250, base: 827750, tot: 865200, unit: 76.91 },
+      { nombre: 'PETTER BENAVIDES', grp: 'G1', tab: 10000, base: 750000, tot: 822650, unit: 82.27 },
+      { nombre: 'ALCIDES CORREA', grp: 'G1', tab: 10000, base: 750000, tot: 796850, unit: 79.69 },
+      { nombre: 'RUBIELA MARTINEZ', grp: 'G1', tab: 10000, base: 750000, tot: 795800, unit: 79.58 },
+      { nombre: 'LILIANA VEGA', grp: 'G1', tab: 8000, base: 594000, tot: 659300, unit: 82.41 },
+      { nombre: 'LUIS ERNESTO ALMEIDA', grp: 'G1', tab: 8000, base: 575000, tot: 627400, unit: 78.42 },
+      { nombre: 'HILDA SERRANO', grp: 'G1', tab: 7000, base: 505000, tot: 551900, unit: 78.84 },
+      { nombre: 'ELIZABETH REYES', grp: 'G1', tab: 7000, base: 475000, tot: 516200, unit: 73.74 },
+      { nombre: 'KARINA SILVA', grp: 'G1', tab: 5050, base: 378750, tot: 432600, unit: 85.66 },
+      { nombre: 'SANDRA MORENO', grp: 'G1', tab: 5200, base: 390000, tot: 421250, unit: 81.01 },
+      { nombre: 'YENDER PADILLA', grp: 'G1', tab: 5000, base: 375000, tot: 419650, unit: 83.93 },
+      { nombre: 'HUGO ALMEIDA', grp: 'G1', tab: 5000, base: 375000, tot: 411850, unit: 82.37 },
+      { nombre: 'JOSE JURADO', grp: 'G1', tab: 5000, base: 375000, tot: 388700, unit: 77.74 },
+      { nombre: 'LUZ MERY ABAUNZA', grp: 'G1', tab: 5000, base: 375000, tot: 339350, unit: 67.87 },
+      { nombre: 'LUIS VALDERRAMA', grp: 'G2', tab: 15000, base: 1125000, tot: 1433750, unit: 95.58 },
+      { nombre: 'ELVIRA LOPEZ', grp: 'G2', tab: 12000, base: 900000, tot: 1134750, unit: 94.56 },
+      { nombre: 'HUMBERTO LUNA', grp: 'G2', tab: 10000, base: 750000, tot: 940000, unit: 94.00 },
+      { nombre: 'ALBA SANABRIA', grp: 'G2', tab: 5000, base: 375000, tot: 482700, unit: 96.54 },
+      { nombre: 'MARIA MEDINA', grp: 'G2', tab: 5000, base: 375000, tot: 505360, unit: 101.07 },
+      { nombre: 'LEIDY SERRANO', grp: 'G3', tab: 5000, base: 375000, tot: 598700, unit: 119.74 }
+    ];
+
+    // Gráfico de Clusters Doughnut
+    new Chart(document.getElementById('clustersChart'), {
+      type: 'doughnut',
+      data: {
+        labels: ['Estándar Óptimo (~$80 COP)', 'Costo Alto Bonificado (~$96 COP)', 'Desviación Crítica (~$120 COP)'],
+        datasets: [{
+          data: [23, 5, 1],
+          backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+          borderWidth: 0
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { color: '#9ca3af' } } }
+      }
+    });
+
+    // Gráfico de Barras de Costo Unitario
+    const topDiff = items.slice(0, 10);
+    new Chart(document.getElementById('costBarsChart'), {
+      type: 'bar',
+      data: {
+        labels: topDiff.map(d => d.nombre.split(' ')[0] + ' ' + (d.nombre.split(' ')[1] || '')),
+        datasets: [{
+          label: 'Costo Unitario Real (COP)',
+          data: topDiff.map(d => d.unit),
+          backgroundColor: topDiff.map(d => d.grp === 'G1' ? '#10b981' : (d.grp === 'G2' ? '#f59e0b' : '#ef4444')),
+          borderRadius: 6
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: {
+          y: { ticks: { color: '#9ca3af', callback: v => '$' + v }, grid: { color: 'rgba(255,255,255,0.05)' } },
+          x: { ticks: { color: '#9ca3af', font: { size: 10 } }, grid: { display: false } }
+        }
+      }
+    });
+
+    // Tabla
+    const tbody = document.querySelector('#dataTable tbody');
+    items.forEach(d => {
+      const tr = document.createElement('tr');
+      const tagClass = d.grp === 'G1' ? 'tag-g1' : (d.grp === 'G2' ? 'tag-g2' : 'tag-g3');
+      const tagText = d.grp === 'G1' ? 'Óptimo' : (d.grp === 'G2' ? 'Medio Alto' : 'Crítico');
+      tr.innerHTML = `
+        <td><strong>${d.nombre}</strong></td>
+        <td><span class="${tagClass}">${tagText}</span></td>
+        <td>${d.tab.toLocaleString()}</td>
+        <td>$${d.base.toLocaleString()} COP</td>
+        <td>$${d.tot.toLocaleString()} COP</td>
+        <td><strong>$${d.unit} COP</strong></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  </script>
+</body>
+</html>

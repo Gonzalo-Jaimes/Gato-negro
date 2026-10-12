@@ -1,0 +1,337 @@
+{
+  "fecha_analisis": "2026-10-12T18:41:25.453Z",
+  "total_operarios_circuito": 31,
+  "cestas_entregadas_total": 175,
+  "cestas_devueltas_total": 167,
+  "cestas_retenidas_total": 11,
+  "centroides_densidad": [
+    1124,
+    1246,
+    1322
+  ],
+  "clusters_densidad": [
+    [
+      {
+        "nombre": "ELIZABETH REYES SERRANO",
+        "tabacos_entregados": 7000,
+        "cestas_entregadas": 6,
+        "cestas_devueltas": 6,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1167,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "ERNESTO REYES",
+        "tabacos_entregados": 3000,
+        "cestas_entregadas": 3,
+        "cestas_devueltas": 3,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1000,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "HILDA SERRANO",
+        "tabacos_entregados": 7000,
+        "cestas_entregadas": 7,
+        "cestas_devueltas": 6,
+        "cestas_retenidas": 1,
+        "densidad_tabacos_por_cesta": 1167,
+        "estado_envases": "RETENCIÓN"
+      },
+      {
+        "nombre": "LILIANA  VEGA",
+        "tabacos_entregados": 8000,
+        "cestas_entregadas": 6,
+        "cestas_devueltas": 7,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1143,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "LUIS ERNESTO ALMEIDA",
+        "tabacos_entregados": 8000,
+        "cestas_entregadas": 7,
+        "cestas_devueltas": 7,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1143,
+        "estado_envases": "CICLO COMPLETO"
+      }
+    ],
+    [
+      {
+        "nombre": "ALCIDES CORREA",
+        "tabacos_entregados": 10000,
+        "cestas_entregadas": 8,
+        "cestas_devueltas": 8,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "ALBA SANABRIA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "ELVIRA LOPEZ",
+        "tabacos_entregados": 12000,
+        "cestas_entregadas": 10,
+        "cestas_devueltas": 10,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1200,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "HUGO ALMEIDA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "HUMBERTO LUNA",
+        "tabacos_entregados": 10000,
+        "cestas_entregadas": 8,
+        "cestas_devueltas": 8,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "JOSE JURADO",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "KARINA SILVA",
+        "tabacos_entregados": 5050,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1263,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "LUZ MERY ABAUNZA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "LUIS VALDERRAMA",
+        "tabacos_entregados": 15000,
+        "cestas_entregadas": 12,
+        "cestas_devueltas": 12,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "LEIDY SERRANO",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "MAYERLIN BOLIVAR",
+        "tabacos_entregados": 15000,
+        "cestas_entregadas": 12,
+        "cestas_devueltas": 12,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "MARIA MEDINA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "PETTER BENAVIDES",
+        "tabacos_entregados": 10000,
+        "cestas_entregadas": 8,
+        "cestas_devueltas": 8,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "RAMON PARRA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "RENE ALMEIDA",
+        "tabacos_entregados": 2450,
+        "cestas_entregadas": 2,
+        "cestas_devueltas": 2,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1225,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "RUBIELA MARTINEZ",
+        "tabacos_entregados": 10000,
+        "cestas_entregadas": 8,
+        "cestas_devueltas": 8,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "ROSMIRA DURAN",
+        "tabacos_entregados": 2500,
+        "cestas_entregadas": 2,
+        "cestas_devueltas": 2,
+        "cestas_retenidas": 1,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "RETENCIÓN"
+      },
+      {
+        "nombre": "ROSALBA MATAGIRA",
+        "tabacos_entregados": 11000,
+        "cestas_entregadas": 9,
+        "cestas_devueltas": 9,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1222,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "SANDRA MILENA ANTOLINES",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "YENDER PADILLA",
+        "tabacos_entregados": 5000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "YARIRETH ROA",
+        "tabacos_entregados": 11250,
+        "cestas_entregadas": 10,
+        "cestas_devueltas": 9,
+        "cestas_retenidas": 1,
+        "densidad_tabacos_por_cesta": 1250,
+        "estado_envases": "RETENCIÓN"
+      }
+    ],
+    [
+      {
+        "nombre": "JOSE EBLAN GIRON",
+        "tabacos_entregados": 4000,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 3,
+        "cestas_retenidas": 2,
+        "densidad_tabacos_por_cesta": 1333,
+        "estado_envases": "RETENCIÓN"
+      },
+      {
+        "nombre": "STELLA SILVA",
+        "tabacos_entregados": 4000,
+        "cestas_entregadas": 3,
+        "cestas_devueltas": 3,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1333,
+        "estado_envases": "CICLO COMPLETO"
+      },
+      {
+        "nombre": "SANDRA MORENO",
+        "tabacos_entregados": 5200,
+        "cestas_entregadas": 4,
+        "cestas_devueltas": 4,
+        "cestas_retenidas": 0,
+        "densidad_tabacos_por_cesta": 1300,
+        "estado_envases": "CICLO COMPLETO"
+      }
+    ]
+  ],
+  "operarios_retencion_cestas": [
+    {
+      "nombre": "ESPERANZA REY",
+      "tabacos_entregados": 0,
+      "cestas_entregadas": 3,
+      "cestas_devueltas": 0,
+      "cestas_retenidas": 3,
+      "densidad_tabacos_por_cesta": 0,
+      "estado_envases": "RETENCIÓN"
+    },
+    {
+      "nombre": "HILDA SERRANO",
+      "tabacos_entregados": 7000,
+      "cestas_entregadas": 7,
+      "cestas_devueltas": 6,
+      "cestas_retenidas": 1,
+      "densidad_tabacos_por_cesta": 1167,
+      "estado_envases": "RETENCIÓN"
+    },
+    {
+      "nombre": "JOSE EBLAN GIRON",
+      "tabacos_entregados": 4000,
+      "cestas_entregadas": 4,
+      "cestas_devueltas": 3,
+      "cestas_retenidas": 2,
+      "densidad_tabacos_por_cesta": 1333,
+      "estado_envases": "RETENCIÓN"
+    },
+    {
+      "nombre": "ROSMIRA DURAN",
+      "tabacos_entregados": 2500,
+      "cestas_entregadas": 2,
+      "cestas_devueltas": 2,
+      "cestas_retenidas": 1,
+      "densidad_tabacos_por_cesta": 1250,
+      "estado_envases": "RETENCIÓN"
+    },
+    {
+      "nombre": "YARIRETH ROA",
+      "tabacos_entregados": 11250,
+      "cestas_entregadas": 10,
+      "cestas_devueltas": 9,
+      "cestas_retenidas": 1,
+      "densidad_tabacos_por_cesta": 1250,
+      "estado_envases": "RETENCIÓN"
+    },
+    {
+      "nombre": "YOLI BECERRA",
+      "tabacos_entregados": 0,
+      "cestas_entregadas": 3,
+      "cestas_devueltas": 0,
+      "cestas_retenidas": 3,
+      "densidad_tabacos_por_cesta": 0,
+      "estado_envases": "RETENCIÓN"
+    }
+  ]
+}

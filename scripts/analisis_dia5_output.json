@@ -1,0 +1,339 @@
+{
+  "fecha_analisis": "2026-10-12T18:29:50.327Z",
+  "total_operarios_liquidados": 29,
+  "volumen_total_tabacos": 205450,
+  "masa_salarial_total_cop": 17321060,
+  "costo_medio_ponderado_cop": 84.31,
+  "centroides": [
+    79.91,
+    96.35,
+    119.74
+  ],
+  "clusters": [
+    [
+      {
+        "nombre": "MAYERLIN BOLIVAR",
+        "tabacos_producidos": 15000,
+        "pago_base_pesos": 1125000,
+        "total_liquidado_pesos": 1177150,
+        "sobrecosto_adicional_pesos": 52150,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 78.48,
+        "bono_subproductos_bs": 52150,
+        "compras": 0
+      },
+      {
+        "nombre": "ROSALBA MATAGIRA",
+        "tabacos_producidos": 11000,
+        "pago_base_pesos": 825000,
+        "total_liquidado_pesos": 905700,
+        "sobrecosto_adicional_pesos": 80700,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 82.34,
+        "bono_subproductos_bs": 80700,
+        "compras": 0
+      },
+      {
+        "nombre": "YARIRETH ROA",
+        "tabacos_producidos": 11250,
+        "pago_base_pesos": 827750,
+        "total_liquidado_pesos": 865200,
+        "sobrecosto_adicional_pesos": 37450,
+        "tarifa_base_unidad": 73.58,
+        "costo_efectivo_unidad": 76.91,
+        "bono_subproductos_bs": 37450,
+        "compras": 0
+      },
+      {
+        "nombre": "PETTER BENAVIDES",
+        "tabacos_producidos": 10000,
+        "pago_base_pesos": 750000,
+        "total_liquidado_pesos": 822650,
+        "sobrecosto_adicional_pesos": 72650,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 82.27,
+        "bono_subproductos_bs": 72650,
+        "compras": 0
+      },
+      {
+        "nombre": "ALCIDES CORREA",
+        "tabacos_producidos": 10000,
+        "pago_base_pesos": 750000,
+        "total_liquidado_pesos": 796850,
+        "sobrecosto_adicional_pesos": 46850,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 79.69,
+        "bono_subproductos_bs": 46850,
+        "compras": 0
+      },
+      {
+        "nombre": "RUBIELA MARTINEZ",
+        "tabacos_producidos": 10000,
+        "pago_base_pesos": 750000,
+        "total_liquidado_pesos": 795800,
+        "sobrecosto_adicional_pesos": 45800,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 79.58,
+        "bono_subproductos_bs": 45800,
+        "compras": 0
+      },
+      {
+        "nombre": "LILIANA  VEGA",
+        "tabacos_producidos": 8000,
+        "pago_base_pesos": 594000,
+        "total_liquidado_pesos": 659300,
+        "sobrecosto_adicional_pesos": 65300,
+        "tarifa_base_unidad": 74.25,
+        "costo_efectivo_unidad": 82.41,
+        "bono_subproductos_bs": 65300,
+        "compras": 0
+      },
+      {
+        "nombre": "LUIS ERNESTO ALMEIDA",
+        "tabacos_producidos": 8000,
+        "pago_base_pesos": 575000,
+        "total_liquidado_pesos": 627400,
+        "sobrecosto_adicional_pesos": 52400,
+        "tarifa_base_unidad": 71.88,
+        "costo_efectivo_unidad": 78.42,
+        "bono_subproductos_bs": 52400,
+        "compras": 0
+      },
+      {
+        "nombre": "HILDA SERRANO",
+        "tabacos_producidos": 7000,
+        "pago_base_pesos": 505000,
+        "total_liquidado_pesos": 551900,
+        "sobrecosto_adicional_pesos": 46900,
+        "tarifa_base_unidad": 72.14,
+        "costo_efectivo_unidad": 78.84,
+        "bono_subproductos_bs": 46900,
+        "compras": 0
+      },
+      {
+        "nombre": "ELIZABETH REYES SERRANO",
+        "tabacos_producidos": 7000,
+        "pago_base_pesos": 475000,
+        "total_liquidado_pesos": 516200,
+        "sobrecosto_adicional_pesos": 41200,
+        "tarifa_base_unidad": 67.86,
+        "costo_efectivo_unidad": 73.74,
+        "bono_subproductos_bs": 41200,
+        "compras": 0
+      },
+      {
+        "nombre": "KARINA SILVA",
+        "tabacos_producidos": 5050,
+        "pago_base_pesos": 378750,
+        "total_liquidado_pesos": 432600,
+        "sobrecosto_adicional_pesos": 53850,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 85.66,
+        "bono_subproductos_bs": 53850,
+        "compras": 0
+      },
+      {
+        "nombre": "SANDRA MORENO",
+        "tabacos_producidos": 5200,
+        "pago_base_pesos": 390000,
+        "total_liquidado_pesos": 421250,
+        "sobrecosto_adicional_pesos": 31250,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 81.01,
+        "bono_subproductos_bs": 31250,
+        "compras": 0
+      },
+      {
+        "nombre": "YENDER PADILLA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 419650,
+        "sobrecosto_adicional_pesos": 44650,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 83.93,
+        "bono_subproductos_bs": 44650,
+        "compras": 0
+      },
+      {
+        "nombre": "HUGO ALMEIDA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 411850,
+        "sobrecosto_adicional_pesos": 36850,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 82.37,
+        "bono_subproductos_bs": 36850,
+        "compras": 0
+      },
+      {
+        "nombre": "SANDRA MILENA ANTOLINES",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 404900,
+        "sobrecosto_adicional_pesos": 29900,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 80.98,
+        "bono_subproductos_bs": 29900,
+        "compras": 0
+      },
+      {
+        "nombre": "RAMON PARRA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 402050,
+        "sobrecosto_adicional_pesos": 27050,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 80.41,
+        "bono_subproductos_bs": 27050,
+        "compras": 0
+      },
+      {
+        "nombre": "JOSE JURADO",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 360000,
+        "total_liquidado_pesos": 388700,
+        "sobrecosto_adicional_pesos": 28700,
+        "tarifa_base_unidad": 72,
+        "costo_efectivo_unidad": 77.74,
+        "bono_subproductos_bs": 28700,
+        "compras": 0
+      },
+      {
+        "nombre": "LUZ MERY ABAUNZA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 325000,
+        "total_liquidado_pesos": 339350,
+        "sobrecosto_adicional_pesos": 14350,
+        "tarifa_base_unidad": 65,
+        "costo_efectivo_unidad": 67.87,
+        "bono_subproductos_bs": 14349.999999999998,
+        "compras": 0
+      },
+      {
+        "nombre": "JOSE EBLAN GIRON",
+        "tabacos_producidos": 4000,
+        "pago_base_pesos": 300000,
+        "total_liquidado_pesos": 330750,
+        "sobrecosto_adicional_pesos": 30750,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 82.69,
+        "bono_subproductos_bs": 30750,
+        "compras": 0
+      },
+      {
+        "nombre": "STELLA SILVA",
+        "tabacos_producidos": 4000,
+        "pago_base_pesos": 270000,
+        "total_liquidado_pesos": 299600,
+        "sobrecosto_adicional_pesos": 29600,
+        "tarifa_base_unidad": 67.5,
+        "costo_efectivo_unidad": 74.9,
+        "bono_subproductos_bs": 29600,
+        "compras": 0
+      },
+      {
+        "nombre": "ERNESTO REYES",
+        "tabacos_producidos": 3000,
+        "pago_base_pesos": 225000,
+        "total_liquidado_pesos": 250100,
+        "sobrecosto_adicional_pesos": 25100,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 83.37,
+        "bono_subproductos_bs": 25100,
+        "compras": 0
+      },
+      {
+        "nombre": "RENE ALMEIDA",
+        "tabacos_producidos": 2450,
+        "pago_base_pesos": 183750,
+        "total_liquidado_pesos": 204700,
+        "sobrecosto_adicional_pesos": 20950,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 83.55,
+        "bono_subproductos_bs": 20950,
+        "compras": 0
+      },
+      {
+        "nombre": "ROSMIRA DURAN",
+        "tabacos_producidos": 2500,
+        "pago_base_pesos": 187500,
+        "total_liquidado_pesos": 202150,
+        "sobrecosto_adicional_pesos": 14650,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 80.86,
+        "bono_subproductos_bs": 14650,
+        "compras": 0
+      }
+    ],
+    [
+      {
+        "nombre": "LUIS VALDERRAMA",
+        "tabacos_producidos": 15000,
+        "pago_base_pesos": 1125000,
+        "total_liquidado_pesos": 1433750,
+        "sobrecosto_adicional_pesos": 308750,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 95.58,
+        "bono_subproductos_bs": 78750,
+        "compras": 1000
+      },
+      {
+        "nombre": "ELVIRA LOPEZ",
+        "tabacos_producidos": 12000,
+        "pago_base_pesos": 900000,
+        "total_liquidado_pesos": 1134750,
+        "sobrecosto_adicional_pesos": 234750,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 94.56,
+        "bono_subproductos_bs": 62250,
+        "compras": 750
+      },
+      {
+        "nombre": "HUMBERTO LUNA",
+        "tabacos_producidos": 10000,
+        "pago_base_pesos": 750000,
+        "total_liquidado_pesos": 940000,
+        "sobrecosto_adicional_pesos": 190000,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 94,
+        "bono_subproductos_bs": 52000,
+        "compras": 600
+      },
+      {
+        "nombre": "MARIA MEDINA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 505360,
+        "sobrecosto_adicional_pesos": 130360,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 101.07,
+        "bono_subproductos_bs": 13750,
+        "compras": 507
+      },
+      {
+        "nombre": "ALBA SANABRIA",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 482700,
+        "sobrecosto_adicional_pesos": 107700,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 96.54,
+        "bono_subproductos_bs": 38700,
+        "compras": 300
+      }
+    ],
+    [
+      {
+        "nombre": "LEIDY SERRANO",
+        "tabacos_producidos": 5000,
+        "pago_base_pesos": 375000,
+        "total_liquidado_pesos": 598700,
+        "sobrecosto_adicional_pesos": 223700,
+        "tarifa_base_unidad": 75,
+        "costo_efectivo_unidad": 119.74,
+        "bono_subproductos_bs": 51200,
+        "compras": 750
+      }
+    ]
+  ]
+}
