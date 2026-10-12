@@ -13,13 +13,19 @@
 El personal de planta y supervisores de fábrica están históricamente habituados a registrar pesajes, recepciones y entregas en libros de **Microsoft Excel** (`FORMATO NUEVO NOMINA FABRIQUIN`, `FORMATO RECEPCION TABACOS`, etc.). Exigirles una migración 100% manual a la plataforma web de la noche a la mañana crea fricción, errores de digitación y resistencia al cambio.
 
 ### B. El Potencial de Datos Ocultos (Patrones y Redes Neuronales)
-En el proceso de manufactura de tabacos existen relaciones no lineales clave:
-- Calidad/humedad del lote de picadura y capa vs. rendimiento en libras.
-- Merma esperada por torcedor o envolvedora según turno o día de la semana.
-- Curvas de agotamiento de insumos (anillos, papel, ligas) vs. pedidos entrantes.
-- Detección temprana de anomalías (mermas sospechosas o registros atípicos).
+### B. El Potencial de Datos Ocultos y Descubrimiento No Supervisado
+El objetivo planteado con la tutoría es **trabajar la data sin sesgar el modelo inicialmente** (enfoque de **Aprendizaje No Supervisado** inicial):
+1. **Descubrimiento Ciego de Patrones (Unsupervised Clustering & Anomaly Detection):**
+   - Sin decirle a la red de antemano qué es "bueno" o "malo", permitir que algoritmos de clustering (K-Means, PCA, Autoencoders) agrupen a los fabriquines/operarios y días de producción según su comportamiento real (entradas, salidas, balance diario de lunes a sábado).
+   - Descubrir grupos naturales: fabriquines de alta regularidad, fabriquines con picos irregulares, días de caída de rendimiento semanal, etc.
+2. **Control de Calidad y Variabilidad Humana:**
+   - En la manufactura manual actual, hay fabriquines que entregan tabacos dentro de la norma exacta, mientras otros presentan desviaciones (calibre más grueso, diferencias de longitud o consistencia).
+   - Registrar y mapear estos factores cualitativos/cuantitativos para correlacionarlos con el lote de materia prima y el consumo de insumos.
+3. **Mantenimiento y Entrada de Maquinaria:**
+   - La fábrica está en proceso de incorporar maquinaria que convivirá con el trabajo manual.
+   - Existe ya un archivo base (`Mantenimiento gato negro.xlsm`). Mapear registros de mantenimiento preventivo, correctivo, fallas mecánicas y tiempos de paro para que la red identifique patrones de desgaste antes de que ocurra una avería.
 
-Una arquitectura de **Redes Neuronales / Machine Learning progresivo** permitirá evolucionar el software desde un sistema de registro reactivo a una plataforma de **toma de decisiones predictiva**.
+Una arquitectura que evolucione de **Aprendizaje No Supervisado (descubrimiento libre de patrones)** hacia **Aprendizaje Supervisado (predicción certera y clasificación)** permitirá un entendimiento profundo del ecosistema antes de forzar predicciones rígidas.
 
 ---
 
