@@ -10,7 +10,7 @@
     <p style="color: gray; margin-top: 5px;">Asigna tabacos físicos, anillos y pega yuca a los empleados.</p>
 </div>
 
-<div class="section-box" style="border-top: 4px solid #3b82f6;">
+<div class="section-box" style="border-top: 4px solid var(--primary);">
     <h2 style="margin-top: 0; color: #1d4ed8;">➕ Asignar Trabajo</h2>
     
     <form action="/api/anilladores/despachar" method="POST">
@@ -18,7 +18,7 @@
             
             <div style="flex: 2; min-width: 220px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">1. Seleccionar Anillador:</label>
-                <select name="empleado_id" style="width: 100%; padding: 8px; border: 2px solid #3b82f6; border-radius: 6px; font-size: 14px;" required>
+                <select name="empleado_id" style="width: 100%; padding: 8px; border: 2px solid var(--primary); border-radius: 6px; font-size: 14px;" required>
                     <option value="">-- Elige un Empleado --</option>
                     <% empleados.forEach(e => { %>
                         <% if (e.estado) { %>
@@ -30,12 +30,12 @@
             
             <div style="flex: 1; min-width: 150px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">2. Tabacos a Anillar:</label>
-                <input type="number" name="cantidad_tabacos" style="width: 100%; padding: 8px; border: 2px solid #6b7280; border-radius: 6px; font-size: 16px; box-sizing: border-box;" required placeholder="Ej. 5000">
+                <input type="number" name="cantidad_tabacos" style="width: 100%; padding: 8px; border: 2px solid var(--text-muted); border-radius: 6px; font-size: 16px; box-sizing: border-box;" required placeholder="Ej. 5000">
             </div>
 
             <div style="flex: 1; min-width: 150px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">3. Modelo Anillo:</label>
-                <select name="modelo_anillo" style="width: 100%; padding: 8px; border: 2px solid #d97706; border-radius: 6px; font-size: 14px;" required>
+                <select name="modelo_anillo" style="width: 100%; padding: 8px; border: 2px solid var(--primary-hover); border-radius: 6px; font-size: 14px;" required>
                     <option value="Anillos (Gato)">Anillos (Gato)</option>
                     <option value="Anillos (Intabaca)">Anillos (Intabaca)</option>
                 </select>
@@ -43,16 +43,16 @@
 
             <div style="flex: 1; min-width: 150px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">4. Paquetes Anillos (500 uds):</label>
-                <input type="number" name="cantidad_anillos" style="width: 100%; padding: 8px; border: 2px solid #d97706; border-radius: 6px; font-size: 16px;" required placeholder="Ej. 2 (=1000 anillos)">
+                <input type="number" name="cantidad_anillos" style="width: 100%; padding: 8px; border: 2px solid var(--primary-hover); border-radius: 6px; font-size: 16px;" required placeholder="Ej. 2 (=1000 anillos)">
             </div>
 
             <div style="flex: 1; min-width: 150px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">5. Pega Yuca (Envases):</label>
-                <input type="number" name="cantidad_pega" style="width: 100%; padding: 8px; border: 2px solid #10b981; border-radius: 6px; font-size: 16px;" value="0">
+                <input type="number" name="cantidad_pega" style="width: 100%; padding: 8px; border: 2px solid var(--success); border-radius: 6px; font-size: 16px;" value="0">
             </div>
         </div>
         
-        <button type="submit" style="margin-top: 16px; background: #3b82f6; color: white; padding: 10px 24px; font-size: 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
+        <button type="submit" style="margin-top: 16px; background: var(--primary); color: white; padding: 10px 24px; font-size: 15px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer;">
             ✔ Generar Despacho
         </button>
     </form>

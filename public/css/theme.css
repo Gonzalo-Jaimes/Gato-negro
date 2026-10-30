@@ -1,91 +1,130 @@
-/* 🐈‍⬛ Gato Negro - Sistema de Diseño Premium v3.0 */
+/* 🐈‍⬛ Gato Negro - Sistema de Diseño v4.0 · Artesanal tabaquero */
+
+/* Tipografías de Google (el @import debe ir primero o el navegador lo ignora) */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@500;600;700&display=swap');
 
 :root {
-    /* --- PALETA DE COLORES (HSL para mejor manipulación) --- */
-    --primary-h: 38;
-    --primary-s: 92%;
-    --primary-l: 50%;
-    --primary: hsl(var(--primary-h), var(--primary-s), var(--primary-l)); /* #f59e0b */
-    --primary-hover: hsl(var(--primary-h), var(--primary-s), 40%);
-    
-    --bg-main: #f8fafc;
-    --bg-card: #ffffff;
-    --text-main: #1e293b;
-    --text-muted: #64748b;
-    --border-color: #e2e8f0;
+    /* --- ACENTO: cobre / brasa --- */
+    --primary-h: 22;
+    --primary-s: 75%;
+    --primary-l: 40%;
+    --primary-rgb: 180, 84, 26;
+    --primary: #B4541A;
+    --primary-hover: #9A4515;
+    --primary-soft: rgba(180, 84, 26, 0.12);
+    --secondary: #6B4F2A; /* hoja de tabaco */
 
-    /* --- LOGIN MESH (Light Mode default) --- */
-    --login-bg: radial-gradient(at 0% 0%, hsl(210, 40%, 98%) 0, transparent 50%), 
-                radial-gradient(at 50% 0%, hsl(215, 25%, 90%) 0, transparent 50%), 
-                radial-gradient(at 100% 0%, hsl(220, 20%, 85%) 0, transparent 50%),
-                #ffffff;
-    --login-card-bg: rgba(255, 255, 255, 0.7);
-    --login-text: #0f172a;
-    
-    /* --- MODO OSCURO (Dark Mode) --- */
-    --dark-bg: #030712; /* Blue-950 deep */
-    --dark-card: #111827;
-    --dark-border: #1f2937;
-    --dark-text: #f8fafc;
-    --dark-text-muted: #94a3b8;
+    /* --- SUPERFICIES (papel cálido) --- */
+    --bg-main: #F6F1E7;
+    --bg-card: #FFFCF6;
+    --text-main: #2A2018;
+    --text-muted: #7A6B5A;
+    --border-color: #E2D8C6;
+    --on-primary: #FFF8EE;
 
-    /* --- LOGIN MESH (Dark Mode override) --- */
-    --dark-login-bg: radial-gradient(at 0% 0%, hsla(253,16%,7%,1) 0, transparent 50%), 
-                     radial-gradient(at 50% 0%, hsla(225,39%,30%,1) 0, transparent 50%), 
-                     radial-gradient(at 100% 0%, hsla(339,49%,30%,1) 0, transparent 50%),
-                     #030712;
-    --dark-login-card-bg: rgba(255, 255, 255, 0.03);
-    --dark-login-text: #ffffff;
-    
-    /* --- EFECTOS --- */
-    --radius: 12px;
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-    --glass-bg: rgba(255, 255, 255, 0.1);
+    /* --- SEMÁNTICOS (desaturados) --- */
+    --success: #4F7A4A;
+    --danger: #A63D2F;
+    --warning: #C98A1B;
+
+    /* --- LOGIN --- */
+    --login-bg: radial-gradient(at 0% 0%, #FBF7EE 0, transparent 55%),
+                radial-gradient(at 100% 0%, #EBDDC6 0, transparent 55%),
+                radial-gradient(at 50% 100%, #E4D2B4 0, transparent 60%),
+                #F6F1E7;
+    --login-card-bg: rgba(255, 252, 246, 0.85);
+    --login-text: #2A2018;
+
+    /* --- MODO OSCURO (valores) --- */
+    --dark-bg: #16110C;
+    --dark-card: #1F1912;
+    --dark-border: #33291D;
+    --dark-text: #F1E8D8;
+    --dark-text-muted: #A8977F;
+    --dark-login-bg: radial-gradient(at 0% 0%, #2A1E12 0, transparent 55%),
+                     radial-gradient(at 100% 0%, #3A2312 0, transparent 55%),
+                     #16110C;
+    --dark-login-card-bg: rgba(255, 244, 225, 0.05);
+    --dark-login-text: #F1E8D8;
+
+    /* --- FORMA Y PROFUNDIDAD --- */
+    --radius: 14px;
+    --radius-sm: 10px;
+    --shadow-sm: 0 1px 2px 0 rgb(60 40 20 / 0.06);
+    --shadow-md: 0 4px 10px -2px rgb(60 40 20 / 0.10), 0 2px 4px -2px rgb(60 40 20 / 0.08);
+    --shadow-lg: 0 14px 28px -6px rgb(60 40 20 / 0.16), 0 6px 10px -6px rgb(60 40 20 / 0.10);
+    --glass-bg: rgba(255, 252, 246, 0.6);
     --glass-blur: blur(12px);
-    
+
+    /* --- MOVIMIENTO --- */
+    --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+    --t-fast: 150ms;
+    --t-base: 200ms;
+
     /* --- TIPOGRAFÍA --- */
     --font-main: 'Inter', system-ui, -apple-system, sans-serif;
-    --font-head: 'Outfit', sans-serif;
+    --font-head: 'Outfit', 'Inter', sans-serif;
 }
-
-/* Tipografías de Google */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Outfit:wght@600;700&display=swap');
 
 /* --- RESET & GLOBAL --- */
 * { box-sizing: border-box; margin: 0; padding: 0; }
-body { 
-    font-family: var(--font-main); 
-    background-color: var(--bg-main); 
-    color: var(--text-main); 
+body {
+    font-family: var(--font-main);
+    background-color: var(--bg-main);
+    color: var(--text-main);
     line-height: 1.5;
-    transition: background 0.3s, color 0.3s;
+    -webkit-font-smoothing: antialiased;
+    transition: background-color 0.3s, color 0.3s;
 }
+h1, h2, h3, h4 { font-family: var(--font-head); letter-spacing: -0.01em; }
+.num, td.num, .stat-num { font-variant-numeric: tabular-nums; }
+:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
-/* --- CLASES DE UTILIDAD --- */
+/* --- COMPONENTES COMPARTIDOS --- */
+.btn, .premium-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 20px;
+    background: var(--primary);
+    color: var(--on-primary);
+    font-family: var(--font-main);
+    font-size: 0.95rem;
+    font-weight: 600;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    text-decoration: none;
+    transition: background var(--t-fast) var(--ease-out), transform var(--t-fast) var(--ease-out), box-shadow var(--t-fast);
+}
+.btn:hover, .premium-btn:hover { background: var(--primary-hover); box-shadow: var(--shadow-md); }
+.btn:active, .premium-btn:active { transform: scale(0.98); }
+.btn-ghost { background: transparent; color: var(--text-main); border: 1px solid var(--border-color); }
+.btn-ghost:hover { background: var(--primary-soft); color: var(--primary); box-shadow: none; }
+.btn-danger { background: var(--danger); }
+.btn-danger:hover { background: #8C3226; }
+.btn-sm { padding: 6px 12px; font-size: 0.85rem; }
+
 .premium-card {
     background: var(--bg-card);
     border-radius: var(--radius);
     padding: 1.5rem;
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
-    transition: transform 0.2s, box-shadow 0.2s;
+    transition: transform var(--t-base) var(--ease-out), box-shadow var(--t-base);
 }
 .premium-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
 
-.premium-btn {
-    padding: 10px 20px;
-    background: var(--primary);
-    color: white;
-    font-size: 1rem;
-    font-weight: 500;
-    border: none;
-    border-radius: 8px;
-    cursor: pointer;
-    transition: all 0.2s;
+.badge {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: var(--primary-soft);
+    color: var(--primary);
 }
-.premium-btn:hover { background: var(--primary-hover); transform: scale(1.02); }
 
 /* --- DARK MODE SELECTOR --- */
 html.dark-mode {
@@ -97,15 +136,23 @@ html.dark-mode {
     --login-bg: var(--dark-login-bg);
     --login-card-bg: var(--dark-login-card-bg);
     --login-text: var(--dark-login-text);
+    --primary: #D9743A;
+    --primary-hover: #E88A52;
+    --primary-rgb: 217, 116, 58;
+    --primary-soft: rgba(217, 116, 58, 0.16);
+    --on-primary: #1A1008;
+    --glass-bg: rgba(31, 25, 18, 0.7);
+    --shadow-md: 0 4px 10px -2px rgb(0 0 0 / 0.4);
+    --shadow-lg: 0 14px 28px -6px rgb(0 0 0 / 0.5);
 }
 html.dark-mode .premium-card { background: var(--dark-card); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
 
-/* --- COMPONENTES DE MODAL (Restauración v3.2) --- */
+/* --- COMPONENTES DE MODAL --- */
 .modal-overlay-pic {
     display: none;
     position: fixed;
     inset: 0;
-    background: rgba(0, 0, 0, 0.7);
+    background: rgba(22, 14, 6, 0.65);
     backdrop-filter: blur(4px);
     z-index: 2000;
     align-items: center;
@@ -122,15 +169,15 @@ html.dark-mode .premium-card { background: var(--dark-card); box-shadow: 0 10px 
     position: relative;
     border: 1px solid var(--border-color);
     box-shadow: var(--shadow-lg);
-    animation: modalAppear 0.3s ease-out;
+    animation: modalAppear 0.22s var(--ease-out);
 }
 
 @keyframes modalAppear {
-    from { opacity: 0; transform: scale(0.95); }
+    from { opacity: 0; transform: scale(0.96); }
     to { opacity: 1; transform: scale(1); }
 }
 
-/* --- BADGES DE SACOS --- */
+/* --- BADGES DE SACOS (tonos tierra) --- */
 .saco-badge {
     padding: 4px 10px;
     border-radius: 6px;
@@ -139,25 +186,25 @@ html.dark-mode .premium-card { background: var(--dark-card); box-shadow: 0 10px 
     color: white;
     display: inline-block;
 }
-.saco-35 { background: #1d4ed8; }
-.saco-28 { background: #0369a1; }
-.saco-21 { background: #0e7490; }
-.saco-14 { background: #065f46; }
-.saco-7  { background: #4d7c0f; }
-.saco-sob { background: #7c3aed; }
+.saco-35 { background: #7A3B14; }
+.saco-28 { background: #8F5320; }
+.saco-21 { background: #6B4F2A; }
+.saco-14 { background: #4F6A3A; }
+.saco-7  { background: #5E7F3D; }
+.saco-sob { background: #7A4A6B; }
 
 /* --- ESTADÍSTICAS Y CAJAS --- */
-.stat-box { 
-    padding: 1.25rem; 
-    border-radius: 12px; 
-    background: var(--bg-card); 
+.stat-box {
+    padding: 1.25rem;
+    border-radius: var(--radius);
+    background: var(--bg-card);
     border: 1px solid var(--border-color);
     text-align: center;
 }
 .stat-num { font-size: 1.5rem; font-weight: 800; line-height: 1; margin-bottom: 0.25rem; }
 .stat-lbl { font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600; }
 
-/* --- OPTIMIZACIÓN TÁCTIL Y RESPONSIVA (V3.1) --- */
+/* --- OPTIMIZACIÓN TÁCTIL Y RESPONSIVA --- */
 .touch-target {
     min-height: 48px;
     min-width: 48px;
@@ -173,4 +220,7 @@ html.dark-mode .premium-card { background: var(--dark-card); box-shadow: 0 10px 
 @media (max-width: 768px) {
     .pic-grid { grid-template-columns: 1fr !important; }
     .touch-mobile-full { width: 100% !important; margin-bottom: 12px; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }

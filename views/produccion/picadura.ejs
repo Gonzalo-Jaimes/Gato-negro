@@ -32,7 +32,7 @@
         const _totalStock = sacosDisponibles.length;
         const _kgStock = sacosDisponibles.reduce((acc, s) => acc + parseFloat(s.peso_kg), 0);
     %>
-    <div class="stat-box" style="border-top: 4px solid #2563eb;">
+    <div class="stat-box" style="border-top: 4px solid var(--primary-hover);">
         <div class="stat-num" style="color:var(--primary);"><%= _totalStock %></div>
         <div class="stat-lbl">Total Sacos</div>
     </div>
@@ -45,7 +45,7 @@
         if (p == 35) _colorVal = '#1d4ed8';
         else if (p == 28) _colorVal = '#0284c7';
         else if (p == 21) _colorVal = '#0891b2';
-        else if (p == 14) _colorVal = '#059669';
+        else if (p == 14) _colorVal = 'var(--success)';
     %>
     <div class="stat-box">
         <div class="stat-num" style="font-size:26px; color: <%= _colorVal %>;"><%= _conteosStock[p] %></div>
@@ -81,17 +81,17 @@
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">CAPA EN BODEGA</div>
             <div style="font-size: 20px; font-weight: 900; color: #7c3aed;"><%= getInv('capa') %> <small style="font-size: 12px;">kg</small></div>
         </div>
-        <div class="card" style="padding: 12px; border-left: 4px solid #2563eb;">
+        <div class="card" style="padding: 12px; border-left: 4px solid var(--primary-hover);">
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">CAPOTE EN BODEGA</div>
-            <div style="font-size: 20px; font-weight: 900; color: #2563eb;"><%= getInv('capote') %> <small style="font-size: 12px;">kg</small></div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--primary-hover);"><%= getInv('capote') %> <small style="font-size: 12px;">kg</small></div>
         </div>
         <div class="card" style="padding: 12px; border-left: 4px solid #16a34a;">
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PICADURA BRUTA (HOJA)</div>
-            <div style="font-size: 20px; font-weight: 900; color: #f59e0b;"><%= getInv('picadura', ['saca', 'saco', 'procesada']) %> <small style="font-size: 12px;">kg</small></div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--primary);"><%= getInv('picadura', ['saca', 'saco', 'procesada']) %> <small style="font-size: 12px;">kg</small></div>
         </div>
-        <div class="card" style="padding: 12px; border-left: 4px solid #059669;">
+        <div class="card" style="padding: 12px; border-left: 4px solid var(--success);">
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PICADURA PROCESADA (SACAS)</div>
-            <div style="font-size: 20px; font-weight: 900; color: #059669;"><%= _kgStock.toFixed(1) %> <small style="font-size: 12px;">kg</small></div>
+            <div style="font-size: 20px; font-weight: 900; color: var(--success);"><%= _kgStock.toFixed(1) %> <small style="font-size: 12px;">kg</small></div>
         </div>
     </div>
 </div>
@@ -131,7 +131,7 @@
                 </div>
                 <div>
                     <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Capote</div>
-                    <div style="font-size:18px; font-weight:900; color:#2563eb;" id="meta-capo">0 kg</div>
+                    <div style="font-size:18px; font-weight:900; color:var(--primary-hover);" id="meta-capo">0 kg</div>
                 </div>
             </div>
             
@@ -150,13 +150,13 @@
         <!-- Paso 3: Confirmación -->
         <div>
             <label style="font-size:12px; font-weight:bold; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:6px;">2. Confirmar:</label>
-            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" class="premium-btn touch-target touch-mobile-full" style="width:100%; background:#10b981; color:white; font-size:15px; box-shadow: var(--shadow-sm); border: none; font-weight: bold;">
+            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" class="premium-btn touch-target touch-mobile-full" style="width:100%; background:var(--success); color:white; font-size:15px; box-shadow: var(--shadow-sm); border: none; font-weight: bold;">
                 ✅ DESPACHAR
             </button>
             <div id="resumen-sacos-sel" style="margin-top:8px; font-size:13px; color:var(--text-main); font-weight: bold; text-align: center;">
                 0 bultos seleccionados
             </div>
-            <p id="pic-error" style="color:#ef4444; font-size:12px; margin-top:6px; font-weight: bold; text-align: center; display:none;"></p>
+            <p id="pic-error" style="color:var(--danger); font-size:12px; margin-top:6px; font-weight: bold; text-align: center; display:none;"></p>
         </div>
     </div>
 </div>
@@ -180,7 +180,7 @@
                     </div>
                 </div>
 
-                <p style="font-size:13px; color:#6b7280; margin-bottom:10px;">¿Cuántos sacos de cada tamaño salieron de esta pesada?</p>
+                <p style="font-size:13px; color:var(--text-muted); margin-bottom:10px;">¿Cuántos sacos de cada tamaño salieron de esta pesada?</p>
                 
                 <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px;">
                     <% pesos.forEach(p => { %>
@@ -191,9 +191,9 @@
                     <% }); %>
                     <div style="display: flex; align-items: center; gap: 10px; background: rgba(var(--primary-h), var(--primary-s), var(--primary-l), 0.1); padding: 10px; border-radius: 8px; grid-column: span 2;">
                         <span class="saco-badge saco-sob">Sobrante</span>
-                        <span style="font-size: 13px; color: #6b7280;">Cantidad:</span>
+                        <span style="font-size: 13px; color: var(--text-muted);">Cantidad:</span>
                         <input type="number" name="sacos_sobrante_qty" class="inp-qty" min="0" value="0">
-                        <span style="font-size: 13px; color: #6b7280;">Peso (kg):</span>
+                        <span style="font-size: 13px; color: var(--text-muted);">Peso (kg):</span>
                         <input type="number" name="sacos_sobrante_kg" class="inp-qty" min="0" step="0.1" value="0" placeholder="Ej: 8.5">
                     </div>
                 </div>
@@ -227,7 +227,7 @@
                     <div class="lote-card agotado">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>Pesada <%= lote.fecha %></strong>
-                            <span style="font-size:11px; background:#f3f4f6; padding:3px 8px; border-radius:10px; color:#6b7280;">✅ Agotada</span>
+                            <span style="font-size:11px; background:#f3f4f6; padding:3px 8px; border-radius:10px; color:var(--text-muted);">✅ Agotada</span>
                         </div>
                         <div style="font-size:12px; color:#9ca3af; margin-top:4px;"><%= lote.kg_entrada %> kg entrada → <%= lote.kg_salida %> kg salida</div>
                     </div>
@@ -236,7 +236,7 @@
                         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                             <div>
                                 <strong style="font-size:15px;">Pesada <%= lote.fecha %></strong>
-                                <div style="font-size:11px; color:#6b7280;"><%= lote.kg_entrada %> kg bruta → <%= lote.kg_salida %> kg procesada (+<%= (lote.kg_salida - lote.kg_entrada).toFixed(1) %> kg humedad)</div>
+                                <div style="font-size:11px; color:var(--text-muted);"><%= lote.kg_entrada %> kg bruta → <%= lote.kg_salida %> kg procesada (+<%= (lote.kg_salida - lote.kg_entrada).toFixed(1) %> kg humedad)</div>
                             </div>
                             <span style="font-size:13px; font-weight:bold; color:#16a34a;"><%= sacosLote.length %> sacos</span>
                         </div>
@@ -302,11 +302,11 @@
 <div class="modal-overlay-pic" id="modal-division" onclick="if(event.target===this)this.classList.remove('activo')">
   <div class="modal-box-pic">
     <h3 style="margin:0 0 4px 0; color:#1e3a5f;">✂️ Dividir Saco en Menores</h3>
-    <p id="txt-saco-origen" style="font-size:13px; color:#6b7280; margin-bottom:16px;"></p>
+    <p id="txt-saco-origen" style="font-size:13px; color:var(--text-muted); margin-bottom:16px;"></p>
     <p style="font-size:13px; margin-bottom:10px; font-weight:bold;">¿Cuántos sacos de cada tamaño crear?</p>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:14px;">
         <% [35,28,21,14,7].forEach(p => { %>
-        <div style="display:flex; align-items:center; gap:10px; background:#f8fafc; padding:9px; border-radius:8px;">
+        <div style="display:flex; align-items:center; gap:10px; background:var(--bg-main); padding:9px; border-radius:8px;">
             <span class="saco-badge saco-<%= p %>"><%= p %> kg</span>
             <input type="number" id="div-qty-<%= p %>" min="0" value="0" 
                    style="width:60px; padding:5px; border:1px solid #d1d5db; border-radius:5px; text-align:center;"
@@ -317,9 +317,9 @@
     <div id="div-preview" style="display:none; padding:10px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
     <div style="display:flex; gap:10px;">
         <button onclick="confirmarDivision()" style="flex:1; background:#1d4ed8; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer;">✂️ Dividir</button>
-        <button onclick="document.getElementById('modal-division').classList.remove('activo')" style="flex:1; background:#6b7280; color:white; border:none; padding:11px; border-radius:8px; cursor:pointer;">Cancelar</button>
+        <button onclick="document.getElementById('modal-division').classList.remove('activo')" style="flex:1; background:var(--text-muted); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer;">Cancelar</button>
     </div>
-    <p id="div-error" style="color:#ef4444; font-size:13px; margin-top:8px; display:none;"></p>
+    <p id="div-error" style="color:var(--danger); font-size:13px; margin-top:8px; display:none;"></p>
   </div>
 </div>
 
@@ -408,20 +408,20 @@ async function confirmarDivision() {
         </select>
 
         <!-- Bloque de Metas de Material (Unificación V2.9.2) -->
-        <div id="bloque-metas" style="display:none; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:15px; margin-bottom:20px;">
+        <div id="bloque-metas" style="display:none; background:var(--bg-main); border:1px solid var(--border-color); border-radius:10px; padding:15px; margin-bottom:20px;">
             <p style="margin:0 0 10px 0; font-size:14px; font-weight:bold; color:#1e3a5f;">📋 Meta de Material (Factura):</p>
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
                 <div style="text-align:center;">
-                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Picadura</div>
+                    <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Meta Picadura</div>
                     <div style="font-size:16px; font-weight:bold; color:#16a34a;" id="meta-pica">0 kg</div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Capa</div>
+                    <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Meta Capa</div>
                     <div style="font-size:16px; font-weight:bold; color:#7c3aed;" id="meta-capa">0 kg</div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:11px; color:#64748b; text-transform:uppercase;">Meta Capote</div>
-                    <div style="font-size:16px; font-weight:bold; color:#2563eb;" id="meta-capo">0 kg</div>
+                    <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Meta Capote</div>
+                    <div style="font-size:16px; font-weight:bold; color:var(--primary-hover);" id="meta-capo">0 kg</div>
                 </div>
             </div>
             
@@ -446,9 +446,9 @@ async function confirmarDivision() {
 
         <div style="display:flex; gap:10px;">
             <button onclick="confirmarEntrega()" style="flex:1; background:#16a34a; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px;">✅ Confirmar Entrega</button>
-            <button onclick="cerrarModalEntrega()" style="flex:1; background:#6b7280; color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-size:14px;">Cancelar</button>
+            <button onclick="cerrarModalEntrega()" style="flex:1; background:var(--text-muted); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
-        <p id="pic-error" style="color:#ef4444; font-size:13px; margin-top:8px; display:none;"></p>
+        <p id="pic-error" style="color:var(--danger); font-size:13px; margin-top:8px; display:none;"></p>
     </div>
 </div>
 

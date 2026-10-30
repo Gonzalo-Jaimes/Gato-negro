@@ -194,7 +194,7 @@ router.get('/despachos_empaque', isAdmin, async (req, res) => {
     const { data: despachos_activos } = await supabase.from('pedidos').select('*').eq('estado', 'aprobado');
     let despachosRoles = [];
     if (despachos_activos && usuarios) { despachos_activos.forEach(d => { if (usuarios.find(u => u.usuario === d.usuario)) despachosRoles.push(d); }); }
-    res.render('produccion/despacho_empaque', { session: req.session, usuarios, inventario, despachos_activos: despachosRoles });
+    res.render('produccion/empaque_despacho', { session: req.session, usuarios, inventario, despachos_activos: despachosRoles });
 });
 
 router.post('/asignar_despacho', isAdmin, async (req, res) => {
@@ -212,13 +212,7 @@ router.post('/asignar_despacho', isAdmin, async (req, res) => {
     res.redirect('/despachos_empaque');
 });
 
-router.get('/recepcion_empaque', isAdmin, async (req, res) => {
-    const { data: despachos } = await supabase.from('pedidos').select('*').eq('estado', 'aprobado');
-    const { data: usuarios } = await supabase.from('usuarios').select('usuario, rol');
-    let despachosRoles = [];
-    if (despachos && usuarios) { despachos.forEach(d => { let u = usuarios.find(u => u.usuario === d.usuario); if (u && (u.rol === 'anillador' || u.rol === 'empacador')) { d.rol_usuario = u.rol; despachosRoles.push(d); } }); }
-    res.render('produccion/recepcion_empaque', { session: req.session, despachos_pendientes: despachosRoles });
-});
+// /recepcion_empaque lo sirve produccion.js (empaque_recepcion); se elimino el duplicado que renderizaba una vista inexistente.
 
 router.post('/recibir_empaque/:id', isAdmin, async (req, res) => {
     const idPedido = req.params.id;

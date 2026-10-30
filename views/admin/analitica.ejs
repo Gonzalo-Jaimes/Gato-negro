@@ -64,7 +64,7 @@
       data-ingresos="<%= finanzas.ingresos %>" 
       data-nomina="<%= finanzas.nomina %>" 
       data-mantenimiento="<%= finanzas.mantenimiento %>"
-      data-raw="<%- JSON.stringify(raw_movs || []).replace(/'/g, '&#39;') %>"
+      data-raw="<%= JSON.stringify(raw_movs || []) %>"
       style="display:none;"></span>
 
 <!-- CDN de Chart.js -->

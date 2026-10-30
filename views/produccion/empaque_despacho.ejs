@@ -5,7 +5,7 @@
 
 <p style="color: gray;">Asígnele tareas y materia prima a los trabajadores de Empaque y Anillado. Al confirmar, el material se descontará del inventario y se le enviará como "Deuda" de producción al trabajador.</p>
 
-<div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid #3b82f6; max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
+<div style="background: white; padding: 20px; border-radius: 10px; border-top: 4px solid var(--primary); max-width: 600px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">
     <form action="/asignar_despacho" method="POST">
         <label><strong>1. Selecciona el Trabajador:</strong></label><br>
         <select name="usuario" required style="width: 100%; padding: 8px; margin-top: 5px; margin-bottom: 15px;">
@@ -33,7 +33,7 @@
             </select>
         </div>
 
-        <button type="submit" style="width: 100%; padding: 10px; background: #3b82f6; color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 16px;">🚀 Despachar Tarea</button>
+        <button type="submit" style="width: 100%; padding: 10px; background: var(--primary); color: white; border: none; border-radius: 5px; font-weight: bold; font-size: 16px;">🚀 Despachar Tarea</button>
     </form>
 </div>
 
@@ -52,7 +52,7 @@
             <td style="text-transform: capitalize; font-weight: bold;"><%= p.usuario %></td>
             <td><%= p.material %></td>
             <td style="color: blue; font-weight: bold;"><%= p.cantidad %></td>
-            <td><span style="background: #dbeafe; color: #2563eb; padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">🔵 En Proceso</span></td>
+            <td><span style="background: #dbeafe; color: var(--primary-hover); padding: 4px 8px; border-radius: 10px; font-size: 12px; font-weight: bold;">🔵 En Proceso</span></td>
         </tr>
     <% }); %>
 </table>

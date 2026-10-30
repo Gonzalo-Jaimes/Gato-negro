@@ -2,23 +2,23 @@
 
 <style>
   .fab-deuda-badge { float: right; font-size: 13px; }
-  .deuda-roja  { color: #ef4444; }
-  .deuda-verde { color: #10b981; }
+  .deuda-roja  { color: var(--danger); }
+  .deuda-verde { color: var(--success); }
 
   /* === DARK MODE: DESPACHO PAGE === */
   /* Resultado del cálculo de pesaje */
   html.dark-mode #resultado_calculo {
       background: #111111 !important;
       border-color: #333 !important;
-      color: #e5e7eb !important;
+      color: var(--border-color) !important;
   }
   html.dark-mode #resultado_calculo h3 { color: #f3f4f6 !important; }
-  html.dark-mode #resultado_calculo p[style*="color: #ef4444"],
-  html.dark-mode #resultado_calculo p[style*="color:#ef4444"] { color: #f87171 !important; }
-  html.dark-mode #resultado_calculo p[style*="color: #10b981"],
-  html.dark-mode #resultado_calculo p[style*="color:#10b981"] { color: #34d399 !important; }
-  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
-  html.dark-mode #resultado_calculo [style*="color:#6b7280"] { color: #9ca3af !important; }
+  html.dark-mode #resultado_calculo p[style*="color: var(--danger)"],
+  html.dark-mode #resultado_calculo p[style*="color:var(--danger)"] { color: #f87171 !important; }
+  html.dark-mode #resultado_calculo p[style*="color: var(--success)"],
+  html.dark-mode #resultado_calculo p[style*="color:var(--success)"] { color: #34d399 !important; }
+  html.dark-mode #resultado_calculo [style*="color: var(--text-muted)"],
+  html.dark-mode #resultado_calculo [style*="color:var(--text-muted)"] { color: #9ca3af !important; }
   html.dark-mode #resultado_calculo [style*="color: #1f2937"],
   html.dark-mode #resultado_calculo [style*="color:#1f2937"] { color: #f3f4f6 !important; }
   /* Sección material extra (rojo) dentro del resultado */
@@ -29,8 +29,8 @@
   }
   html.dark-mode #resultado_calculo [style*="color:#991b1b"] { color: #fca5a5 !important; }
   html.dark-mode #resultado_calculo [style*="color: #991b1b"] { color: #fca5a5 !important; }
-  html.dark-mode #resultado_calculo [style*="color: #6b7280"],
-  html.dark-mode #resultado_calculo span[style*="color:#6b7280"] { color: #9ca3af !important; }
+  html.dark-mode #resultado_calculo [style*="color: var(--text-muted)"],
+  html.dark-mode #resultado_calculo span[style*="color:var(--text-muted)"] { color: #9ca3af !important; }
   /* Inputs editables dentro del resultado */
   html.dark-mode #resultado_calculo input[type="number"] {
       background: #222 !important;
@@ -44,7 +44,7 @@
   html.dark-mode [style*="color: #b45309"],
   html.dark-mode [style*="color:#b45309"] { color: #fbbf24 !important; }
   html.dark-mode [style*="color: #713f12"],
-  html.dark-mode [style*="color:#713f12"] { color: #f59e0b !important; }
+  html.dark-mode [style*="color:#713f12"] { color: var(--primary) !important; }
 </style>
 
 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
@@ -94,7 +94,7 @@
     <% } %>
 </div>
 <div style="display:flex; justify-content:center;">
-<div class="card" style="max-width: 680px; width: 100%; border-top: 4px solid #f59e0b;">
+<div class="card" style="max-width: 680px; width: 100%; border-top: 4px solid var(--primary);">
     <h2 style="margin-top: 0;">Parámetros del Despacho</h2>
     
     <form action="/despachar_tarea" method="POST" target="_blank" onsubmit="setTimeout(()=> window.location.href='/despacho', 2000)">
@@ -103,9 +103,9 @@
         <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Fabriquín:</label>
         <input type="text" id="buscar_fab" placeholder="Escribe el código (F01) o nombre (Alcides)..."
                autocomplete="off"
-               style="width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; border: 2px solid #f59e0b; border-radius: 8px; margin-bottom: 4px;"
+               style="width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 4px;"
                oninput="filtrarFabriquines()" onfocus="mostrarDropdown()" onblur="setTimeout(cerrarDropdown, 200)">
-        <div id="fab_dropdown" style="display:none; background:var(--bg-card); border: 1px solid #f59e0b; border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <div id="fab_dropdown" style="display:none; background:var(--bg-card); border: 1px solid var(--primary); border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
             <% empleados.forEach(emp => { 
                 const prest = prestamos.find(p => p.empleado_id === emp.id);
                 const saldoPrest = prest ? prest.saldo_pendiente : 0;
@@ -130,13 +130,13 @@
         <input type="hidden" name="empleado_id" id="empleado_id" required>
 
         <!-- Alerta saldo tabacos -->
-        <div id="saldo_alerta" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #d97706;">
+        <div id="saldo_alerta" style="display: none; background: #fffbeb; border: 1px solid #fcd34d; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: var(--primary-hover);">
             <strong>⚠️ Tiene Saldo en Casa:</strong> Este fabriquin aún debe <span id="saldo_info" style="font-weight: 900; font-size:18px;">0</span> tabacos. 
             <br><small>El nuevo material se sumará a su deuda actual.</small>
         </div>
 
         <!-- Alerta saldo MATERIAL -->
-        <div id="saldo_material_alerta" style="display: none; background: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: #dc2626;">
+        <div id="saldo_material_alerta" style="display: none; background: #fef2f2; border: 1px solid #fca5a5; padding: 15px; border-radius: 8px; margin-bottom: 20px; color: var(--danger);">
             <strong>⚖️ Saldo de Material Pendiente:</strong><br>
             <span id="info_capa_ant">Capa: 0 kg</span> &nbsp;|&nbsp;
             <span id="info_capote_ant">Capote: 0 kg</span> &nbsp;|&nbsp;
@@ -202,16 +202,16 @@
         </div>
 
         <!-- SIMULAR -->
-        <button type="button" onclick="simularCalculo()" style="width: 100%; background: #3b82f6; font-size: 16px; margin-bottom: 20px;">🧮 Calcular Pesaje</button>
+        <button type="button" onclick="simularCalculo()" style="width: 100%; background: var(--primary); font-size: 16px; margin-bottom: 20px;">🧮 Calcular Pesaje</button>
 
         <!-- RESULTADO CON CAMPOS EDITABLES DE MATERIAL -->
-        <div id="resultado_calculo" style="display: none; background: #f8fafc; border: 1px solid #e2e8f0; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
+        <div id="resultado_calculo" style="display: none; background: var(--bg-main); border: 1px solid var(--border-color); padding: 20px; border-radius: 8px; margin-bottom: 20px;">
             <h3 style="margin-top:0; color:#1f2937;">Material a Pesar y Extraer de Bodega:</h3>
-            <p style="color: #ef4444;"><strong>Deuda Anterior:</strong> <span id="res_casa"></span></p>
-            <p style="color: #10b981; font-weight:bold; font-size:18px;">Nueva Deuda Total: <span id="res_meta"></span> Tabacos</p>
+            <p style="color: var(--danger);"><strong>Deuda Anterior:</strong> <span id="res_casa"></span></p>
+            <p style="color: var(--success); font-weight:bold; font-size:18px;">Nueva Deuda Total: <span id="res_meta"></span> Tabacos</p>
             <hr>
 
-            <p style="margin: 5px 0; font-size: 13px; color: #6b7280;">
+            <p style="margin: 5px 0; font-size: 13px; color: var(--text-muted);">
                 🎟️ <strong><span id="res_fisico"></span> Tabacos</strong> — Edita los kg si necesitas ajustar por saldo de material:
             </p>
 
@@ -220,21 +220,21 @@
                 <label style="min-width: 130px; font-weight:bold;">• Capa (kg):</label>
                 <input type="number" name="capa_kg" id="inp_capa" step="0.01" min="0"
                        style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
-                <span id="lbl_capa_desc" style="font-size:12px; color:#6b7280;"></span>
+                <span id="lbl_capa_desc" style="font-size:12px; color:var(--text-muted);"></span>
             </div>
             <!-- CAPOTE -->
             <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
                 <label style="min-width: 130px; font-weight:bold;">• Capote (kg):</label>
                 <input type="number" name="capote_kg" id="inp_capote" step="0.01" min="0"
                        style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
-                <span id="lbl_capote_desc" style="font-size:12px; color:#6b7280;"></span>
+                <span id="lbl_capote_desc" style="font-size:12px; color:var(--text-muted);"></span>
             </div>
             <!-- PICADURA -->
             <div style="display:flex; align-items:center; gap:10px; margin-top:8px;">
                 <label style="min-width: 130px; font-weight:bold;">• Picadura (kg):</label>
                 <input type="number" name="picadura_kg" id="inp_picadura" step="0.01" min="0"
                        style="width: 100px; font-size:16px; font-weight:bold; padding:5px; border:2px solid #d1d5db; border-radius:6px;">
-                <span id="lbl_picadura_desc" style="font-size:12px; color:#6b7280;"></span>
+                <span id="lbl_picadura_desc" style="font-size:12px; color:var(--text-muted);"></span>
             </div>
             <!-- MATERIAL EXTRA (por tabacos malos o faltante) -->
             <div style="margin-top:16px; padding:12px; background:#fef2f2; border:1px dashed #fca5a5; border-radius:6px;">
@@ -246,22 +246,22 @@
                         <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Capa:</label>
                         <input type="number" name="extra_capa_kg" id="inp_extra_capa" step="0.01" min="0" placeholder="0"
                                style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
-                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                        <span style="font-size:12px; color:var(--text-muted);">kg</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Capote:</label>
                         <input type="number" name="extra_capote_kg" id="inp_extra_capote" step="0.01" min="0" placeholder="0"
                                style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
-                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                        <span style="font-size:12px; color:var(--text-muted);">kg</span>
                     </div>
                     <div style="display:flex; align-items:center; gap:6px;">
                         <label style="min-width:90px; font-size:13px; font-weight:bold;">Extra Picadura:</label>
                         <input type="number" name="extra_picadura_kg" id="inp_extra_picadura" step="0.01" min="0" placeholder="0"
                                style="width:80px; padding:4px; border:2px solid #fca5a5; border-radius:6px; font-size:14px;">
-                        <span style="font-size:12px; color:#6b7280;">kg</span>
+                        <span style="font-size:12px; color:var(--text-muted);">kg</span>
                     </div>
                 </div>
-                <p style="margin:6px 0 0 0; font-size:11px; color:#6b7280;">*El extra se suma al material entregado hoy y genera saldo negativo que se descuenta gradualmente en próximos despachos.</p>
+                <p style="margin:6px 0 0 0; font-size:11px; color:var(--text-muted);">*El extra se suma al material entregado hoy y genera saldo negativo que se descuenta gradualmente en próximos despachos.</p>
             </div>
             <!-- CESTAS -->
             <div style="margin-top:12px;">
@@ -271,7 +271,7 @@
         </div>
 
         <hr style="margin-bottom: 20px;">
-        <button type="submit" id="btn_submit" style="width: 100%; background: #10b981; font-size: 18px; font-weight: bold;" disabled>
+        <button type="submit" id="btn_submit" style="width: 100%; background: var(--success); font-size: 18px; font-weight: bold;" disabled>
             🖨️ Registrar Salida e Imprimir Formato
         </button>
     </form>
