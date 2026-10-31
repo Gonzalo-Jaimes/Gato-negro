@@ -1,16 +1,16 @@
 <%- include('../partials/header') %>
 
 <style>
-    .btn-guardar   { background: #3b82f6; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-liquidar  { background: #10b981; color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-prestamo  { background: #f59e0b; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-guardar   { background: var(--primary); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-liquidar  { background: var(--success); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
+    .btn-prestamo  { background: var(--primary); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
     .btn-extra     { background: #15803d; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-    .btn-historial { background: #6b7280; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
+    .btn-historial { background: var(--text-muted); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
     .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
     .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
     .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
     .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
-    .inp-dia:focus { outline: 2px solid #3b82f6; }
+    .inp-dia:focus { outline: 2px solid var(--primary); }
 
     /* Toast */
     #toast-exito { position: fixed; top: 20px; right: 20px; background: #065f46; color: white; padding: 16px 22px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); z-index: 9999; display: none; max-width: 380px; font-size: 14px; }
@@ -20,8 +20,8 @@
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal-overlay.activo { display: flex; }
     .modal-box { background: var(--bg-card); border-radius: 16px; padding: 30px; width: 450px; max-width: 95vw; border: 1px solid var(--border-color); }
-    html.dark-mode .modal-box { background: #1f2937; color: #e5e7eb; border-color: #374151; }
-    html.dark-mode .modal-box input, html.dark-mode .modal-box select { background: #111827; color: #e5e7eb; border-color: #4b5563; }
+    html.dark-mode .modal-box { background: #1f2937; color: var(--border-color); border-color: #374151; }
+    html.dark-mode .modal-box input, html.dark-mode .modal-box select { background: #111827; color: var(--border-color); border-color: #4b5563; }
 
     /* Historial */
     .historial-box { display: none; border-top: 1px solid var(--border-color); padding: 12px 16px; background: rgba(0,0,0,0.03); }
@@ -56,10 +56,10 @@
         <label style="font-size:13px; font-weight:bold;">Nota (opcional):</label>
         <input type="text" id="modal-nota" placeholder="Ej: Para pagar operarios internos" style="width:100%; padding:8px; margin-bottom:18px; border:1px solid var(--border-color); border-radius:6px; font-size:14px; box-sizing:border-box;">
         <div style="display:flex; gap:10px;">
-            <button onclick="guardarMovimientoPrestamo()" style="flex:1; background:#f59e0b; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
-            <button onclick="cerrarModal()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
+            <button onclick="guardarMovimientoPrestamo()" style="flex:1; background:var(--primary); color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
+            <button onclick="cerrarModal()" style="flex:1; background:var(--text-muted); color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
-        <p id="modal-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
+        <p id="modal-error" style="color:var(--danger); font-size:12px; margin-top:8px; display:none;"></p>
     </div>
 </div>
 
@@ -68,7 +68,7 @@
     <div class="modal-box">
         <h3 style="margin:0 0 16px 0; color:#15803d;">🌿 Material Extra Entre Semana</h3>
         <p id="modal-extra-emp" style="font-weight:bold; margin-bottom:12px;"></p>
-        <p style="font-size:12px; color:#6b7280; margin-bottom:12px;">El material extra queda como deuda. Gregorío puede descontarlo en los siguientes despachos.</p>
+        <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">El material extra queda como deuda. Gregorío puede descontarlo en los siguientes despachos.</p>
         <label style="font-size:13px; font-weight:bold;">Material:</label>
         <select id="extra-material" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:6px; font-size:14px;">
             <option value="capa">🍃 Capa</option>
@@ -83,9 +83,9 @@
         <input type="text" id="extra-nota" placeholder="Ej: Capa salió mala, necesitó reemplazo" style="width:100%; padding:8px; margin-bottom:18px; border:1px solid var(--border-color); border-radius:6px; font-size:14px; box-sizing:border-box;">
         <div style="display:flex; gap:10px;">
             <button onclick="guardarMaterialExtra()" style="flex:1; background:#15803d; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
-            <button onclick="cerrarModalExtra()" style="flex:1; background:#6b7280; color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
+            <button onclick="cerrarModalExtra()" style="flex:1; background:var(--text-muted); color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
-        <p id="extra-error" style="color:#ef4444; font-size:12px; margin-top:8px; display:none;"></p>
+        <p id="extra-error" style="color:var(--danger); font-size:12px; margin-top:8px; display:none;"></p>
     </div>
 </div>
 
@@ -112,7 +112,7 @@
     const saldoPrestamo = prestamo ? parseInt(prestamo.saldo_pendiente) : 0;
 %>
 
-<div class="card tarjeta-fabr" id="card-<%= emp.id %>" data-nombre="<%= (emp.codigo + ' ' + emp.nombre).toLowerCase() %>" style="margin-bottom: 20px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? '#10b981' : '#f59e0b' %>;">
+<div class="card tarjeta-fabr" id="card-<%= emp.id %>" data-nombre="<%= (emp.codigo + ' ' + emp.nombre).toLowerCase() %>" style="margin-bottom: 20px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? 'var(--success)' : 'var(--primary)' %>;">
 
     <!-- CABECERA -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color); flex-wrap: wrap; gap: 10px;">
@@ -195,7 +195,7 @@
                        class="inp-dia"
                        style="border-color: #bfdbfe; background: #eff6ff;" placeholder="0.00">
 
-                <div style="font-size: 11px; font-weight: bold; color: #059669; margin-top: 6px; margin-bottom: 4px;">✨ Extras (tabs)</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--success); margin-top: 6px; margin-bottom: 4px;">✨ Extras (tabs)</div>
                 <input type="number" name="extra_tabacos"
                        value="<%= reg.extra_tabacos || '' %>"
                        class="inp-dia"
@@ -233,7 +233,7 @@
                     const esCargo = h.monto_abono < 0;
                     const tipoLabel = esCargo ? (h.tipo === 'prestamo' ? '💵 Préstamo' : h.tipo === 'descuento_sueldo' ? '✂️ Desc. Sueldo' : '📦 Cargo') : '💚 Abono';
                 %>
-                <tr style="<%= esCargo ? 'color:#b91c1c;' : 'color:#059669;' %>">
+                <tr style="<%= esCargo ? 'color:#b91c1c;' : 'color:var(--success);' %>">
                     <td><%= h.fecha %></td>
                     <td><%= tipoLabel %></td>
                     <td>$<%= Math.abs(h.monto_abono).toLocaleString('es-CO') %></td>

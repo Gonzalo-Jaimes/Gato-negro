@@ -1,13 +1,13 @@
 <%- include('../partials/header') %>
 
 <style>
-    .btn-guardar  { background-color: #3b82f6; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
-    .btn-liquidar { background-color: #10b981; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; margin-top: 6px; }
+    .btn-guardar  { background-color: var(--primary); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
+    .btn-liquidar { background-color: var(--success); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; margin-top: 6px; }
     .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
     .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
     .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
     .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
-    .inp-dia:focus { outline: 2px solid #3b82f6; }
+    .inp-dia:focus { outline: 2px solid var(--primary); }
 </style>
 
 <div style="margin-bottom: 20px;">
@@ -34,19 +34,19 @@
     const extraTotal = (reg.lun_papel_extra||0)+(reg.mar_papel_extra||0)+(reg.mie_papel_extra||0)+(reg.jue_papel_extra||0)+(reg.vie_papel_extra||0)+(reg.sab_papel_extra||0);
 %>
 
-<div class="card tarjeta-env" data-nombre="<%= (emp.codigo + ' ' + emp.nombre).toLowerCase() %>" style="margin-bottom: 24px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? '#10b981' : '#f59e0b' %>;">
+<div class="card tarjeta-env" data-nombre="<%= (emp.codigo + ' ' + emp.nombre).toLowerCase() %>" style="margin-bottom: 24px; padding: 0; overflow: hidden; border-left: 5px solid <%= pendiente <= 0 ? 'var(--success)' : 'var(--primary)' %>;">
 
     <!-- CABECERA -->
     <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: var(--bg-card); border-bottom: 1px solid var(--border-color);">
         <div>
             <strong style="font-size: 15px; color: var(--text-main);"><%= emp.codigo %> — <%= emp.nombre %></strong>
-            <span style="margin-left: 12px; font-size: 12px; color: #6b7280;">🌯 <%= reg.marca || 'Gato' %></span>
+            <span style="margin-left: 12px; font-size: 12px; color: var(--text-muted);">🌯 <%= reg.marca || 'Gato' %></span>
             <br>
             <span class="badge-pendiente <%= pendiente <= 0 ? 'verde' : 'rojo' %>" style="margin-top: 4px;">
                 <%= pendiente <= 0 ? '✅ Completó ' + totalOut + ' cestas' : '⏳ Faltan: ' + pendiente + ' cestas' %>
             </span>
         </div>
-        <div style="text-align: right; font-size: 13px; color: #10b981; font-weight: bold;">
+        <div style="text-align: right; font-size: 13px; color: var(--success); font-weight: bold;">
             $<%= pago.toLocaleString('es-CO') %> COP
             <br><span style="color: var(--text-muted); font-size: 11px;">
                 Papel — Asig: <strong><%= reg.papel_trans_g || 0 %> kg</strong> |

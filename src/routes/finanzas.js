@@ -133,7 +133,7 @@ router.get('/imprimir_nomina_v18/:id', isAdmin, async (req, res) => {
         if (abonos) { abonos.forEach(a => { const monto = parseFloat(a.monto_abono || 0); const tipo = a.tipo || 'abono'; if (monto > 0 && (tipo === 'abono' || tipo === 'descuento_sueldo')) { descuentos += monto; desglose_descuentos.push({ tipo, monto, nota: a.nota, fecha: a.fecha_abono }); } }); }
     } catch(e) {}
     const total_neto = Math.max(0, total_ganado - descuentos);
-    res.render('finanzas/formato_nomina_v18', {
+    res.render('finanzas/formato_nomina', {
         empleado: emp, reg, tiempo: obtenerHoraColombia(),
         totales: { tabacos: total_tabacos, cestas: total_cestas },
         pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_bruto: total_ganado, descuentos, desglose_descuentos, total_neto, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }

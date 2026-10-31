@@ -1,0 +1,50 @@
+/* Loader de los ojos del gato, compartido por la landing, el login y el panel.
+   Estados de #loader:
+     (sin clase)  cubre la pantalla                (arranque de la landing)
+     .ready       los ojos se abren del todo
+     .done        reposo: paneles fuera, ojos ocultos
+     .closing     cierre rapido del telon antes de navegar
+   html.cat-cover pinta el telon antes del primer fotograma en las paginas de destino. */
+
+:root { --fx-ease: cubic-bezier(.22, 1, .36, 1); }
+
+#loader { position: fixed; inset: 0; z-index: 9999; display: grid; place-items: center; pointer-events: all; }
+.ld-panel { position: absolute; top: 0; bottom: 0; width: 50.5%; background: #0d0a07; transition: transform .8s var(--fx-ease); }
+.ld-l { left: 0; }
+.ld-r { right: 0; }
+.ld-eyes { position: relative; width: min(62vw, 300px); height: auto; overflow: visible;
+    filter: drop-shadow(0 0 calc(6px + var(--lp, 0) * 26px) rgba(217, 116, 58, .75));
+    transition: opacity .35s ease; }
+.ld-eyes .eye { transform-box: fill-box; transform-origin: center; transform: scaleY(.04);
+    animation: ld-blink 2.4s ease-in-out infinite; }
+.ld-eyes .eye + .eye { animation-delay: .04s; }
+
+#loader.ready .eye { animation: ld-wide .55s var(--fx-ease) forwards; }
+#loader.done { pointer-events: none; }
+#loader.done .ld-eyes { opacity: 0; }
+#loader.done .ld-l { transform: translateX(-101%); }
+#loader.done .ld-r { transform: translateX(101%); }
+#loader.done .eye { animation-play-state: paused; }
+
+/* Cierre antes de navegar: mas rapido que la apertura, los ojos aparecen justo despues */
+#loader.closing .ld-panel { transition-duration: .5s; }
+#loader.closing .ld-eyes { transition-delay: .15s; }
+
+/* Pagina de destino: telon ya cerrado desde el primer pintado */
+html.cat-cover { overflow: hidden; }
+html.cat-cover::before { content: ""; position: fixed; inset: 0; z-index: 9998; background: #0d0a07; }
+html.cat-cover #loader.done { pointer-events: all; }
+html.cat-cover #loader.done .ld-panel { transform: none; transition: none; }
+html.cat-cover #loader.done .ld-eyes { opacity: 1; transition: none; }
+html.cat-cover #loader.done .eye { animation-play-state: running; }
+
+@keyframes ld-blink {
+    0%, 100% { transform: scaleY(.04); }
+    22% { transform: scaleY(.6); }
+    30% { transform: scaleY(.1); }
+    38%, 85% { transform: scaleY(.66); }
+}
+@keyframes ld-wide {
+    from { transform: scaleY(.66); }
+    to { transform: scaleY(1.12); }
+}

@@ -1,0 +1,16 @@
+<%# Loader de los ojos del gato. idle:true lo deja en reposo (paginas que solo lo usan para transiciones). %>
+<div id="loader" class="<%= locals.idle ? 'done' : '' %>" aria-hidden="true">
+    <div class="ld-panel ld-l"></div>
+    <div class="ld-panel ld-r"></div>
+    <svg class="ld-eyes" viewBox="0 0 240 90" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+            <radialGradient id="ld-iris" cx="50%" cy="50%" r="55%">
+                <stop offset="0%" stop-color="#F2B04A"/>
+                <stop offset="55%" stop-color="#D9743A"/>
+                <stop offset="100%" stop-color="#6B2D0B"/>
+            </radialGradient>
+        </defs>
+        <g class="eye"><ellipse cx="60" cy="45" rx="46" ry="32" fill="url(#ld-iris)"/><ellipse cx="60" cy="45" rx="6" ry="28" fill="#0b0805"/><circle cx="48" cy="34" r="4" fill="#fff" opacity=".55"/></g>
+        <g class="eye"><ellipse cx="180" cy="45" rx="46" ry="32" fill="url(#ld-iris)"/><ellipse cx="180" cy="45" rx="6" ry="28" fill="#0b0805"/><circle cx="168" cy="34" r="4" fill="#fff" opacity=".55"/></g>
+    </svg>
+</div>

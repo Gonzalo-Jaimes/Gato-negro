@@ -6,11 +6,43 @@
     <title>Don Gato | Software de Gestión Tabaquera</title>
     <!-- Incluimos Tailwind CSS por CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = { theme: { extend: {
+            fontFamily: { sans: ['Inter','sans-serif'], display: ['Outfit','Inter','sans-serif'] },
+            colors: {
+                orange: { 400:'#D9743A', 500:'#B4541A', 600:'#9A4515' },
+                slate: { 200:'#E8DCC6', 300:'#D3C4A9', 400:'#B3A28A', 500:'#8F7E68', 600:'#6E5F4C', 700:'#3D3022', 800:'#271E15', 900:'#1B1510', 950:'#120E0A' }
+            } } } };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Outfit:wght@600;700&display=swap" rel="stylesheet">
+    <link rel="preload" as="image" href="/img/logo.png">
+    <link rel="stylesheet" href="/css/cat-loader.css">
+    <link rel="stylesheet" href="/css/landing-fx.css">
+    <script>
+        /* Elige modo WebGL o ligero antes del primer pintado (?lite=1 / ?fx=1 fuerzan cada modo) */
+        (function () {
+            var d = document.documentElement, q = location.search, m = function (s) { return matchMedia(s).matches; };
+            d.classList.add('js', 'is-loading');
+            var reduced = m('(prefers-reduced-motion: reduce)');
+            var lite = m('(max-width: 768px)') || m('(pointer: coarse)') || reduced
+                || (navigator.deviceMemory && navigator.deviceMemory <= 2)
+                || (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 2)
+                || (navigator.connection && navigator.connection.saveData);
+            if (/[?&]lite=1/.test(q)) lite = true;
+            if (/[?&]fx=1/.test(q)) lite = false;
+            if (!lite) {
+                try { var c = document.createElement('canvas'); if (!(c.getContext('webgl2') || c.getContext('webgl'))) lite = true; }
+                catch (e) { lite = true; }
+            }
+            d.classList.add(lite ? 'fx-lite' : 'fx-gl');
+            if (reduced) d.classList.add('fx-reduced');
+        })();
+    </script>
+    <noscript><style>#loader { display: none !important; }</style></noscript>
     <style>
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0f172a; /* Fondo oscuro Gato Negro */
+            background-color: #1B1510; /* Fondo oscuro Gato Negro */
             color: #f8fafc;
             overflow-x: hidden;
             cursor: default;
@@ -21,14 +53,14 @@
             width: 8px;
         }
         ::-webkit-scrollbar-track {
-            background: #0f172a; 
+            background: #1B1510; 
         }
         ::-webkit-scrollbar-thumb {
-            background: #334155; 
+            background: #3D3022; 
             border-radius: 4px;
         }
         ::-webkit-scrollbar-thumb:hover {
-            background: #475569; 
+            background: #6E5F4C; 
         }
 
         /* Filtro para Neko98: El gato por defecto es blanco, esto lo vuelve negro */
@@ -38,91 +70,107 @@
 
         /* Gradiente de fondo similar al de la imagen */
         .bg-gradient-dark {
-            background: radial-gradient(circle at center, #1e293b 0%, #0f172a 100%);
+            background-image: radial-gradient(circle at 20% 0%, rgba(180,84,26,0.18), transparent 45%);
+            background: radial-gradient(circle at center, #271E15 0%, #1B1510 100%);
         }
     </style>
 </head>
 <body class="antialiased bg-gradient-dark">
 
+    <!-- Loader: los ojos del gato se abren cuando el hero está listo -->
+    <%- include('partials/cat-loader') %>
+
     <!-- Se eliminó el cursor estático para usar oneko.js -->
 
+    <div class="hero-wrap">
     <!-- Navegación -->
     <nav class="container mx-auto px-6 py-6 flex justify-between items-center relative z-10">
-        <div class="text-2xl font-extrabold text-orange-500 flex items-center gap-2">
+        <div class="nav-brand text-2xl font-extrabold text-orange-500 flex items-center gap-2">
             <img src="/img/logo.png" alt="Logo" class="w-10 h-10 rounded-full" onerror="this.style.display='none'"> 
-            Don Gato<span class="text-white">SaaS</span>
+            Don Gato<span class="nav-saas text-white">SaaS</span>
         </div>
         <div>
-            <a href="/login" class="px-6 py-2 bg-orange-500 text-black font-extrabold rounded-lg shadow-[0_0_15px_rgba(249,115,22,0.4)] hover:bg-orange-400 transition">
+            <a href="/login" class="nav-cta px-6 py-2 bg-orange-500 text-white font-extrabold rounded-lg shadow-[0_0_15px_rgba(180,84,26,0.4)] hover:bg-orange-400 transition">
                 INICIAR SESIÓN
             </a>
         </div>
     </nav>
 
-    <!-- Hero Section -->
-    <header class="container mx-auto px-6 py-20 text-center relative z-10">
-        <h1 class="text-5xl md:text-7xl font-extrabold tracking-tight text-white mb-6 drop-shadow-lg">
-            Control total para tu <br/><span class="text-orange-500">Fábrica de Tabaco</span>
-        </h1>
-        <p class="text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            Descubre Gato Negro, la plataforma ERP definitiva creada por Don Gato. Gestiona el inventario, supervisa a tus trabajadores y mantén el control de tus finanzas en tiempo real.
-        </p>
-        <div class="flex flex-col sm:flex-row justify-center gap-4">
-            <a href="/login" class="px-8 py-4 bg-orange-500 text-black font-extrabold rounded-xl shadow-[0_0_20px_rgba(249,115,22,0.3)] hover:bg-orange-400 transition text-lg tracking-wide">
-                ACCEDER AL SISTEMA
-            </a>
-            <a href="#caracteristicas" class="px-8 py-4 bg-slate-800 text-white font-bold rounded-xl shadow border border-slate-700 hover:bg-slate-700 transition text-lg">
-                Ver Características
-            </a>
+    <!-- Hero Section: texto + imagen con shader (escritorio) o CSS (móvil) -->
+    <header class="hero container mx-auto px-6 relative z-10">
+        <div class="hero-copy">
+            <h1 class="hero-in font-display text-5xl md:text-6xl 2xl:text-7xl font-extrabold tracking-tight text-white mb-6 drop-shadow-lg" style="--i:0">
+                Control total para tu <br/><span class="text-orange-500">Fábrica de Tabaco</span>
+            </h1>
+            <p class="hero-in text-xl text-slate-400 mb-10 max-w-2xl mx-auto" style="--i:1">
+                Descubre Gato Negro, la plataforma ERP definitiva creada por Don Gato. Gestiona el inventario, supervisa a tus trabajadores y mantén el control de tus finanzas en tiempo real.
+            </p>
+            <div class="hero-in hero-btns flex flex-col sm:flex-row justify-center gap-4" style="--i:2">
+                <a href="/login" class="px-8 py-4 bg-orange-500 text-white font-extrabold rounded-xl shadow-[0_0_20px_rgba(180,84,26,0.3)] hover:bg-orange-400 transition text-lg tracking-wide">
+                    ACCEDER AL SISTEMA
+                </a>
+                <a href="#caracteristicas" class="px-8 py-4 bg-slate-800 text-white font-bold rounded-xl shadow border border-slate-700 hover:bg-slate-700 transition text-lg">
+                    Ver Características
+                </a>
+            </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+            <div class="hero-art-in">
+                <img id="hero-img" src="/img/logo.png" alt="" decoding="async">
+                <canvas id="hero-gl"></canvas>
+            </div>
         </div>
     </header>
+    </div>
 
     <!-- Características Completas del ERP -->
-    <section id="caracteristicas" class="py-24 border-t border-slate-800 bg-slate-900/50 backdrop-blur-sm relative z-10">
+    <section id="caracteristicas" class="modules-section py-24 border-t border-slate-800 relative z-10">
         <div class="container mx-auto px-6">
-            <h2 class="text-4xl font-extrabold text-center text-white mb-4">Módulos y Funcionalidades del Sistema</h2>
-            <p class="text-center text-slate-400 mb-16 max-w-2xl mx-auto">Gato Negro ERP está diseñado para abarcar toda la cadena de valor de la producción tabaquera, desde la hoja de tabaco hasta la venta final.</p>
-            
+            <div class="reveal-head">
+                <h2 class="font-display text-4xl font-extrabold text-center text-white mb-4">Módulos y Funcionalidades del Sistema</h2>
+                <p class="text-center text-slate-400 mb-16 max-w-2xl mx-auto">Gato Negro ERP está diseñado para abarcar toda la cadena de valor de la producción tabaquera, desde la hoja de tabaco hasta la venta final.</p>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 <!-- Inventario -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">📦</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Gestión de Inventario</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Gestión de Inventario</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Control estricto de Entradas y Salidas en tiempo real. Gestión de Materia Prima (Capa, Picadura), Insumos (Anillos, Papel), Tabacos en proceso y Producto Terminado.</p>
                 </div>
                 
                 <!-- Fabriquines -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🌱</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Módulo Fabriquines</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Módulo Fabriquines</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Despacho de hojas, pesaje de materia prima y recepción diaria de tabacos elaborados. Controla la "Deuda" de material de cada torcedor automatizadamente.</p>
                 </div>
                 
                 <!-- Envolvedoras y Anilladores -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🌯</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Envolvedoras y Anilladores</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Envolvedoras y Anilladores</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Despacho inteligente que descuenta papel e insumos automáticamente. Sistema de recepción con tarjetas visuales semanales y liquidación exacta.</p>
                 </div>
 
                 <!-- Empacadores -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">🏷️</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Control de Empaque</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Control de Empaque</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Registro de producción de empacadores soportando bultos completos (25/50 unidades) y cajas sueltas, arrojando el cálculo total exacto de tabacos.</p>
                 </div>
 
                 <!-- Finanzas -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">💰</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Finanzas y Nómina</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Finanzas y Nómina</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Cierre diario y liquidación semanal automatizada. El sistema cruza la producción con las tarifas de cada rol, generando el pago exacto a cada empleado.</p>
                 </div>
 
                 <!-- NFC & Tech -->
-                <div class="bg-slate-800 rounded-2xl p-8 border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(249,115,22,0.1)] transition group">
+                <div class="card-reveal bg-slate-800 rounded-2xl p-8 shadow-lg border border-slate-700 hover:border-orange-500/50 hover:shadow-[0_0_30px_rgba(180,84,26,0.1)] transition group">
                     <div class="w-14 h-14 bg-slate-900 text-orange-500 rounded-xl flex items-center justify-center mb-6 text-2xl group-hover:scale-110 transition-transform">📲</div>
-                    <h3 class="text-xl font-bold text-white mb-3">Seguridad NFC</h3>
+                    <h3 class="font-display text-xl font-bold text-white mb-3">Seguridad NFC</h3>
                     <p class="text-slate-400 text-sm leading-relaxed">Autenticación rápida mediante tarjetas NFC físicas e integración directa con un Bot de Telegram para consultas operativas desde cualquier lugar.</p>
                 </div>
             </div>
@@ -149,6 +197,9 @@
             </div>
         </div>
     </footer>
+
+    <script src="/js/landing-fx.js"></script>
+    <script src="/js/cat-transition.js" defer></script>
 
     <!-- Script interactivo de Oneko (Neko98 adaptado) servido desde CDN -->
     <script src="https://cdn.jsdelivr.net/gh/adryd325/oneko.js/oneko.js" data-cat="https://raw.githubusercontent.com/adryd325/oneko.js/main/oneko.gif"></script>

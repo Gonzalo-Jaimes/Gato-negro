@@ -11,7 +11,7 @@
     <p style="color: gray; margin-top: 5px;">Asigna la semana a una envolvedora y calcula el papel necesario en kilogramos.</p>
 </div>
 
-<div class="section-box" style="border-top: 4px solid #10b981;">
+<div class="section-box" style="border-top: 4px solid var(--success);">
     <h2 style="margin-top: 0; color: #065f46;">➕ Asignar Semana a Envolvedora</h2>
     <form action="/guardar_envoltedora" method="POST" id="form_despacho_env">
         <input type="hidden" name="registro_id" value="">
@@ -21,8 +21,8 @@
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">1. Envolvedora:</label>
                 <input type="text" id="buscar_env" placeholder="Código o nombre..." autocomplete="off"
                        oninput="filtrarEnv()" onfocus="mostrarDdEnv()" onblur="setTimeout(cerrarDdEnv,200)"
-                       style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:14px; box-sizing:border-box;">
-                <div id="dd_env" style="display:none; background:#1e1e1e; border:1px solid #10b981; border-radius:6px; max-height:180px; overflow-y:auto; position:relative; z-index:100;">
+                       style="width:100%; padding:8px; border:2px solid var(--success); border-radius:6px; font-size:14px; box-sizing:border-box;">
+                <div id="dd_env" style="display:none; background:#1e1e1e; border:1px solid var(--success); border-radius:6px; max-height:180px; overflow-y:auto; position:relative; z-index:100;">
                     <% empleados.forEach(emp => { %>
                     <div class="env-op" data-id="<%= emp.id %>" data-texto="<%= emp.codigo %> - <%= emp.nombre %>"
                          onclick="selEnv(this)"
@@ -35,7 +35,7 @@
             </div>
             <div style="flex: 1; min-width: 130px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">2. Marca:</label>
-                <select name="marca" style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:14px;" required>
+                <select name="marca" style="width:100%; padding:8px; border:2px solid var(--success); border-radius:6px; font-size:14px;" required>
                     <option value="Gato">Gato</option>
                     <option value="Intabaca">Intabaca</option>
                 </select>
@@ -45,20 +45,20 @@
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">3. Cestas asignadas:</label>
                 <input type="number" name="cestas_asignadas" id="inp_cestas_env" min="1" placeholder="Ej: 4"
                        oninput="calcPapel()"
-                       style="width:100%; padding:8px; border:2px solid #6b7280; border-radius:6px; font-size:16px; box-sizing:border-box;">
+                       style="width:100%; padding:8px; border:2px solid var(--text-muted); border-radius:6px; font-size:16px; box-sizing:border-box;">
             </div>
 
             <div style="flex: 1; min-width: 160px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">4. Peso de 50 tabacos (kg):</label>
                 <input type="number" name="peso_50_tabacos" id="inp_p50" step="0.001" min="0" placeholder="Ej: 0.010"
                        oninput="calcPapel()"
-                       style="width:100%; padding:8px; border:2px solid #d97706; border-radius:6px; font-size:16px; box-sizing:border-box;">
+                       style="width:100%; padding:8px; border:2px solid var(--primary-hover); border-radius:6px; font-size:16px; box-sizing:border-box;">
             </div>
 
             <div style="flex: 1; min-width: 160px;">
                 <label style="font-weight:bold; display:block; margin-bottom:4px; font-size:13px;">5. Papel a entregar (kg):</label>
                 <input type="number" name="papel_trans_g" id="inp_papel_real" step="0.001" min="0" placeholder="Calculo automático"
-                       style="width:100%; padding:8px; border:2px solid #10b981; border-radius:6px; font-size:16px; box-sizing:border-box; font-weight:bold;">
+                       style="width:100%; padding:8px; border:2px solid var(--success); border-radius:6px; font-size:16px; box-sizing:border-box; font-weight:bold;">
             </div>
         </div>
 
@@ -66,7 +66,7 @@
             📋 <span id="txt_papel_calc"></span>
         </div>
 
-        <button type="submit" style="margin-top:16px; background:#10b981; color:white; padding:10px 24px; font-size:15px; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">
+        <button type="submit" style="margin-top:16px; background:var(--success); color:white; padding:10px 24px; font-size:15px; font-weight:bold; border:none; border-radius:6px; cursor:pointer;">
             ✔ Crear Hoja Semanal
         </button>
     </form>

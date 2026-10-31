@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Recibo de Nómina - <%= usuario %></title>
+    <script>
+        if (localStorage.getItem('gato-dark-mode') === 'true') {
+            document.documentElement.classList.add('dark-mode');
+        }
+    </script>
+    <link rel="stylesheet" href="/css/theme.css">
+    <style>
+        body { padding: 24px; }
+        .recibo { max-width: 800px; margin: auto; background: var(--bg-card); border: 1px solid var(--border-color); border-top: 6px solid var(--primary); border-radius: var(--radius); box-shadow: var(--shadow-md); padding: 40px; }
+        .recibo h1 { font-size: 1.6rem; margin-bottom: 4px; }
+        .meta { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 12px; color: var(--text-muted); font-size: 0.9rem; margin-bottom: 24px; }
+        h2 { font-size: 1.05rem; margin: 24px 0 8px; color: var(--secondary); }
+        html.dark-mode h2 { color: var(--text-main); }
+        table { width: 100%; border-collapse: collapse; font-size: 0.92rem; }
+        th, td { padding: 10px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { background: var(--primary-soft); font-weight: 600; }
+        td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+        .vacio { color: var(--text-muted); padding: 12px 0; }
+        .totales { margin-top: 24px; margin-left: auto; max-width: 320px; }
+        .totales div { display: flex; justify-content: space-between; padding: 6px 0; font-variant-numeric: tabular-nums; }
+        .totales .neto { border-top: 2px solid var(--text-main); margin-top: 6px; padding-top: 12px; font-size: 1.2rem; font-weight: 700; color: var(--primary); }
+        .firmas { display: flex; justify-content: space-around; margin-top: 64px; text-align: center; font-weight: 600; }
+        .firmas div { width: 40%; border-top: 2px solid var(--text-main); padding-top: 8px; }
+        .acciones { text-align: center; margin-top: 32px; display: flex; gap: 12px; justify-content: center; }
+        @media print {
+            body { background: #fff; padding: 0; }
+            .recibo { box-shadow: none; border: none; padding: 0; }
+            .acciones { display: none; }
+        }
+    </style>
+</head>
+<body>
+<div class="recibo">
+    <h1>Recibo de Nómina</h1>
+    <div class="meta">
+        <span><strong><%= usuario %></strong> · Documento: <%= documento %></span>
+        <span>Fecha: <%= fecha %></span>
+    </div>
+
+    <h2>Producción pendiente de pago</h2>
+    <% if (produccion && produccion.length) { %>
+    <table>
+        <thead><tr><th>Fecha</th><th>Marca</th><th class="num">Cantidad</th><th class="num">Precio</th><th class="num">Total</th></tr></thead>
+        <tbody>
+        <% produccion.forEach(p => { %>
+            <tr>
+                <td><%= p.fecha %></td>
+                <td><%= p.marca || '-' %></td>
+                <td class="num"><%= Number(p.cantidad_producida || 0).toLocaleString('es-CO') %></td>
+                <td class="num">$<%= Number(p.precio_por_unidad || 0).toLocaleString('es-CO') %></td>
+                <td class="num">$<%= Number(p.total_ganado || 0).toLocaleString('es-CO') %></td>
+            </tr>
+        <% }); %>
+        </tbody>
+    </table>
+    <% } else { %><p class="vacio">Sin producción pendiente.</p><% } %>
+
+    <h2>Descuentos por deuda</h2>
+    <% if (deudas && deudas.length) { %>
+    <table>
+        <thead><tr><th>Concepto</th><th class="num">Monto</th></tr></thead>
+        <tbody>
+        <% deudas.forEach(d => { %>
+            <tr>
+                <td><%= d.descripcion || d.nota || d.material || 'Deuda activa' %></td>
+                <td class="num">-$<%= Number(d.monto_deuda || 0).toLocaleString('es-CO') %></td>
+            </tr>
+        <% }); %>
+        </tbody>
+    </table>
+    <% } else { %><p class="vacio">Sin deudas activas.</p><% } %>
+
+    <div class="totales">
+        <div><span>Subtotal</span><span>$<%= Number(subtotal || 0).toLocaleString('es-CO') %></span></div>
+        <div><span>Descuentos</span><span>-$<%= Number(descuentos || 0).toLocaleString('es-CO') %></span></div>
+        <div class="neto"><span>Total neto</span><span>$<%= Number(total_neto || 0).toLocaleString('es-CO') %> COP</span></div>
+    </div>
+
+    <div class="firmas">
+        <div>Entregado por</div>
+        <div>Recibido conforme<br><span style="font-weight: 400;"><%= usuario %></span></div>
+    </div>
+
+    <div class="acciones">
+        <button class="btn" onclick="window.print()">🖨️ Imprimir</button>
+        <a class="btn btn-ghost" href="/nomina">Volver a nómina</a>
+    </div>
+</div>
+</body>
+</html>
