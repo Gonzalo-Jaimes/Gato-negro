@@ -14,7 +14,8 @@
     
     <!-- Sistema de Diseño v3.0 -->
     <link rel="stylesheet" href="/css/theme.css">
-    
+    <%- include('cat-head', { accept: ['login>panel'] }) %>
+
     <style>
         /* --- ESTILOS DE LAYOUT V3.0 --- */
         :root {
@@ -266,6 +267,7 @@
     </script>
 </head>
 <body>
+    <%- include('cat-loader', { idle: true }) %>
 
 <header class="topbar">
     <div class="topbar-brand">

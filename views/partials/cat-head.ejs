@@ -1,0 +1,12 @@
+<%# Pagina de destino: si llega con una marca valida, pinta el telon antes del primer fotograma. accept: marcas aceptadas. %>
+<link rel="stylesheet" href="/css/cat-loader.css">
+<script>
+    try {
+        var r = sessionStorage.getItem('cat-transition');
+        if (r && !matchMedia('(prefers-reduced-motion: reduce)').matches) {
+            var o = JSON.parse(r);
+            if (Date.now() - o.t < 6000 && <%- JSON.stringify(accept) %>.indexOf(o.v) !== -1) document.documentElement.classList.add('cat-cover');
+        }
+    } catch (e) {}
+</script>
+<script src="/js/cat-transition.js" defer></script>

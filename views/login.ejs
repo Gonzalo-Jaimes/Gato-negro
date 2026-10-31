@@ -7,7 +7,8 @@
     
     <!-- Diseño Premium v3.0 -->
     <link rel="stylesheet" href="/css/theme.css">
-    
+    <%- include('partials/cat-head', { accept: ['landing>login', 'panel>login'] }) %>
+
     <script>
         /* Aplicar dark mode ANTES de pintar para evitar el flash */
         if (localStorage.getItem('gato-dark-mode') === 'true') {
@@ -174,9 +175,50 @@
         }
         #btn-dark:hover { background: var(--login-accent); color: var(--on-primary); transform: rotate(15deg); }
 
+        /* Volver al inicio: espejo del boton de tema */
+        .login-back {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 100;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            height: 40px;
+            padding: 0 16px 0 12px;
+            border-radius: 999px;
+            border: 1px solid var(--border-color);
+            background: var(--login-card-bg);
+            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(12px);
+            color: var(--text-muted);
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: color .15s ease-out, border-color .15s ease-out, transform .15s ease-out;
+        }
+        .login-back::after { content: ""; position: absolute; inset: -4px; } /* zona tactil de 48px */
+        .login-back svg { transition: transform .15s ease-out; }
+        .login-back:active { transform: scale(.97); }
+        .login-back:focus-visible { outline: 2px solid var(--login-accent); outline-offset: 3px; color: var(--text-main); }
+        @media (hover: hover) {
+            .login-back:hover { color: var(--text-main); border-color: var(--login-accent); }
+            .login-back:hover svg { transform: translateX(-2px); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            .login-back, .login-back svg { transition: none; }
+        }
+
     </style>
 </head>
 <body>
+
+    <%- include('partials/cat-loader', { idle: true }) %>
+
+    <a href="/" class="login-back" aria-label="Volver a la página principal">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.25" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M19 12H5"/><path d="m12 19-7-7 7-7"/></svg>
+        Volver al inicio
+    </a>
 
     <button id="btn-dark" onclick="toggleDark()">🌙</button>
 

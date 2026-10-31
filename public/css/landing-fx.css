@@ -1,0 +1,76 @@
+/* Landing: loader de ojos, hero WebGL/ligero y revelado de módulos.
+   Todas las reglas que ocultan contenido cuelgan de html.js, así sin JS la página se ve completa. */
+
+:root {
+    --fx-ease: cubic-bezier(.22, 1, .36, 1);
+    --fx-copper: #B4541A;
+    --fx-copper-light: #D9743A;
+}
+
+html.is-loading,
+html.is-loading body { overflow: hidden; }
+
+/* El loader de los ojos vive en cat-loader.css (compartido con login y panel). */
+
+/* ---------- Hero ---------- */
+.hero-wrap { position: relative; min-height: 100vh; min-height: 100svh; display: flex; flex-direction: column; overflow: hidden; }
+.hero { flex: 1; width: 100%; display: grid; align-items: center; position: relative; z-index: 10; text-align: center; padding-top: 1.5rem; padding-bottom: 3rem; }
+
+.hero-copy { position: relative; z-index: 1; }
+.hero-art { position: absolute; inset: 0; z-index: 0; pointer-events: none; opacity: .3; }
+.hero-art-in { position: absolute; inset: 0; transform: translate3d(0, calc(var(--sy, 0) * .14px), 0); will-change: transform; }
+.hero-art img, .hero-art canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.hero-art img { object-fit: cover; transition: opacity .5s ease; }
+.hero-art canvas { opacity: 0; transition: opacity .8s ease; }
+.hero-art::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(27, 21, 16, .2) 0%, rgba(27, 21, 16, .85) 100%); }
+
+html.fx-gl .hero-art.gl-ready canvas { opacity: 1; }
+html.fx-gl .hero-art.gl-ready img { opacity: 0; }
+html.fx-lite .hero-art canvas { display: none; }
+html.fx-lite:not(.fx-reduced) .hero-art img { animation: kenburns 24s ease-in-out infinite alternate; transform-origin: 60% 55%; }
+@keyframes kenburns { from { transform: scale(1); } to { transform: scale(1.1) translate3d(-1.5%, -1%, 0); } }
+
+/* Pulso cobre sobre los ojos del gato en modo ligero */
+html.fx-lite:not(.fx-reduced) .hero-art-in::before {
+    content: ""; position: absolute; inset: 0; z-index: 1; mix-blend-mode: screen;
+    background: radial-gradient(circle at 62% 62%, rgba(217, 116, 58, .35), transparent 38%);
+    animation: eye-pulse 4s ease-in-out infinite; }
+@keyframes eye-pulse { 0%, 100% { opacity: .25; } 50% { opacity: .9; } }
+
+/* Entrada escalonada del texto cuando termina el loader */
+html.js .hero-in { opacity: 0; transform: translateY(26px); }
+html.js:not(.is-loading) .hero-in { opacity: 1; transform: none;
+    transition: opacity .9s var(--fx-ease) calc(var(--i, 0) * 110ms + 250ms), transform .9s var(--fx-ease) calc(var(--i, 0) * 110ms + 250ms); }
+html.js .hero-art { transition: opacity 1s ease .3s; }
+
+@media (min-width: 1024px) {
+    .hero { grid-template-columns: 1.05fr .95fr; gap: 3rem; text-align: left; }
+    .hero .hero-copy p { margin-left: 0; }
+    .hero .hero-btns { justify-content: flex-start; }
+    .hero-art { position: relative; inset: auto; opacity: 1; justify-self: center; height: min(72vh, 640px); aspect-ratio: 680 / 810;
+        -webkit-mask-image: radial-gradient(ellipse at center, #000 46%, transparent 74%);
+        mask-image: radial-gradient(ellipse at center, #000 46%, transparent 74%); }
+    .hero-art::after { display: none; }
+}
+
+/* ---------- Módulos: oculta hasta que se acerca ---------- */
+.modules-section { position: relative; }
+.modules-section::before { content: ""; position: absolute; inset: 0; z-index: -1; background: rgba(39, 30, 21, .5); backdrop-filter: blur(4px); }
+html.js .modules-section::before { opacity: var(--p, 0); }
+html.js .modules-section .reveal-head { opacity: var(--p, 0); transform: translateY(calc((1 - var(--p, 0)) * 42px)); }
+
+html.js #caracteristicas .card-reveal { opacity: 0; transform: translateY(40px) scale(.97);
+    transition: opacity .85s var(--fx-ease) var(--d, 0ms), transform .85s var(--fx-ease) var(--d, 0ms), border-color .3s, box-shadow .3s; }
+html.js #caracteristicas .card-reveal.in { opacity: 1; transform: none; }
+
+html.fx-reduced .hero-in,
+html.fx-reduced #caracteristicas .card-reveal,
+html.fx-reduced .modules-section .reveal-head { transition: none !important; }
+
+/* ---------- Navbar móvil ---------- */
+.nav-brand { white-space: nowrap; }
+@media (max-width: 420px) { .nav-saas { display: none; } }
+@media (max-width: 480px) {
+    .nav-brand { font-size: 1.05rem; gap: .4rem; }
+    .nav-cta { padding: .5rem .85rem; font-size: .8rem; white-space: nowrap; }
+}
