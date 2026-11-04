@@ -253,7 +253,7 @@
             const links = document.querySelectorAll('.sidebar a');
             
             links.forEach(link => {
-                if (link.getAttribute('href') === path) {
+                if (link.getAttribute('href') === path || (path === '/lista' && link.getAttribute('href') === '/maquinas')) {
                     link.classList.add('active');
                     
                     // Si está en un submenú, abrir el padre
@@ -337,6 +337,13 @@
             <a href="/usuarios" class="nav-item">👤 Accesos</a>
         </div>
         
+    <% } else if (session.rol === "mantenimiento") { %>
+        <!-- ⚙️ MENÚ MANTENIMIENTO (MANOLO) -->
+        <div class="sidebar-section">
+            <div class="sidebar-label">Área Técnica</div>
+            <a href="/maquinas" class="nav-item">⚙️ Ver Máquinas</a>
+            <a href="/mantenimiento" class="nav-item">🔧 Subir Mantenimiento</a>
+        </div>
     <% } else { %>
         <!-- MENU OPERATIVO -->
         <a href="/pedidos" class="nav-item">📋 Pedidos</a>
