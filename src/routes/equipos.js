@@ -1,8 +1,22 @@
 const express = require('express');
 const router = express.Router();
 const QRCode = require('qrcode');
-const { supabase, mostrarAlerta, obtenerHoraColombia } = require('../lib/shared');
+const { supabase, mostrarAlerta, obtenerHoraColombia, registrarAuditoria } = require('../lib/shared');
 const { isAdmin, isAuth } = require('../lib/middleware');
+const bot = require('../bot/bot_core');
+
+const ADMIN_CHAT_IDS = [8589883684]; // Gonzalo
+
+async function notificarAdminTelegram(mensaje) {
+    if (!process.env.TELEGRAM_TOKEN || !bot || !bot.sendMessage) return;
+    for (const chatId of ADMIN_CHAT_IDS) {
+        try {
+            await bot.sendMessage(chatId, mensaje, { parse_mode: 'Markdown' });
+        } catch (err) {
+            console.error('⚠️ No se pudo enviar notificación Telegram de mantenimiento:', err.message);
+        }
+    }
+}
 
 // ---------------- MÁQUINAS Y EQUIPOS ----------------
 
@@ -132,12 +146,18 @@ router.get('/ficha/:id', isAuth, async (req, res) => {
     if (!maquina) return res.send("<h2>❌ Máquina no encontrada.</h2>");
 
     const { data: mantenimientos } = await supabase.from('mantenimiento')
-        .select('*').eq('maquina', maquina.nombre)
-        .order('fecha', { ascending: false }).order('hora', { ascending: false });
+        .select('*')
+        .eq('maquina', maquina.nombre)
+        .eq('estado', 'REALIZADO')
+        .order('fecha', { ascending: false })
+        .order('hora', { ascending: false });
 
     let costoPreventivo = 0, costoCorrectivo = 0;
+    const totalRegistros = (mantenimientos || []).length;
     if (mantenimientos) {
-        mantenimientos.forEach(mtto => {
+        mantenimientos.forEach((mtto, idx) => {
+            // Numeración secuencial por máquina (1 = el más antiguo, N = el más reciente)
+            mtto.nro_maquina = totalRegistros - idx;
             if (mtto.estado === 'REALIZADO') {
                 const totalMtto = (mtto.costo_mo || 0) + (mtto.costo_mat || 0);
                 if (mtto.tipo === 'Preventivo') costoPreventivo += totalMtto;
@@ -152,48 +172,167 @@ router.get('/ficha/:id', isAuth, async (req, res) => {
     res.render('equipos/ficha', { maquina, historial: mantenimientos || [] });
 });
 
-// ---------------- MANTENIMIENTO ----------------
+// ---------------- MANTENIMIENTO (ÓRDENES, TAREAS Y SOLICITUDES DE CORRECTIVO) ----------------
 
 router.get('/mantenimiento', isAuth, async (req, res) => {
-    const { data: maquinas } = await supabase.from('maquinas').select('nombre, codigo').order('nombre');
+    const { data: maquinas } = await supabase.from('maquinas').select('nombre, codigo, estado').order('nombre');
     const { data: mantenimientos } = await supabase.from('mantenimiento').select('*').order('id', { ascending: false });
-    res.render('equipos/mantenimiento', { maquinas: maquinas || [], mantenimientos: mantenimientos || [] });
+    const { data: mecanicos } = await supabase.from('usuarios').select('usuario').eq('rol', 'mantenimiento').order('usuario');
+
+    // Calcular numeración consecutiva independiente por cada máquina (1, 2, 3...)
+    const listaMttos = mantenimientos || [];
+    const cronologico = [...listaMttos].sort((a, b) => {
+        const fechaA = `${a.fecha || ''} ${a.hora || ''}`;
+        const fechaB = `${b.fecha || ''} ${b.hora || ''}`;
+        if (fechaA !== fechaB) return fechaA.localeCompare(fechaB);
+        return (a.id || 0) - (b.id || 0);
+    });
+    const contadoresMaquina = {};
+    cronologico.forEach(m => {
+        const clave = (m.maquina || 'general').trim().toLowerCase();
+        contadoresMaquina[clave] = (contadoresMaquina[clave] || 0) + 1;
+        m.nro_maquina = contadoresMaquina[clave];
+    });
+
+    res.render('equipos/mantenimiento', {
+        maquinas: maquinas || [],
+        mantenimientos: listaMttos,
+        mecanicos: mecanicos || []
+    });
 });
 
-router.post('/registrar_mantenimiento', isAuth, async (req, res) => {
-    await supabase.from('mantenimiento').insert([{ 
-        fecha: req.body.fecha,
-        hora: req.body.hora,
+async function procesarRegistroMantenimiento(req, res) {
+    const tiempo = obtenerHoraColombia();
+    const esAdmin = req.session && req.session.rol === 'admin';
+    const tipo = req.body.tipo || 'Preventivo';
+
+    // Determinar el estado según el rol y el modo del formulario:
+    // 1. Si el mecánico (no admin) envía un Correctivo, pasa obligatoriamente a 'SOLICITADO' (pendiente de aprobación por Admin).
+    // 2. Si el Admin asigna una tarea pendiente, se guarda como 'NO REALIZADO'.
+    let estadoFinal = req.body.estado || 'REALIZADO';
+    if (!esAdmin && tipo === 'Correctivo') {
+        estadoFinal = 'SOLICITADO';
+    }
+
+    const registro = {
+        fecha: req.body.fecha || tiempo.fecha,
+        hora: req.body.hora || tiempo.hora,
         maquina: req.body.maquina,
-        tipo: req.body.tipo,
+        tipo: tipo,
         descripcion: req.body.descripcion,
         tiempo_min: parseInt(req.body.tiempo_min) || 0,
         costo_mo: parseFloat(req.body.costo_mo) || 0,
         costo_mat: parseFloat(req.body.costo_mat) || 0,
-        hecho_por: req.body.hecho_por,
-        estado: req.body.estado
-    }]);
+        hecho_por: req.body.hecho_por || (req.session && req.session.usuario) || 'Manolo',
+        estado: estadoFinal
+    };
 
-    if (req.body.tipo === 'Preventivo' && req.body.estado === 'REALIZADO') {
-        const tiempo = obtenerHoraColombia();
-        await supabase.from('maquinas').update({ ultimo_mtto: req.body.fecha || tiempo.fecha }).eq('nombre', req.body.maquina);
+    const { error } = await supabase.from('mantenimiento').insert([registro]);
+    if (error) {
+        console.error('❌ Error al insertar mantenimiento:', error.message);
     }
+
+    if (tipo === 'Preventivo' && estadoFinal === 'REALIZADO') {
+        await supabase.from('maquinas').update({ ultimo_mtto: registro.fecha }).eq('nombre', registro.maquina);
+    }
+
+    // Si es una solicitud de correctivo, notificar al Admin por Telegram
+    if (estadoFinal === 'SOLICITADO') {
+        await registrarAuditoria(req, 'MANTENIMIENTO', 'SOLICITUD_CORRECTIVO', {
+            maquina: registro.maquina,
+            descripcion: registro.descripcion
+        });
+        await notificarAdminTelegram(
+            `🔧 *Solicitud de Correctivo*\n` +
+            `• *Máquina:* ${registro.maquina}\n` +
+            `• *Solicitado por:* ${registro.hecho_por}\n` +
+            `• *Descripción:* ${registro.descripcion}\n\n` +
+            `_Ingresa a /mantenimiento en el ERP para aprobar o rechazar esta solicitud._`
+        );
+    }
+
+    res.redirect('/mantenimiento');
+}
+
+router.post('/registrar_mantenimiento', isAuth, procesarRegistroMantenimiento);
+router.post('/agregar_mantenimiento', isAuth, procesarRegistroMantenimiento);
+
+// Admin aprueba o rechaza una solicitud de correctivo
+router.post('/mantenimiento/responder_solicitud/:id', isAdmin, async (req, res) => {
+    const { id } = req.params;
+    const { decision, comentario_admin } = req.body; // decision: 'APROBADO' | 'RECHAZADO'
+    const estadoNuevo = decision === 'APROBADO' ? 'APROBADO' : 'RECHAZADO';
+
+    const { data: orden } = await supabase.from('mantenimiento').select('*').eq('id', id).single();
+    if (!orden) return res.redirect('/mantenimiento');
+
+    let nuevaDescripcion = orden.descripcion || '';
+    if (comentario_admin && comentario_admin.trim() !== '') {
+        const etiqueta = estadoNuevo === 'APROBADO' ? 'Nota Admin (Aprobado)' : 'Motivo Rechazo';
+        nuevaDescripcion += ` | [${etiqueta}: ${comentario_admin.trim()}]`;
+    }
+
+    await supabase.from('mantenimiento').update({
+        estado: estadoNuevo,
+        descripcion: nuevaDescripcion
+    }).eq('id', id);
+
+    await registrarAuditoria(req, 'MANTENIMIENTO', `CORRECTIVO_${estadoNuevo}`, {
+        orden_id: id,
+        maquina: orden.maquina,
+        comentario_admin
+    });
+
     res.redirect('/mantenimiento');
 });
 
-// Alias: views reference /agregar_mantenimiento
-router.post('/agregar_mantenimiento', isAuth, async (req, res) => {
-    await supabase.from('mantenimiento').insert([{ 
-        fecha: req.body.fecha, hora: req.body.hora, maquina: req.body.maquina,
-        tipo: req.body.tipo, descripcion: req.body.descripcion,
-        tiempo_min: parseInt(req.body.tiempo_min) || 0,
-        costo_mo: parseFloat(req.body.costo_mo) || 0, costo_mat: parseFloat(req.body.costo_mat) || 0,
-        hecho_por: req.body.hecho_por, estado: req.body.estado
-    }]);
-    if (req.body.tipo === 'Preventivo' && req.body.estado === 'REALIZADO') {
-        const tiempo = obtenerHoraColombia();
-        await supabase.from('maquinas').update({ ultimo_mtto: req.body.fecha || tiempo.fecha }).eq('nombre', req.body.maquina);
+// Mecánico o Admin completa una Tarea Asignada ('NO REALIZADO') o ejecuta un Correctivo Aprobado ('APROBADO')
+router.post('/mantenimiento/completar/:id', isAuth, async (req, res) => {
+    const { id } = req.params;
+    const tiempo = obtenerHoraColombia();
+
+    const { data: orden } = await supabase.from('mantenimiento').select('*').eq('id', id).single();
+    if (!orden) return res.redirect('/mantenimiento');
+
+    // No permitir ejecutar un correctivo que aún está en 'SOLICITADO' o 'RECHAZADO' a menos que sea Admin
+    const esAdmin = req.session && req.session.rol === 'admin';
+    if (!esAdmin && (orden.estado === 'SOLICITADO' || orden.estado === 'RECHAZADO')) {
+        return res.redirect('/mantenimiento');
     }
+
+    let nuevaDescripcion = orden.descripcion || '';
+    if (req.body.notas_cierre && req.body.notas_cierre.trim() !== '') {
+        nuevaDescripcion += ` | [Ejecución: ${req.body.notas_cierre.trim()}]`;
+    }
+
+    const tiempoMin = req.body.tiempo_min !== undefined ? (parseInt(req.body.tiempo_min) || 0) : (orden.tiempo_min || 0);
+    const costoMo = req.body.costo_mo !== undefined ? (parseFloat(req.body.costo_mo) || 0) : (orden.costo_mo || 0);
+    const costoMat = req.body.costo_mat !== undefined ? (parseFloat(req.body.costo_mat) || 0) : (orden.costo_mat || 0);
+    const hechoPor = (req.body.hecho_por && req.body.hecho_por.trim() !== '')
+        ? req.body.hecho_por.trim()
+        : (orden.hecho_por || (req.session && req.session.usuario) || 'Manolo');
+
+    await supabase.from('mantenimiento').update({
+        estado: 'REALIZADO',
+        fecha: tiempo.fecha,
+        hora: tiempo.hora,
+        tiempo_min: tiempoMin,
+        costo_mo: costoMo,
+        costo_mat: costoMat,
+        hecho_por: hechoPor,
+        descripcion: nuevaDescripcion
+    }).eq('id', id);
+
+    if (orden.tipo === 'Preventivo') {
+        await supabase.from('maquinas').update({ ultimo_mtto: tiempo.fecha }).eq('nombre', orden.maquina);
+    }
+
+    await registrarAuditoria(req, 'MANTENIMIENTO', 'ORDEN_COMPLETADA', {
+        orden_id: id,
+        maquina: orden.maquina,
+        tipo: orden.tipo
+    });
+
     res.redirect('/mantenimiento');
 });
 
