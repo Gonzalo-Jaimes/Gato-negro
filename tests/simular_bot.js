@@ -268,14 +268,33 @@ pruebaLimpia('Empleado inexistente: avisa y no pide confirmación', async () => 
 });
 
 pruebaLimpia('Texto libre fuera del modo chat: lo atiende la IA (ya no responde "No entendí")', async () => {
-    guionOllama = [{ message: { role: 'assistant', content: 'Don Gonzalo Jaimes Bastos fundó Gato Negro' } }];
-    await bot.procesarMensajeSync(msg(ADMIN, '¿Quién creó Gato Negro?'));
+    guionOllama = [{ message: { role: 'assistant', content: 'El flete cuesta lo acordado' } }];
+    await bot.procesarMensajeSync(msg(ADMIN, '¿Cuánto cuesta el flete?'));
     assert.strictEqual(log.ollamaLlamadas.length, 1);
-    assert.match(ultimoTexto(), /Don Gonzalo/);
+    assert.match(ultimoTexto(), /flete/);
     assert.ok(!log.enviados.some(e => /No entendí/.test(e.texto)));
 });
 
 
+
+pruebaLimpia('"¿Quién te creó a ti?" se responde al instante, corto y sin LLM ni lista de personal', async () => {
+    for (const pregunta of ['Quién te creó a ti?', '¿Quién es tu creador?', 'quién te programó']) {
+        reset();
+        await bot.procesarMensajeSync(msg(ADMIN, pregunta));
+        assert.match(ultimoTexto(), /Gonzalo Andres Jaimes Quijano/, pregunta);
+        assert.doesNotMatch(ultimoTexto(), /Omaira|Gregorio/, pregunta);
+        assert.strictEqual(log.ollamaLlamadas.length, 0, pregunta);
+    }
+});
+
+pruebaLimpia('"¿Quién creó Gato Negro?" / "¿cómo se llama el dueño?" → fundador, sin LLM', async () => {
+    for (const pregunta of ['¿Quién creó Gato Negro?', 'Cómo se llama el dueño de la empresa?', 'quién es el fundador']) {
+        reset();
+        await bot.procesarMensajeSync(msg(ADMIN, pregunta));
+        assert.match(ultimoTexto(), /Gonzalo Jaimes Bastos/, pregunta);
+        assert.strictEqual(log.ollamaLlamadas.length, 0, pregunta);
+    }
+});
 
 pruebaLimpia('Modo chat IA: "Alcides 1250 tabacos y 3 cestas" va directo a confirmación, sin LLM', async () => {
     await boton(ADMIN, 'menu_ia'); reset();
