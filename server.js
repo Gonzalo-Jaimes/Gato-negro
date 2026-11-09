@@ -57,6 +57,9 @@ app.set('views', path.join(__dirname, 'views'));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // --- SESIONES ---
+// Detrás del proxy de Vercel la petición llega por HTTP; sin esto cookie-session
+// considera la conexión insegura y descarta la cookie "secure" (login roto).
+app.set('trust proxy', 1);
 app.use(session({
     name: 'gato_session',
     keys: [SESSION_SECRET],
