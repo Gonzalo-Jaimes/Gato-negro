@@ -4,7 +4,7 @@
 
 ## 🚀 El ERP Gato Negro (Versión 3.0+)
 
-Es una plataforma web transaccional (arquitectura MVC) creada por el Ingeniero Mecatrónico Gonzalo Andres Jaimes.
+Es una plataforma web transaccional (arquitectura MVC) creada por el Ingeniero Mecatrónico Gonzalo Andres Jaimes Quijano.
 
 - **Base de Datos:** [[Supabase]] (PostgreSQL) en la nube. Totalmente blindado y asíncrono.
 - **Módulos Principales:** Bodega Central, Inventario Global, Nomina y Facturación, Mantenimiento de Máquinas y Recepción Diaria (Lunes a Sábado).

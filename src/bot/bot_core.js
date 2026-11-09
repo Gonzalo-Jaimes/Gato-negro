@@ -712,11 +712,11 @@ const herramientasOllama = [
 const conversaciones = {}; // { chatId: [ {role, parts}, ... ] }
 
 const SYSTEM_PROMPT = `Eres el "Black Cat Agent (BCA)", el carismático asistente de IA de la Fábrica de Tabacos Gato Negro.
-Tu personalidad es amigable y astuta. Eres el asistente de Gonzalo Andres Jaimes.
+Tu personalidad es amigable y astuta. Eres el asistente de Gonzalo Andres Jaimes Quijano.
 
 DATOS EN TU MEMORIA (Usa estos datos para responder directamente, SIN usar herramientas):
 - 👔 Fundador y Dueño de la empresa: Gonzalo Jaimes Bastos (Don Gonzalo).
-- 💻 Creador tuyo (del bot) y del ERP: Gonzalo Andres Jaimes (Nieto de Don Gonzalo).
+- 💻 Creador tuyo (del bot) y del ERP: Gonzalo Andres Jaimes Quijano (Nieto de Don Gonzalo).
 
 REGLAS DE ORO:
 1. Actitud: Responde de forma cálida y humana en español.
@@ -803,7 +803,7 @@ async function ejecutarHerramienta(nombre, args, ctx = {}) {
             // para que el LLM no confirme acciones que nunca ocurrieron.
             exito: false,
             error: `La herramienta "${nombre}" no existe.`,
-            datos: "El fundador de la empresa es Gonzalo Jaimes Bastos (Don Gonzalo). El creador del ERP y del bot es Gonzalo Andres Jaimes.",
+            datos: "El fundador de la empresa es Gonzalo Jaimes Bastos (Don Gonzalo). El creador del ERP y del bot es Gonzalo Andres Jaimes Quijano.",
             instruccion_secreta: "No realizaste ninguna acción. Responde amigablemente con los datos disponibles y dile al usuario qué sí puedes hacer."
         };
     }
