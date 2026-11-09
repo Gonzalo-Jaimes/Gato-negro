@@ -1,10 +1,51 @@
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
 const express = require('express');
 const session = require('cookie-session');
+const helmet = require('helmet');
 const path = require('path');
 const bot = require('./src/bot/bot_core.js');
 
 const app = express();
+app.disable('x-powered-by');
+
+// --- CABECERAS DE SEGURIDAD ---
+// CSP básica: el proyecto usa scripts/estilos inline en las vistas EJS y unas
+// pocas librerías externas (SweetAlert2, Tailwind CDN, jQuery, DataTables),
+// así que no se puede usar una CSP estricta con nonces sin reescribir todas
+// las vistas. Esta configuración bloquea igualmente cualquier origen no listado
+// (objetos, iframes, formularios a otros dominios, etc.).
+app.use(helmet({
+    contentSecurityPolicy: {
+        directives: {
+            defaultSrc: ["'self'"],
+            scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com", "https://code.jquery.com", "https://cdn.datatables.net"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdn.datatables.net"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
+            imgSrc: ["'self'", "data:", "blob:"],
+            mediaSrc: ["'self'"],
+            connectSrc: ["'self'"],
+            objectSrc: ["'none'"],
+            frameAncestors: ["'self'"],
+            formAction: ["'self'"],
+            baseUri: ["'self'"],
+            upgradeInsecureRequests: []
+        }
+    },
+    // El sitio se sirve embebido en algunos flujos propios (splash NFC, QR);
+    // no se bloquea con frameguard global, pero sí se limita con frameAncestors arriba.
+    crossOriginEmbedderPolicy: false
+}));
+
+// --- CLAVE DE FIRMA DE SESIÓN ---
+// Nunca debe existir un valor estático por defecto: una clave fija y pública
+// permite falsificar cookies de sesión (incluida una sesión de "admin").
+if (!process.env.SESSION_SECRET) {
+    if (process.env.NODE_ENV === 'production' || process.env.VERCEL === '1') {
+        throw new Error('❌ SESSION_SECRET no está configurado. Defínelo como variable de entorno antes de arrancar en producción.');
+    }
+    console.warn('⚠️ SESSION_SECRET no configurado: usando una clave aleatoria solo para desarrollo local (las sesiones no sobrevivirán un reinicio).');
+}
+const SESSION_SECRET = process.env.SESSION_SECRET || require('crypto').randomBytes(32).toString('hex');
 
 // --- MIDDLEWARES ---
 app.use(express.json());
@@ -18,8 +59,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 // --- SESIONES ---
 app.use(session({
     name: 'gato_session',
-    keys: ['gato_negro_nube'],
-    maxAge: 7 * 24 * 60 * 60 * 1000 // 7 días
+    keys: [SESSION_SECRET],
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 7 días
+    secure: process.env.NODE_ENV === 'production' || process.env.VERCEL === '1',
+    httpOnly: true,
+    sameSite: 'lax'
 }));
 
 app.use((req, res, next) => {
