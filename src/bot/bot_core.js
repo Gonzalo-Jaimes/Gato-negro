@@ -711,6 +711,31 @@ const herramientasOllama = [
 // ============================================================
 const conversaciones = {}; // { chatId: [ {role, parts}, ... ] }
 
+// Los modelos chicos a veces escriben la llamada a la herramienta como texto en vez de ejecutarla,
+// p. ej.  registrando_produccion({"nombre_o_codigo": "Alcides", ...})  o  {"name": ...}.
+const MENSAJE_RESPUESTA_CONFUSA = '🐾 No pude completar eso. No se guardó nada. Prueba con el formato: Alcides 1250 tabacos y 3 cestas';
+
+function pareceLlamadaCruda(texto) {
+    return /\{\s*"(name|function)"\s*:/.test(texto)
+        || /\b[a-z]+_[a-z_]+\s*\(\s*\{/i.test(texto)
+        || /"nombre_o_codigo"\s*:/.test(texto);
+}
+
+// Convierte un nombre aproximado ("registrando_produccion") en el de una herramienta real.
+function resolverNombreHerramienta(nombre) {
+    const reales = herramientasOllama.map(t => t.function.name);
+    if (reales.includes(nombre)) return nombre;
+    const raices = (s) => s.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').split('_').filter(Boolean).map(t => t.slice(0, 5));
+    const mias = raices(nombre);
+    let mejor = null, mejorPuntaje = 0;
+    for (const real of reales) {
+        const r = raices(real);
+        const puntaje = mias.filter(t => r.includes(t)).length;
+        if (puntaje > mejorPuntaje) { mejorPuntaje = puntaje; mejor = real; }
+    }
+    return mejorPuntaje >= 2 ? mejor : null;
+}
+
 const SYSTEM_PROMPT = `Eres el "Black Cat Agent (BCA)", el carismático asistente de IA de la Fábrica de Tabacos Gato Negro.
 Tu personalidad es amigable y astuta. Eres el asistente de Gonzalo Andres Jaimes Quijano.
 
@@ -868,6 +893,23 @@ async function responderConOllama(chatId, textoUsuario, userId = chatId) {
                     }
                 } catch(e) {}
             }
+
+            // Formato  nombre_herramienta({...})  escrito como texto (típico de Qwen)
+            if (!response.message.tool_calls || response.message.tool_calls.length === 0) {
+                const mTexto = textoSalida.match(/([a-zA-Z_]+)\s*\(\s*(\{[\s\S]*\})\s*\)/);
+                if (mTexto) {
+                    try {
+                        const real = resolverNombreHerramienta(mTexto[1]);
+                        if (real) {
+                            const args = JSON.parse(mTexto[2].replace(/\bFalse\b/g, 'false').replace(/\bTrue\b/g, 'true'));
+                            console.log("🛠️ Rescate de tool call escrita como texto:", mTexto[1], '→', real);
+                            response.message.tool_calls = [{ function: { name: real, arguments: args } }];
+                            response.message.content = '';
+                            textoSalida = '';
+                        }
+                    } catch (e) {}
+                }
+            }
         }
         // =====================================================================
 
@@ -905,9 +947,9 @@ async function responderConOllama(chatId, textoUsuario, userId = chatId) {
             
             let textoSalidaFinal = finalResponse.message.content;
             // Filtro Anti-Alucinación JSON Brutal Suavizado
-            if (textoSalidaFinal.includes('{"name":') || textoSalidaFinal.includes('{"function":')) {
+            if (pareceLlamadaCruda(textoSalidaFinal)) {
                 console.warn("⚠️ Alucinación JSON interceptada post-tool:", textoSalidaFinal);
-                textoSalidaFinal = "🐾 ¡Miau! Ejecuté la acción exitosamente, pero me enredé respondiendo. ¿Qué más necesitas?";
+                textoSalidaFinal = MENSAJE_RESPUESTA_CONFUSA;
             }
             return textoSalidaFinal;
         }
@@ -916,9 +958,9 @@ async function responderConOllama(chatId, textoUsuario, userId = chatId) {
         conversaciones[chatId].push(response.message);
         
         // Filtro Anti-Alucinación JSON Brutal Suavizado
-        if (textoSalida.includes('{"name":') || textoSalida.includes('{"function":')) {
+        if (pareceLlamadaCruda(textoSalida)) {
              console.warn("⚠️ Alucinación JSON interceptada sin tools:", textoSalida);
-             textoSalida = "🐾 ¡Miau! Me distraje con un ovillo de lana 🧶. La operación fue procesada, ¿me repites qué más querías saber?";
+             textoSalida = MENSAJE_RESPUESTA_CONFUSA;
         }
         return textoSalida;
 
@@ -931,6 +973,26 @@ async function responderConOllama(chatId, textoUsuario, userId = chatId) {
 // ============================================================
 // 📨 PROCESAMIENTO DE MENSAJES DE TELEGRAM
 // ============================================================
+// Registro rápido con formato fijo: "Alcides 1250 tabacos y 3 cestas rojas" / "F11 500 tabacos extra".
+// Es determinista (no depende del LLM) y funciona también dentro del modo chat IA.
+// Devuelve true si el texto tenía ese formato (y ya se pidió la confirmación).
+const REGEX_REGISTRO_RAPIDO = /^([A-Z0-9]{3}|[a-zA-Z\s]{3,})\s+(\d+)\s+tabacos(?:\s+(extra))?(?:\s*(?:y|,|)\s*(\d+)\s+cestas(?:\s+([\w\s]+))?)?$/i;
+
+async function intentarRegistroRapido(chatId, userId, texto) {
+    const match = texto.trim().match(REGEX_REGISTRO_RAPIDO);
+    if (!match) return false;
+    bot.sendChatAction(chatId, 'typing');
+    const r = await pedirConfirmacionProduccion(chatId, userId, {
+        nombre_o_codigo: match[1].trim(),
+        tabacos: parseInt(match[2]),
+        esExtra: !!match[3],
+        cestas: match[4] ? parseInt(match[4]) : 0,
+        color_cesta: match[5] ? match[5].trim() : null,
+    });
+    if (!r.exito) bot.sendMessage(chatId, `⚠️ ${r.error}`);
+    return true;
+}
+
 function enviarRespuestaIA(chatId, respuestaIA) {
     if (!respuestaIA) return;
     bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' }).catch(() => {
@@ -1087,6 +1149,9 @@ async function procesarMensajeSync(msg) {
                 return;
             }
             
+            // Un registro con formato fijo no necesita al LLM (más rápido y sin errores de interpretación)
+            if (await intentarRegistroRapido(chatId, userId, textoFinal)) return;
+
             // Ejecutar Ollama
             bot.sendChatAction(chatId, 'typing');
             const respuestaIA = await responderConOllama(chatId, textoFinal, userId);
@@ -1131,20 +1196,7 @@ async function procesarMensajeSync(msg) {
         }
 
         // C. Registro rápido de producción (Texto Natural)
-        const regexProd = /^([A-Z0-9]{3}|[a-zA-Z\s]{3,})\s+(\d+)\s+tabacos(?:\s+(extra))?(?:\s*(?:y|,|)\s*(\d+)\s+cestas(?:\s+([\w\s]+))?)?$/i;
-        const match = textoFinal.trim().match(regexProd);
-        if (match) {
-            bot.sendChatAction(chatId, 'typing');
-            const nombreCod = match[1].trim();
-            const tabacos = parseInt(match[2]);
-            const esExtra = !!match[3];
-            const cestas = match[4] ? parseInt(match[4]) : 0;
-            const color = match[5] ? match[5].trim() : null;
-            
-            const r = await pedirConfirmacionProduccion(chatId, userId, { nombre_o_codigo: nombreCod, tabacos, cestas, color_cesta: color, esExtra });
-            if (!r.exito) bot.sendMessage(chatId, `⚠️ ${r.error}`);
-            return;
-        }
+        if (await intentarRegistroRapido(chatId, userId, textoFinal)) return;
 
         // 4. Comando /maquinas
         if (textoFinal === '/maquinas' || textoFinal === '/reporte') {
