@@ -734,9 +734,47 @@ GATILLOS DE HERRAMIENTAS (¡OBLIGATORIO USARLAS!):
 - Si te preguntan "¿Qué sabes de la empresa?", "¿Quién es Gregorio/Omaira/etc?", por el personal, precios, historia o el proyecto: INVOCA LA HERRAMIENTA consultar_documentacion indicando el tema.`;
 
 // ============================================================
+// ✅ CONFIRMACIÓN SÍ/NO ANTES DE REGISTRAR PRODUCCIÓN
+// ============================================================
+// Toda escritura de producción (por texto, voz o IA) pasa primero por aquí: se muestra
+// el resumen con el empleado ya resuelto y solo se guarda si el usuario pulsa "Sí".
+const confirmacionesPendientes = {}; // { userId: { id, datos, expira } }
+const CONFIRMACION_TTL_MS = 10 * 60 * 1000;
+
+async function pedirConfirmacionProduccion(chatId, userId, { nombre_o_codigo, tabacos, cestas = 0, color_cesta = null, esExtra = false, abono_pesos = 0 }) {
+    tabacos = parseInt(tabacos) || 0;
+    cestas = parseInt(cestas) || 0;
+    abono_pesos = parseInt(abono_pesos) || 0;
+    if (tabacos <= 0) return { exito: false, error: 'La cantidad de tabacos debe ser mayor que 0.' };
+
+    const emp = await consultarDeudaEmpleado({ nombre_o_codigo });
+    if (!emp.encontrado) return { exito: false, error: emp.mensaje || 'No encontré al empleado.' };
+
+    const id = Math.random().toString(36).slice(2, 8);
+    confirmacionesPendientes[userId] = {
+        id,
+        expira: Date.now() + CONFIRMACION_TTL_MS,
+        datos: { nombre_o_codigo: emp.codigo || nombre_o_codigo, tabacos, cestas, color_cesta, esExtra, abono_pesos },
+    };
+
+    let resumen = `📝 Confirma el registro:\n\n👤 ${emp.nombre} (${emp.codigo})\n🚬 ${tabacos.toLocaleString('es-CO')} tabacos${esExtra ? ' (EXTRA / venta directa)' : ''}`;
+    resumen += `\n🧺 ${cestas} cestas${color_cesta ? ' ' + color_cesta : ''}`;
+    if (abono_pesos > 0) resumen += `\n💵 Abono: $${abono_pesos.toLocaleString('es-CO')}`;
+    resumen += '\n\n¿Lo registro? (se guarda en inventario y deudas)';
+
+    await bot.sendMessage(chatId, resumen, {
+        reply_markup: { inline_keyboard: [[
+            { text: '✅ Sí, registrar', callback_data: `conf_si_${id}` },
+            { text: '❌ Cancelar', callback_data: `conf_no_${id}` },
+        ]] },
+    });
+    return { exito: true, estado: 'esperando_confirmacion' };
+}
+
+// ============================================================
 // 🔄 EJECUTAR LA HERRAMIENTA QUE GEMINI PIDIÓ
 // ============================================================
-async function ejecutarHerramienta(nombre, args) {
+async function ejecutarHerramienta(nombre, args, ctx = {}) {
     console.log(`🔧 Ollama invocó herramienta: ${nombre}`, JSON.stringify(args));
     switch (nombre) {
         case 'consultar_deuda_empleado':    return await consultarDeudaEmpleado(args);
@@ -751,8 +789,14 @@ async function ejecutarHerramienta(nombre, args) {
             const pesosNum   = parseInt(args.abono_pesos) || 0;
             // Cast explícito a booleano real para evitar el bug del string 'false' (truthy)
             const esExtraBool = args.esExtra === true || args.esExtra === 'true' || args.esExtra === 'True';
-            const resTexto = await registrarProduccionRapida(args.nombre_o_codigo, tabacosNum, cestasNum, null, esExtraBool, pesosNum);
-            return { exito: true, detalle: resTexto };
+            const r = await pedirConfirmacionProduccion(ctx.chatId, ctx.userId, {
+                nombre_o_codigo: args.nombre_o_codigo, tabacos: tabacosNum, cestas: cestasNum, esExtra: esExtraBool, abono_pesos: pesosNum,
+            });
+            if (r.exito) {
+                ctx.confirmacionEnviada = true;
+                return { exito: true, estado: 'esperando_confirmacion', instruccion: 'NO está registrado todavía. El usuario debe pulsar Sí o Cancelar en los botones que ya recibió.' };
+            }
+            return r;
         }
         default:                            return {
             // Herramienta inexistente (alucinada por el modelo): NO se reporta como éxito,
@@ -768,7 +812,7 @@ async function ejecutarHerramienta(nombre, args) {
 // ============================================================
 // 🤖 PROCESAR MENSAJE CON OLLAMA (Local & Gratis)
 // ============================================================
-async function responderConOllama(chatId, textoUsuario) {
+async function responderConOllama(chatId, textoUsuario, userId = chatId) {
     // Inicializar historial si no existe
     if (!conversaciones[chatId]) {
         conversaciones[chatId] = [{ role: 'system', content: SYSTEM_PROMPT }];
@@ -833,8 +877,9 @@ async function responderConOllama(chatId, textoUsuario) {
             conversaciones[chatId].push(response.message);
 
             // Ejecutamos las herramientas que pidió (Ej: consultar_produccion)
+            const ctx = { chatId, userId, confirmacionEnviada: false };
             for (const tool of response.message.tool_calls) {
-                const resultadoDB = await ejecutarHerramienta(tool.function.name, tool.function.arguments);
+                const resultadoDB = await ejecutarHerramienta(tool.function.name, tool.function.arguments, ctx);
                 
                 // Le devolvemos los datos de Supabase a Ollama
                 conversaciones[chatId].push({
@@ -842,6 +887,12 @@ async function responderConOllama(chatId, textoUsuario) {
                     name: tool.function.name,
                     content: JSON.stringify(resultadoDB)
                 });
+            }
+
+            // Si se pidió confirmación, ya se envió el resumen con botones: no hace falta que el LLM redacte nada
+            if (ctx.confirmacionEnviada) {
+                conversaciones[chatId].push({ role: 'assistant', content: 'Te pedí confirmación para registrar la producción.' });
+                return null;
             }
 
             // 3. Volvemos a llamar a Ollama para que lea los datos y redacte la respuesta final
@@ -880,6 +931,14 @@ async function responderConOllama(chatId, textoUsuario) {
 // ============================================================
 // 📨 PROCESAMIENTO DE MENSAJES DE TELEGRAM
 // ============================================================
+function enviarRespuestaIA(chatId, respuestaIA) {
+    if (!respuestaIA) return;
+    bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' }).catch(() => {
+        console.warn('⚠️ Error de formato Markdown detectado. Enviando como texto plano...');
+        bot.sendMessage(chatId, respuestaIA);
+    });
+}
+
 async function procesarMensajeSync(msg) {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -1030,13 +1089,8 @@ async function procesarMensajeSync(msg) {
             
             // Ejecutar Ollama
             bot.sendChatAction(chatId, 'typing');
-            const respuestaIA = await responderConOllama(chatId, textoFinal);
-            if (respuestaIA) {
-                bot.sendMessage(chatId, respuestaIA, { parse_mode: 'Markdown' }).catch(err => {
-                    console.warn('⚠️ Error de formato Markdown detectado. Enviando como texto plano...');
-                    bot.sendMessage(chatId, respuestaIA);
-                });
-            }
+            const respuestaIA = await responderConOllama(chatId, textoFinal, userId);
+            enviarRespuestaIA(chatId, respuestaIA);
             return; // Terminar aquí para no procesar otros comandos
         }
 
@@ -1087,8 +1141,8 @@ async function procesarMensajeSync(msg) {
             const cestas = match[4] ? parseInt(match[4]) : 0;
             const color = match[5] ? match[5].trim() : null;
             
-            const respuesta = await registrarProduccionRapida(nombreCod, tabacos, cestas, color, esExtra);
-            bot.sendMessage(chatId, respuesta, { parse_mode: 'Markdown' });
+            const r = await pedirConfirmacionProduccion(chatId, userId, { nombre_o_codigo: nombreCod, tabacos, cestas, color_cesta: color, esExtra });
+            if (!r.exito) bot.sendMessage(chatId, `⚠️ ${r.error}`);
             return;
         }
 
@@ -1148,14 +1202,12 @@ async function procesarMensajeSync(msg) {
         // ============================================================
         // ⚠️ FALLBACK: Mensaje no reconocido
         // ============================================================
-        console.log(`ℹ️ Mensaje no reconocido: "${textoFinal}"`);
-        bot.sendMessage(chatId, 
-            `🐾 *¡Miau!* No entendí lo que quisiste decir.\n\nSi quieres conversar, hacerme preguntas o registrar entregas de tabacos, entra al 🤖 *Chat con IA* presionando el botón en el menú principal.\n\n¿Qué deseas hacer ahora?`, 
-            { 
-                parse_mode: 'Markdown',
-                reply_markup: menus.mainKeyboard
-            }
-        );
+        // Texto o voz libre sin comando: lo atiende la IA directamente (sin pulsar el botón del chat).
+        // Cualquier escritura que la IA quiera hacer pasa por la confirmación Sí/No.
+        console.log(`ℹ️ Mensaje libre → IA: "${textoFinal}"`);
+        bot.sendChatAction(chatId, 'typing');
+        const respuestaLibre = await responderConOllama(chatId, textoFinal, userId);
+        enviarRespuestaIA(chatId, respuestaLibre);
 
     } catch (globalErr) {
         console.error("❌ CRASH EVITADO en bot.on('message'):", globalErr);
@@ -1207,6 +1259,30 @@ bot.on('callback_query', async (query) => {
     }
 
     try {
+        // CONFIRMACIÓN SÍ/NO DE REGISTRO DE PRODUCCIÓN
+        if (data.startsWith('conf_si_') || data.startsWith('conf_no_')) {
+            const aceptar = data.startsWith('conf_si_');
+            const idBoton = data.slice(8);
+            const pend = confirmacionesPendientes[userId];
+            const editar = (texto) => bot.editMessageText(texto, { chat_id: chatId, message_id: messageId }).catch(() => {});
+
+            if (!pend || pend.id !== idBoton || Date.now() > pend.expira) {
+                await editar('⌛ Esta confirmación ya no es válida (expiró o ya se usó). Vuelve a enviar el registro.');
+            } else {
+                confirmacionesPendientes[userId] = null; // se consume ya: un doble toque no registra dos veces
+                if (!aceptar) {
+                    await editar('❌ Registro cancelado. No se guardó nada.');
+                } else {
+                    const d = pend.datos;
+                    const resultado = await registrarProduccionRapida(d.nombre_o_codigo, d.tabacos, d.cestas, d.color_cesta, d.esExtra, d.abono_pesos);
+                    await bot.editMessageText(resultado, { chat_id: chatId, message_id: messageId, parse_mode: 'Markdown' })
+                        .catch(() => editar(resultado));
+                }
+            }
+            bot.answerCallbackQuery(query.id);
+            return;
+        }
+
         // A. MENÚ PRINCIPAL
         if (data === 'menu_principal') {
             await bot.editMessageText(`🐾 *Menú Principal*\nSelecciona una opción:`, {
