@@ -559,21 +559,24 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
             .eq('estado', 'activo');
         const deudaPesosRestante = (prestamosActualizados || []).reduce((s, p) => s + parseFloat(p.saldo_pendiente || 0), 0);
 
-        // 4c. Cestas: obtener original del despacho y restar todas las devueltas históricamente
+        // 4c. Cestas: las del último despacho (cada cesta cubre 1250 tabacos) menos las devueltas
+        //     en el ciclo ABIERTO (recepción pendiente/activa). Antes se restaban las de todo el
+        //     historial, incluidas semanas ya liquidadas, y el saldo quedaba casi siempre en 0.
         const { data: ultimoDespacho } = await supabase
             .from('despachos_registro')
-            .select('cestas_cant')
+            .select('cestas_cant, color_cesta')
             .eq('empleado_id', emp.id)
             .order('id', { ascending: false })
             .limit(1)
             .maybeSingle();
         const cestasOriginales = parseInt(ultimoDespacho?.cestas_cant) || 0;
 
-        // Sumar cestas devueltas en todos los registros semanales históricos
+        // Sumar cestas devueltas solo en el ciclo abierto
         const { data: todasRecep } = await supabase
             .from('recepcion_diaria')
             .select('lun_cestas, mar_cestas, mie_cestas, jue_cestas, vie_cestas, sab_cestas')
-            .eq('empleado_id', emp.id);
+            .eq('empleado_id', emp.id)
+            .in('estado', ['pendiente', 'activo']);
         const cestasRetornadasHistorico = (todasRecep || []).reduce((s, r) =>
             s + (r.lun_cestas||0) + (r.mar_cestas||0) + (r.mie_cestas||0)
               + (r.jue_cestas||0) + (r.vie_cestas||0) + (r.sab_cestas||0), 0);
@@ -586,7 +589,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
         if (nuevaDeudaTabacos > 0 || deudaPesosRestante > 0 || cestasPendientes > 0) {
             msgSaldo = `\n\n📊 *Saldo pendiente de ${emp.nombre}:*`;
             if (nuevaDeudaTabacos > 0) msgSaldo += `\n   🚬 Tabacos: *${nuevaDeudaTabacos.toLocaleString('es-CO')} u*`;
-            if (cestasPendientes > 0)  msgSaldo += `\n   🧺 Cestas:  *${cestasPendientes}*`;
+            if (cestasPendientes > 0)  msgSaldo += `\n   🧺 Cestas:  *${cestasPendientes}*${ultimoDespacho?.color_cesta ? ' (' + ultimoDespacho.color_cesta.toLowerCase() + ')' : ''}`;
             if (deudaPesosRestante > 0) msgSaldo += `\n   💵 Pesos:   *$${deudaPesosRestante.toLocaleString('es-CO')}*`;
         } else {
             msgSaldo = `\n\n🎉 *¡${emp.nombre} ha saldado toda su deuda!*`;
