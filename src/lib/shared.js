@@ -8,6 +8,12 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 
 // --- UTILIDADES COMPARTIDAS ---
 
+// Serializa un valor para insertarlo dentro de un bloque <script> sin riesgo de
+// inyección: JSON.stringify ya escapa comillas y barras invertidas, y además
+// neutralizamos "<" para que un valor con "</script>" (por ejemplo, el nombre
+// de un empleado) no pueda cerrar la etiqueta ni inyectar HTML/JS propio.
+const jsonParaScript = (valor) => JSON.stringify(valor).replace(/</g, '\\u003c');
+
 const mostrarAlerta = (titulo, texto, icono = 'warning', ruta = '/pedidos') => {
     return `
     <!DOCTYPE html>
@@ -15,8 +21,8 @@ const mostrarAlerta = (titulo, texto, icono = 'warning', ruta = '/pedidos') => {
     <body style="background-color: #f4f6f9; display: flex; justify-content: center; align-items: center; height: 100vh; margin: 0;">
         <script>
             document.addEventListener("DOMContentLoaded", function() {
-                Swal.fire({ icon: '${icono}', title: '${titulo}', html: '${texto}', confirmButtonColor: '#111', allowOutsideClick: false })
-                .then(() => { window.location.href = '${ruta}'; });
+                Swal.fire({ icon: ${jsonParaScript(icono)}, title: ${jsonParaScript(titulo)}, html: ${jsonParaScript(texto)}, confirmButtonColor: '#111', allowOutsideClick: false })
+                .then(() => { window.location.href = ${jsonParaScript(ruta)}; });
             });
         </script>
     </body></html>`;

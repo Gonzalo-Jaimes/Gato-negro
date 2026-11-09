@@ -376,7 +376,18 @@
         if (!ok) return;
         const toast = document.getElementById('toast-exito');
         document.getElementById('toast-msg').textContent = decodeURIComponent(ok.replace(/\+/g,' '));
-        if (despId) document.getElementById('toast-link-container').innerHTML = `<a href="/imprimir_despacho/${despId}" target="_blank">🖨️ Imprimir Orden de Despacho</a>`;
+        // despId viene de la URL (?despacho_id=...): se valida que sea numérico
+        // y se construye el enlace con el DOM en vez de innerHTML, para evitar
+        // una XSS reflejada si alguien envía un valor manipulado en el parámetro.
+        if (despId && /^\d+$/.test(despId)) {
+            const contenedor = document.getElementById('toast-link-container');
+            contenedor.textContent = '';
+            const enlace = document.createElement('a');
+            enlace.href = `/imprimir_despacho/${despId}`;
+            enlace.target = '_blank';
+            enlace.textContent = '🖨️ Imprimir Orden de Despacho';
+            contenedor.appendChild(enlace);
+        }
         toast.style.display = 'block';
         setTimeout(() => toast.style.display = 'none', 12000);
         history.replaceState({}, '', '/recepcion_diaria');
