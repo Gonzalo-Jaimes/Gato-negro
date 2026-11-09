@@ -12,6 +12,9 @@ const path = require('path');
 // ============================================================
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Modelos para transcribir notas de voz. Flash y flash-lite entran en el plan gratuito de la API.
+const GEMINI_AUDIO_MODEL = process.env.GEMINI_AUDIO_MODEL || 'gemini-2.5-flash';
+const GEMINI_AUDIO_FALLBACK = process.env.GEMINI_AUDIO_FALLBACK || 'gemini-2.5-flash-lite';
 
 console.log('🔍 Diagnóstico Bot: TELEGRAM_TOKEN =', TELEGRAM_TOKEN ? '✅ Cargado (...' + TELEGRAM_TOKEN.slice(-4) + ')' : '❌ NO ENCONTRADO');
 console.log('🔍 Diagnóstico Bot: GEMINI_API_KEY =', GEMINI_API_KEY ? '✅ Cargada' : '❌ NO ENCONTRADA');
@@ -28,10 +31,13 @@ if (!GEMINI_API_KEY) {
 // ============================================================
 // 🛡️ LISTA BLANCA DE ADMINISTRADORES
 // ============================================================
-const ADMIN_LIST = [
-    8589883684, // Gonzalo
-    2073256205, // Ingeniera Yesith
-];
+// Se puede sobrescribir con ADMIN_IDS="123,456" en el .env.
+const ADMIN_LIST = (process.env.ADMIN_IDS
+    ? process.env.ADMIN_IDS.split(',').map(s => parseInt(s.trim())).filter(Number.isFinite)
+    : [
+        8589883684, // Gonzalo
+        2073256205, // Ingeniera Yesith
+    ]);
 
 // ============================================================
 // 🧠 MEMORIA DE ESTADOS (CONTEXTO DE USUARIO)
@@ -82,8 +88,7 @@ if (TELEGRAM_TOKEN) {
 
 
 function esAdmin(userId) {
-    // Si la lista está vacía, todos pueden entrar (modo desarrollo)
-    if (ADMIN_LIST.length === 0) return true;
+    // Lista vacía = nadie entra (fail-closed). Antes dejaba entrar a todos.
     return ADMIN_LIST.includes(userId);
 }
 
@@ -286,8 +291,25 @@ async function consultarDocumentacion({ tema }) {
  */
 async function consultarProduccion({ dias = 7 } = {}) {
     try {
+        dias = parseInt(dias) || 7;
+
+        // "Hoy": los registros son semanales (una columna por día), así que se
+        // suma solo la columna del día actual de la semana en curso.
+        if (dias <= 1) {
+            const { columna } = obtenerFechaHoraColombia();
+            const col = `${columna}_tabacos`;
+            const { data: enCurso } = await supabase
+                .from('recepcion_diaria')
+                .select(col)
+                .in('estado', ['pendiente', 'activo']);
+            const totalHoy = (enCurso || []).reduce((acc, r) => acc + (r[col] || 0), 0);
+            return { total: totalHoy, dias_consultados: 1, registros_encontrados: (enCurso || []).length };
+        }
+
+        // Rango de varios días: se incluye la semana que contiene la fecha de
+        // inicio (semana_inicio es el lunes, hasta 6 días antes de esa fecha).
         const fechaDesde = new Date();
-        fechaDesde.setDate(fechaDesde.getDate() - dias);
+        fechaDesde.setDate(fechaDesde.getDate() - dias - 6);
         const fechaStr = fechaDesde.toISOString().split('T')[0];
 
         const { data: registros } = await supabase
@@ -719,10 +741,13 @@ async function ejecutarHerramienta(nombre, args) {
             const resTexto = await registrarProduccionRapida(args.nombre_o_codigo, tabacosNum, cestasNum, null, esExtraBool, pesosNum);
             return { exito: true, detalle: resTexto };
         }
-        default:                            return { 
-            exito: true, 
+        default:                            return {
+            // Herramienta inexistente (alucinada por el modelo): NO se reporta como éxito,
+            // para que el LLM no confirme acciones que nunca ocurrieron.
+            exito: false,
+            error: `La herramienta "${nombre}" no existe.`,
             datos: "El fundador de la empresa es Gonzalo Jaimes Bastos (Don Gonzalo). El creador del ERP y del bot es Gonzalo Andres Jaimes.",
-            instruccion_secreta: "Responde amigablemente usando esta información. Entrégasela al usuario con alegría."
+            instruccion_secreta: "No realizaste ninguna acción. Responde amigablemente con los datos disponibles y dile al usuario qué sí puedes hacer."
         };
     }
 }
@@ -745,7 +770,10 @@ async function responderConOllama(chatId, textoUsuario) {
     // Limitar historial a últimas 20 interacciones
     if (conversaciones[chatId].length > 20) {
         const sys = conversaciones[chatId][0]; // Guardar el prompt
-        conversaciones[chatId] = [sys, ...conversaciones[chatId].slice(-19)];
+        let recorte = conversaciones[chatId].slice(-19);
+        // No empezar con un mensaje 'tool' o 'assistant' huérfano (sin su pregunta/tool_call previo)
+        while (recorte.length && recorte[0].role !== 'user') recorte.shift();
+        conversaciones[chatId] = [sys, ...recorte];
     }
 
     try {
@@ -854,6 +882,13 @@ async function procesarMensajeSync(msg) {
     try {
         console.log(`📩 [MENSAJE RECIBIDO] De: ${fromUser} (${userId}) | Texto: "${text}"`);
 
+        // 0. Filtro de Seguridad: ANTES de cualquier trabajo costoso (descarga/transcripción de audio, IA)
+        if (!esAdmin(userId)) {
+            console.log(`⛔ Usuario no autorizado: ${userId}`);
+            bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
+            return;
+        }
+
         let textoFinal = text;
 
         // 🎙️ MANEJO DE AUDIOS CON GEMINI (Speech-to-Text)
@@ -882,11 +917,12 @@ async function procesarMensajeSync(msg) {
                     ];
                     
                     try {
-                        const geminiModel = ai.getGenerativeModel({ model: "gemini-1.5-flash" }); // Usar nombre canónico
+                        // Los modelos 1.5 ya no existen en la API; el modelo se puede cambiar con GEMINI_AUDIO_MODEL
+                        const geminiModel = ai.getGenerativeModel({ model: GEMINI_AUDIO_MODEL });
                         geminiRes = await geminiModel.generateContent(promptAudio);
                     } catch (errApi) {
                         console.warn(`⚠️ Intento flash falló (${errApi.message}). Intentando modelo pro...`);
-                        const fallbackModel = ai.getGenerativeModel({ model: "gemini-1.5-pro" }); // Usar nombre canónico
+                        const fallbackModel = ai.getGenerativeModel({ model: GEMINI_AUDIO_FALLBACK });
                         geminiRes = await fallbackModel.generateContent(promptAudio); 
                     }
                     
@@ -904,13 +940,6 @@ async function procesarMensajeSync(msg) {
             }
         }
 
-        // 0. Filtro de Seguridad
-        if (!esAdmin(userId)) {
-            console.log(`⛔ Usuario no autorizado: ${userId}`);
-            bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
-            return;
-        }
-
         // 1. Comando /id  – siempre responder sin IA
         if (textoFinal === '/id') {
             bot.sendMessage(chatId, `🔑 Tu ID de Telegram es: \`${userId}\``, { parse_mode: 'Markdown' });
@@ -919,7 +948,12 @@ async function procesarMensajeSync(msg) {
 
         // 1. Manejo de Comandos Manuales
         const saludos = ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hey'];
-        const esSaludo = saludos.some(s => textoFinal.toLowerCase().startsWith(s));
+        // Solo es saludo si es corto ("hola", "buenas tardes") y no hay un flujo activo.
+        // Así "Hola, ¿cuánto debe F11?" o un reporte en curso no se pierden.
+        const hayFlujoActivo = !!userStates[userId];
+        const esSaludo = !hayFlujoActivo
+            && textoFinal.trim().split(/\s+/).length <= 3
+            && saludos.some(s => textoFinal.toLowerCase().startsWith(s));
 
         if (textoFinal === '/start' || esSaludo) {
             userStates[userId] = null; // Limpiar estado al iniciar
@@ -1151,6 +1185,13 @@ bot.on('callback_query', async (query) => {
     const messageId = query.message.message_id;
     const userId = query.from.id;
     const data = query.data;
+
+    // Los botones también exigen ser admin (antes solo se validaban los mensajes de texto)
+    if (!esAdmin(userId)) {
+        console.log(`⛔ Botón rechazado, usuario no autorizado: ${userId}`);
+        bot.answerCallbackQuery(query.id, { text: '⛔ No autorizado.', show_alert: true }).catch(() => {});
+        return;
+    }
 
     try {
         // A. MENÚ PRINCIPAL

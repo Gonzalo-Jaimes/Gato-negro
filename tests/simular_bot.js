@@ -1,0 +1,215 @@
+/**
+ * Simulador del bot: ejecuta bot_core.js con Telegram, Supabase, Ollama y Gemini FALSOS.
+ * No toca internet, ni la base de datos real, ni tu token. Es seguro correrlo en cualquier momento.
+ *
+ * Uso:  node tests/simular_bot.js
+ */
+const path = require('path');
+const assert = require('assert');
+
+const ADMIN = 8589883684;      // ID autorizado (de la lista por defecto)
+const INTRUSO = 111111111;     // ID NO autorizado
+
+// ---------- Registro de lo que "pasa" ----------
+const log = { enviados: [], callbacks: [], ediciones: [], inserts: [], updates: [], supabaseTablas: [], fetch: 0, geminiModelos: [], ollamaLlamadas: [] };
+const handlers = {};
+const reset = () => { Object.keys(log).forEach(k => Array.isArray(log[k]) ? (log[k].length = 0) : (log[k] = 0)); };
+
+// ---------- Datos falsos de la "base de datos" ----------
+const hoyCol = (() => {
+    const d = new Intl.DateTimeFormat('es-CO', { timeZone: 'America/Bogota', weekday: 'short' }).format(new Date())
+        .toLowerCase().replace('.', '').normalize('NFD').replace(/[̀-ͯ]/g, '');
+    return ['lun', 'mar', 'mie', 'jue', 'vie', 'sab'].includes(d) ? d : 'extra';
+})();
+const tablas = {
+    maquinas: [{ id: 1, nombre: 'Saranda', estado: 'Funcional', ultimo_mtto: '2026-01-01', frecuencia_mtto_dias: 30 }],
+    recepcion_diaria: [
+        { lun_tabacos: 7, mar_tabacos: 7, mie_tabacos: 7, jue_tabacos: 7, vie_tabacos: 7, sab_tabacos: 7, extra_tabacos: 7, semana_inicio: '2026-11-02' },
+        { lun_tabacos: 7, mar_tabacos: 7, mie_tabacos: 7, jue_tabacos: 7, vie_tabacos: 7, sab_tabacos: 7, extra_tabacos: 7, semana_inicio: '2026-11-02' },
+    ],
+    empleados_fabriquines: [], prestamos_fabriquines: [], despachos_registro: [], inventario: [], movimientos: [],
+};
+
+// ---------- Mock de Supabase (encadenable) ----------
+function query(tabla) {
+    log.supabaseTablas.push(tabla);
+    const q = {
+        _op: 'select',
+        then(res, rej) {
+            const data = this._single ? (tablas[tabla] || [])[0] || null : (tablas[tabla] || []);
+            return Promise.resolve({ data, error: null }).then(res, rej);
+        },
+    };
+    ['select', 'eq', 'in', 'gte', 'gt', 'lt', 'ilike', 'or', 'order', 'limit'].forEach(m => (q[m] = () => q));
+    q.single = () => { q._single = true; return q; };
+    q.maybeSingle = () => { q._single = true; return q; };
+    q.insert = rows => { log.inserts.push({ tabla, rows }); return q; };
+    q.update = row => { log.updates.push({ tabla, row }); return q; };
+    return q;
+}
+
+// ---------- Inyección de mocks ----------
+function mockModulo(ruta, exports) {
+    const resolved = require.resolve(ruta);
+    require.cache[resolved] = { id: resolved, filename: resolved, loaded: true, exports };
+}
+const raiz = path.join(__dirname, '..');
+mockModulo(path.join(raiz, 'src/lib/shared.js'), {
+    supabase: { from: query },
+    obtenerHoraColombia: () => ({ fecha: '2026-11-09', hora: '10:00' }),
+});
+mockModulo('node-telegram-bot-api', class FakeTelegramBot {
+    constructor() {}
+    on(evento, fn) { handlers[evento] = fn; }
+    sendMessage(chatId, texto, opts) { log.enviados.push({ chatId, texto, opts }); return Promise.resolve({ message_id: 1 }); }
+    editMessageText(texto, opts) { log.ediciones.push({ texto, opts }); return Promise.resolve({}); }
+    answerCallbackQuery(id, opts) { log.callbacks.push({ id, opts }); return Promise.resolve(true); }
+    sendChatAction() {}
+    sendDocument() { return Promise.resolve({}); }
+    getFile() { return Promise.resolve({ file_path: 'voice/x.oga' }); }
+    isPolling() { return false; }
+    stopPolling() {}
+});
+// Ollama: el guion de respuestas lo define cada prueba
+let guionOllama = [];
+mockModulo('ollama', {
+    Ollama: class { chat(args) { log.ollamaLlamadas.push(JSON.parse(JSON.stringify(args))); return Promise.resolve(guionOllama.shift() || { message: { role: 'assistant', content: 'ok' } }); } },
+});
+mockModulo('@google/generative-ai', {
+    GoogleGenerativeAI: class {
+        getGenerativeModel({ model }) {
+            return { generateContent: async () => { log.geminiModelos.push(model); return { response: { text: () => 'hola desde la voz' } }; } };
+        }
+    },
+});
+global.fetch = async () => { log.fetch++; return { arrayBuffer: async () => new ArrayBuffer(8) }; };
+
+process.env.TELEGRAM_TOKEN = 'token-falso';
+process.env.GEMINI_API_KEY = 'gemini-falsa';
+delete process.env.ADMIN_IDS;
+process.env.OLLAMA_HOST = 'http://falso:1';
+const bot = require(path.join(raiz, 'src/bot/bot_core.js'));
+
+// ---------- Utilidades de prueba ----------
+const msg = (userId, text, extra = {}) => ({ chat: { id: userId }, from: { id: userId, first_name: 'Test' }, text, ...extra });
+const boton = (userId, data) => handlers.callback_query({ id: 'cb', data, from: { id: userId }, message: { chat: { id: userId }, message_id: 5 } });
+const ultimoTexto = () => (log.enviados[log.enviados.length - 1] || {}).texto || '';
+
+const pruebas = [];
+const prueba = (nombre, fn) => pruebas.push({ nombre, fn });
+
+// ================== PRUEBAS ==================
+prueba('Intruso: el texto es rechazado y no toca la base de datos', async () => {
+    await bot.procesarMensajeSync(msg(INTRUSO, '/deuda F11'));
+    assert.match(ultimoTexto(), /No hablo con desconocidos/);
+    assert.strictEqual(log.supabaseTablas.length, 0);
+});
+
+prueba('Intruso: una nota de voz NO descarga audio ni llama a Gemini', async () => {
+    await bot.procesarMensajeSync({ chat: { id: INTRUSO }, from: { id: INTRUSO, first_name: 'X' }, voice: { file_id: 'v' } });
+    assert.strictEqual(log.fetch, 0, 'no debe descargar el audio');
+    assert.strictEqual(log.geminiModelos.length, 0, 'no debe gastar cuota de Gemini');
+});
+
+prueba('Intruso: los botones son rechazados', async () => {
+    await boton(INTRUSO, 'menu_finanzas');
+    assert.match(log.callbacks[0].opts.text, /No autorizado/);
+    assert.strictEqual(log.ediciones.length, 0);
+    assert.strictEqual(log.supabaseTablas.length, 0);
+});
+
+prueba('Admin: /ping responde', async () => {
+    await bot.procesarMensajeSync(msg(ADMIN, '/ping'));
+    assert.match(ultimoTexto(), /Pong/);
+});
+
+prueba('Admin: "hola" abre el menú principal', async () => {
+    await bot.procesarMensajeSync(msg(ADMIN, 'hola'));
+    assert.match(ultimoTexto(), /Bienvenido/);
+});
+
+prueba('Admin: "Hola, cuánto debe F11?" NO es tomado como saludo', async () => {
+    await bot.procesarMensajeSync(msg(ADMIN, 'Hola, cuánto debe F11?'));
+    assert.doesNotMatch(ultimoTexto(), /Bienvenido/);
+});
+
+prueba('Flujo de mantenimiento: un saludo dentro del reporte NO lo cancela y se guarda', async () => {
+    await boton(ADMIN, 'maquina_tipo_Correctivo_1');
+    reset();
+    await bot.procesarMensajeSync(msg(ADMIN, 'Buenas tardes, falló el motor'));
+    assert.strictEqual(log.inserts.length, 1, 'debe guardar el reporte');
+    assert.strictEqual(log.inserts[0].tabla, 'mantenimiento');
+    assert.match(log.inserts[0].rows[0].descripcion, /falló el motor/);
+    assert.strictEqual(log.inserts[0].rows[0].maquina, 'Saranda');
+});
+
+prueba('Voz de admin: usa el modelo vigente (gemini-2.5-flash), no el 1.5', async () => {
+    await bot.procesarMensajeSync({ chat: { id: ADMIN }, from: { id: ADMIN, first_name: 'G' }, voice: { file_id: 'v' } });
+    assert.strictEqual(log.fetch, 1);
+    assert.deepStrictEqual(log.geminiModelos, ['gemini-2.5-flash']);
+    assert.ok(log.enviados.some(e => /hola desde la voz/.test(e.texto)), 'debe mostrar lo entendido');
+});
+
+prueba('IA: una herramienta inventada NO se reporta como éxito', async () => {
+    await boton(ADMIN, 'menu_ia');
+    reset();
+    guionOllama = [
+        { message: { role: 'assistant', content: '', tool_calls: [{ function: { name: 'borrar_todo', arguments: {} } }] } },
+        { message: { role: 'assistant', content: 'listo' } },
+    ];
+    await bot.procesarMensajeSync(msg(ADMIN, 'haz magia'));
+    const msgs = log.ollamaLlamadas[1].messages;
+    const tool = JSON.parse(msgs.filter(m => m.role === 'tool').pop().content);
+    assert.strictEqual(tool.exito, false);
+});
+
+prueba('IA: consultar_produccion(dias=1) suma solo la columna de hoy', async () => {
+    reset();
+    guionOllama = [
+        { message: { role: 'assistant', content: '', tool_calls: [{ function: { name: 'consultar_produccion', arguments: { dias: 1 } } }] } },
+        { message: { role: 'assistant', content: 'ok' } },
+    ];
+    await bot.procesarMensajeSync(msg(ADMIN, 'cuántos tabacos hoy'));
+    const tool = JSON.parse(log.ollamaLlamadas[1].messages.filter(m => m.role === 'tool').pop().content);
+    // 2 registros * 7 tabacos en la columna de hoy (si hoy es domingo: columna "extra", también 7)
+    assert.strictEqual(tool.total, 14, `columna de hoy: ${hoyCol}`);
+});
+
+prueba('IA: el historial recortado nunca empieza con un mensaje "tool"', async () => {
+    reset();
+    for (let i = 0; i < 14; i++) {
+        guionOllama = [
+            { message: { role: 'assistant', content: '', tool_calls: [{ function: { name: 'listar_todos_los_deudores', arguments: {} } }] } },
+            { message: { role: 'assistant', content: 'r' + i } },
+        ];
+        await bot.procesarMensajeSync(msg(ADMIN, 'lista ' + i));
+    }
+    for (const llamada of log.ollamaLlamadas) {
+        assert.strictEqual(llamada.messages[0].role, 'system');
+        if (llamada.messages.length > 1) assert.strictEqual(llamada.messages[1].role, 'user', 'primer mensaje tras el prompt debe ser del usuario');
+    }
+});
+
+prueba('Ollama apagado: el bot responde un aviso y no se cae', async () => {
+    reset();
+    const { Ollama } = require('ollama');
+    const original = Ollama.prototype.chat;
+    Ollama.prototype.chat = () => Promise.reject(new Error('ECONNREFUSED'));
+    await bot.procesarMensajeSync(msg(ADMIN, 'hola ia'));
+    Ollama.prototype.chat = original;
+    assert.match(ultimoTexto(), /Ollama/);
+});
+
+// ================== EJECUCIÓN ==================
+(async () => {
+    let ok = 0, fallos = 0;
+    const silencio = console.log; const silencioW = console.warn; const silencioE = console.error;
+    for (const p of pruebas) {
+        reset();
+        console.log = console.warn = console.error = () => {};
+        try { await p.fn(); console.log = silencio; console.warn = silencioW; console.error = silencioE; ok++; console.log('  ✅', p.nombre); }
+        catch (e) { console.log = silencio; console.warn = silencioW; console.error = silencioE; fallos++; console.log('  ❌', p.nombre, '\n      →', e.message.split('\n')[0]); }
+    }
+    console.log(`\n${ok} ok, ${fallos} con fallos`);
+    process.exit(fallos ? 1 : 0);
+})();
