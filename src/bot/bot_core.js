@@ -12,6 +12,11 @@ const path = require('path');
 // ============================================================
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Modelo de chat de Ollama (cambia con OLLAMA_MODEL sin tocar el código)
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1';
+// Modelos para transcribir notas de voz. Alias "-latest": siguen a la versión vigente cuando Google retira modelos (los 1.5 y 2.5 ya no sirven a cuentas nuevas).
+const GEMINI_AUDIO_MODEL = process.env.GEMINI_AUDIO_MODEL || 'gemini-flash-lite-latest';
+const GEMINI_AUDIO_FALLBACK = process.env.GEMINI_AUDIO_FALLBACK || 'gemini-3.5-flash';
 
 console.log('🔍 Diagnóstico Bot: TELEGRAM_TOKEN =', TELEGRAM_TOKEN ? '✅ Cargado (...' + TELEGRAM_TOKEN.slice(-4) + ')' : '❌ NO ENCONTRADO');
 console.log('🔍 Diagnóstico Bot: GEMINI_API_KEY =', GEMINI_API_KEY ? '✅ Cargada' : '❌ NO ENCONTRADA');
@@ -28,10 +33,13 @@ if (!GEMINI_API_KEY) {
 // ============================================================
 // 🛡️ LISTA BLANCA DE ADMINISTRADORES
 // ============================================================
-const ADMIN_LIST = [
-    8589883684, // Gonzalo
-    2073256205, // Ingeniera Yesith
-];
+// Se puede sobrescribir con ADMIN_IDS="123,456" en el .env.
+const ADMIN_LIST = (process.env.ADMIN_IDS
+    ? process.env.ADMIN_IDS.split(',').map(s => parseInt(s.trim())).filter(Number.isFinite)
+    : [
+        8589883684, // Gonzalo
+        2073256205, // Ingeniera Yesith
+    ]);
 
 // ============================================================
 // 🧠 MEMORIA DE ESTADOS (CONTEXTO DE USUARIO)
@@ -82,8 +90,7 @@ if (TELEGRAM_TOKEN) {
 
 
 function esAdmin(userId) {
-    // Si la lista está vacía, todos pueden entrar (modo desarrollo)
-    if (ADMIN_LIST.length === 0) return true;
+    // Lista vacía = nadie entra (fail-closed). Antes dejaba entrar a todos.
     return ADMIN_LIST.includes(userId);
 }
 
@@ -286,8 +293,25 @@ async function consultarDocumentacion({ tema }) {
  */
 async function consultarProduccion({ dias = 7 } = {}) {
     try {
+        dias = parseInt(dias) || 7;
+
+        // "Hoy": los registros son semanales (una columna por día), así que se
+        // suma solo la columna del día actual de la semana en curso.
+        if (dias <= 1) {
+            const { columna } = obtenerFechaHoraColombia();
+            const col = `${columna}_tabacos`;
+            const { data: enCurso } = await supabase
+                .from('recepcion_diaria')
+                .select(col)
+                .in('estado', ['pendiente', 'activo']);
+            const totalHoy = (enCurso || []).reduce((acc, r) => acc + (r[col] || 0), 0);
+            return { total: totalHoy, dias_consultados: 1, registros_encontrados: (enCurso || []).length };
+        }
+
+        // Rango de varios días: se incluye la semana que contiene la fecha de
+        // inicio (semana_inicio es el lunes, hasta 6 días antes de esa fecha).
         const fechaDesde = new Date();
-        fechaDesde.setDate(fechaDesde.getDate() - dias);
+        fechaDesde.setDate(fechaDesde.getDate() - dias - 6);
         const fechaStr = fechaDesde.toISOString().split('T')[0];
 
         const { data: registros } = await supabase
@@ -388,6 +412,14 @@ function obtenerFechaHoraColombia() {
  * Ahora soporta 'abono_pesos' para descontar de préstamos activos.
  */
 async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, color_cesta = null, esExtra = false, abono_pesos = 0) {
+    // Pasos de escritura ya guardados. Supabase no ofrece transacciones desde aquí, así que si un
+    // paso falla se corta y se informa exactamente qué quedó guardado, para corregirlo a mano.
+    const pasosGuardados = [];
+    const escribir = async (paso, promesa) => {
+        const { error } = await promesa;
+        if (error) throw new Error(`falló "${paso}" (${error.message})`);
+        pasosGuardados.push(paso);
+    };
     try {
         const empRes = await consultarDeudaEmpleado({ nombre_o_codigo });
         if (!empRes.encontrado) return empRes.mensaje;
@@ -442,7 +474,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
                 const colCestas = `${tiempo.columna}_cestas`;
                 updatedData[colCestas] = (reg[colCestas] || 0) + cestas;
             }
-            await supabase.from('recepcion_diaria').update(updatedData).eq('id', reg.id);
+            await escribir('registro diario', supabase.from('recepcion_diaria').update(updatedData).eq('id', reg.id));
         } else {
             // --- MODO PAGO DE DEUDA: sin despacho activo esta semana ---
             msgDetalle = `registrado como *Pago de Deuda* (sin despacho activo esta semana)`;
@@ -451,7 +483,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
         // 1.5 NOVEDAD: Descontar la deuda de tabacos inmediatamente en tiempo real
         if (!esExtra) {
             const nuevaDeuda = Math.max(0, (emp.deuda_tabacos || 0) - tabacos);
-            await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaDeuda }).eq('id', emp.id);
+            await escribir('deuda de tabacos', supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaDeuda }).eq('id', emp.id));
         }
 
         // 1.6 NOVEDAD: Descontar abono en pesos de los préstamos activos
@@ -473,7 +505,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
                         const aDescontar = Math.min(saldo, pesosRestantes);
                         const nuevoSaldo = saldo - aDescontar;
                         const nuevoEstado = nuevoSaldo <= 0 ? 'pagado' : 'activo';
-                        await supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoEstado }).eq('id', p.id);
+                        await escribir('abono a préstamo', supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoEstado }).eq('id', p.id));
                         pesosRestantes -= aDescontar;
                     }
                 }
@@ -489,28 +521,28 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
         
         const { data: invTab } = await supabase.from('inventario').select('*').eq('material', materialInv).maybeSingle();
         if (invTab) {
-            await supabase.from('inventario').update({ cantidad: invTab.cantidad + tabacos }).eq('id', invTab.id);
+            await escribir('inventario de tabacos', supabase.from('inventario').update({ cantidad: invTab.cantidad + tabacos }).eq('id', invTab.id));
         } else {
-            await supabase.from('inventario').insert([{ material: materialInv, cantidad: tabacos, categoria: categoriaInv }]);
+            await escribir('inventario de tabacos', supabase.from('inventario').insert([{ material: materialInv, cantidad: tabacos, categoria: categoriaInv }]));
         }
 
-        await supabase.from('movimientos').insert([{
+        await escribir('movimiento (Kardex)', supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: materialInv, cantidad: tabacos, usuario: 'Bot',
             descripcion: esPagoDeDeuda
                 ? `Pago de Deuda: ${emp.codigo} - ${emp.nombre}`
                 : `Registro Rápido ${esExtra ? '(EXTRA)' : ''}: ${emp.codigo} - ${emp.nombre}`
-        }]);
+        }]));
 
         // 3. Actualizar Inventario (Cestas)
         if (cestas > 0) {
             let colorFinal = color_cesta ? `Cestas ${color_cesta}` : 'Cestas';
             const { data: invCest } = await supabase.from('inventario').select('*').ilike('material', `%${colorFinal}%`).limit(1).maybeSingle();
             if (invCest) {
-                await supabase.from('inventario').update({ cantidad: invCest.cantidad + cestas }).eq('id', invCest.id);
-                await supabase.from('movimientos').insert([{
+                await escribir('inventario de cestas', supabase.from('inventario').update({ cantidad: invCest.cantidad + cestas }).eq('id', invCest.id));
+                await escribir('movimiento de cestas', supabase.from('movimientos').insert([{
                     fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: invCest.material, cantidad: cestas, usuario: 'Bot',
                     descripcion: `Retorno Rápido: ${emp.codigo}`
-                }]);
+                }]));
             }
         }
 
@@ -563,7 +595,11 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
 
         return `✅ *Registro Exitoso*\n👤 Empleado: *${emp.nombre} (${emp.codigo})*\n📈 *+${tabacos.toLocaleString('es-CO')} u* ${msgDetalle}${cestas > 0 ? ` y *+${cestas}* cestas` : ''}.${msgAbono}${msgSaldo}`;
     } catch (e) {
-        return '❌ Error al registrar producción: ' + e.message;
+        const yaGuardado = pasosGuardados.length
+            ? `
+⚠️ *Ojo:* quedó guardado parcialmente (${pasosGuardados.join(', ')}). Revisa en el ERP antes de repetir el registro.`
+            : '';
+        return '❌ Error al registrar producción: ' + e.message + yaGuardado;
     }
 }
 
@@ -719,10 +755,13 @@ async function ejecutarHerramienta(nombre, args) {
             const resTexto = await registrarProduccionRapida(args.nombre_o_codigo, tabacosNum, cestasNum, null, esExtraBool, pesosNum);
             return { exito: true, detalle: resTexto };
         }
-        default:                            return { 
-            exito: true, 
+        default:                            return {
+            // Herramienta inexistente (alucinada por el modelo): NO se reporta como éxito,
+            // para que el LLM no confirme acciones que nunca ocurrieron.
+            exito: false,
+            error: `La herramienta "${nombre}" no existe.`,
             datos: "El fundador de la empresa es Gonzalo Jaimes Bastos (Don Gonzalo). El creador del ERP y del bot es Gonzalo Andres Jaimes.",
-            instruccion_secreta: "Responde amigablemente usando esta información. Entrégasela al usuario con alegría."
+            instruccion_secreta: "No realizaste ninguna acción. Responde amigablemente con los datos disponibles y dile al usuario qué sí puedes hacer."
         };
     }
 }
@@ -745,13 +784,16 @@ async function responderConOllama(chatId, textoUsuario) {
     // Limitar historial a últimas 20 interacciones
     if (conversaciones[chatId].length > 20) {
         const sys = conversaciones[chatId][0]; // Guardar el prompt
-        conversaciones[chatId] = [sys, ...conversaciones[chatId].slice(-19)];
+        let recorte = conversaciones[chatId].slice(-19);
+        // No empezar con un mensaje 'tool' o 'assistant' huérfano (sin su pregunta/tool_call previo)
+        while (recorte.length && recorte[0].role !== 'user') recorte.shift();
+        conversaciones[chatId] = [sys, ...recorte];
     }
 
     try {
         // 1. Llamar a Ollama
         const response = await ollama.chat({
-            model: 'llama3.1', // Llama 3.1 8B es el rey del Tool Calling para la RTX 4050
+            model: OLLAMA_MODEL,
             messages: conversaciones[chatId],
             tools: herramientasOllama,
         });
@@ -805,7 +847,7 @@ async function responderConOllama(chatId, textoUsuario) {
 
             // 3. Volvemos a llamar a Ollama para que lea los datos y redacte la respuesta final
             const finalResponse = await ollama.chat({
-                model: 'llama3.1',
+                model: OLLAMA_MODEL,
                 messages: conversaciones[chatId]
             });
             
@@ -854,6 +896,13 @@ async function procesarMensajeSync(msg) {
     try {
         console.log(`📩 [MENSAJE RECIBIDO] De: ${fromUser} (${userId}) | Texto: "${text}"`);
 
+        // 0. Filtro de Seguridad: ANTES de cualquier trabajo costoso (descarga/transcripción de audio, IA)
+        if (!esAdmin(userId)) {
+            console.log(`⛔ Usuario no autorizado: ${userId}`);
+            bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
+            return;
+        }
+
         let textoFinal = text;
 
         // 🎙️ MANEJO DE AUDIOS CON GEMINI (Speech-to-Text)
@@ -882,11 +931,12 @@ async function procesarMensajeSync(msg) {
                     ];
                     
                     try {
-                        const geminiModel = ai.getGenerativeModel({ model: "gemini-1.5-flash" }); // Usar nombre canónico
+                        // Los modelos 1.5 ya no existen en la API; el modelo se puede cambiar con GEMINI_AUDIO_MODEL
+                        const geminiModel = ai.getGenerativeModel({ model: GEMINI_AUDIO_MODEL });
                         geminiRes = await geminiModel.generateContent(promptAudio);
                     } catch (errApi) {
                         console.warn(`⚠️ Intento flash falló (${errApi.message}). Intentando modelo pro...`);
-                        const fallbackModel = ai.getGenerativeModel({ model: "gemini-1.5-pro" }); // Usar nombre canónico
+                        const fallbackModel = ai.getGenerativeModel({ model: GEMINI_AUDIO_FALLBACK });
                         geminiRes = await fallbackModel.generateContent(promptAudio); 
                     }
                     
@@ -904,13 +954,6 @@ async function procesarMensajeSync(msg) {
             }
         }
 
-        // 0. Filtro de Seguridad
-        if (!esAdmin(userId)) {
-            console.log(`⛔ Usuario no autorizado: ${userId}`);
-            bot.sendMessage(chatId, `🐾 *Miau...* No hablo con desconocidos. Tu ID es \`${userId}\`. Pídele a Gonzalo que te agregue.`, { parse_mode: 'Markdown' });
-            return;
-        }
-
         // 1. Comando /id  – siempre responder sin IA
         if (textoFinal === '/id') {
             bot.sendMessage(chatId, `🔑 Tu ID de Telegram es: \`${userId}\``, { parse_mode: 'Markdown' });
@@ -919,7 +962,12 @@ async function procesarMensajeSync(msg) {
 
         // 1. Manejo de Comandos Manuales
         const saludos = ['hola', 'buenos dias', 'buenas tardes', 'buenas noches', 'que tal', 'hey'];
-        const esSaludo = saludos.some(s => textoFinal.toLowerCase().startsWith(s));
+        // Solo es saludo si es corto ("hola", "buenas tardes") y no hay un flujo activo.
+        // Así "Hola, ¿cuánto debe F11?" o un reporte en curso no se pierden.
+        const hayFlujoActivo = !!userStates[userId];
+        const esSaludo = !hayFlujoActivo
+            && textoFinal.trim().split(/\s+/).length <= 3
+            && saludos.some(s => textoFinal.toLowerCase().startsWith(s));
 
         if (textoFinal === '/start' || esSaludo) {
             userStates[userId] = null; // Limpiar estado al iniciar
@@ -1151,6 +1199,13 @@ bot.on('callback_query', async (query) => {
     const messageId = query.message.message_id;
     const userId = query.from.id;
     const data = query.data;
+
+    // Los botones también exigen ser admin (antes solo se validaban los mensajes de texto)
+    if (!esAdmin(userId)) {
+        console.log(`⛔ Botón rechazado, usuario no autorizado: ${userId}`);
+        bot.answerCallbackQuery(query.id, { text: '⛔ No autorizado.', show_alert: true }).catch(() => {});
+        return;
+    }
 
     try {
         // A. MENÚ PRINCIPAL

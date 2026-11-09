@@ -7,10 +7,9 @@ services:
       - .env
     ports:
       - "3000:3000"
-    volumes:
-      # Mapear el código local al contenedor para actualizar sin tener que reconstruir
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
+    # Sin volumen de código: la imagen trae todo lo necesario, así que el contenedor
+    # funciona sin importar dónde esté la carpeta del proyecto.
+    # Para aplicar cambios de código:  docker compose up -d --build
     environment:
-      # Este host permite que el contenedor hable con tu Windows local
+      # Este host permite que el contenedor hable con tu Windows local (Ollama)
       - OLLAMA_HOST=http://host.docker.internal:11434

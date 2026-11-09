@@ -3,7 +3,8 @@
   "version": "3.2.6",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "test:bot": "node tests/simular_bot.js"
   },
   "dependencies": {
     "@google/genai": "^1.49.0",
