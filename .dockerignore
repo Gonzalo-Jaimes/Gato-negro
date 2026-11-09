@@ -2,6 +2,14 @@ node_modules
 .env
 .git
 *.log
-documentacion
 tests
 *.bat
+# La base de conocimientos del bot (documentacion/*.md) SÍ va en la imagen; se excluye lo pesado.
+documentacion/anexos
+documentacion/*.xlsx
+documentacion/*.xlsm
+documentacion/*.pdf
+documentacion/*.doc
+documentacion/*.docx
+*.png
+*.pdf

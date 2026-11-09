@@ -33,14 +33,13 @@ if (!GEMINI_API_KEY) {
 // ============================================================
 // 🛡️ LISTA BLANCA DE ADMINISTRADORES
 // ============================================================
-// Se puede sobrescribir con ADMIN_IDS="123,456" en el .env.
-const ADMIN_LIST = (process.env.ADMIN_IDS
-    ? process.env.ADMIN_IDS.split(',').map(s => parseInt(s.trim())).filter(Number.isFinite)
-    : [
-        8589883684, // Gonzalo
-        2073256205, // Ingeniera Yesith
-    ]);
-
+// IDs base + los que agregues con ADMIN_IDS="123,456" en el .env (se SUMAN, no reemplazan).
+const ADMIN_BASE = [
+    8589883684, // Gonzalo
+    2073256205, // Ingeniera Yesith
+];
+const ADMIN_EXTRA = (process.env.ADMIN_IDS || '').split(',').map(x => parseInt(x.trim())).filter(Number.isFinite);
+const ADMIN_LIST = [...new Set([...ADMIN_BASE, ...ADMIN_EXTRA])];
 // ============================================================
 // 🧠 MEMORIA DE ESTADOS (CONTEXTO DE USUARIO)
 // ============================================================
