@@ -143,10 +143,10 @@ prueba('Flujo de mantenimiento: un saludo dentro del reporte NO lo cancela y se 
     assert.strictEqual(log.inserts[0].rows[0].maquina, 'Saranda');
 });
 
-prueba('Voz de admin: usa el modelo vigente (gemini-2.5-flash), no el 1.5', async () => {
+prueba('Voz de admin: usa el modelo vigente (gemini-flash-lite-latest)', async () => {
     await bot.procesarMensajeSync({ chat: { id: ADMIN }, from: { id: ADMIN, first_name: 'G' }, voice: { file_id: 'v' } });
     assert.strictEqual(log.fetch, 1);
-    assert.deepStrictEqual(log.geminiModelos, ['gemini-2.5-flash']);
+    assert.deepStrictEqual(log.geminiModelos, ['gemini-flash-lite-latest']);
     assert.ok(log.enviados.some(e => /hola desde la voz/.test(e.texto)), 'debe mostrar lo entendido');
 });
 

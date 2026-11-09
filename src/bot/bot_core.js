@@ -14,9 +14,9 @@ const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
 // Modelo de chat de Ollama (cambia con OLLAMA_MODEL sin tocar el código)
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1';
-// Modelos para transcribir notas de voz. Flash y flash-lite entran en el plan gratuito de la API.
-const GEMINI_AUDIO_MODEL = process.env.GEMINI_AUDIO_MODEL || 'gemini-2.5-flash';
-const GEMINI_AUDIO_FALLBACK = process.env.GEMINI_AUDIO_FALLBACK || 'gemini-2.5-flash-lite';
+// Modelos para transcribir notas de voz. Alias "-latest": siguen a la versión vigente cuando Google retira modelos (los 1.5 y 2.5 ya no sirven a cuentas nuevas).
+const GEMINI_AUDIO_MODEL = process.env.GEMINI_AUDIO_MODEL || 'gemini-flash-lite-latest';
+const GEMINI_AUDIO_FALLBACK = process.env.GEMINI_AUDIO_FALLBACK || 'gemini-3.5-flash';
 
 console.log('🔍 Diagnóstico Bot: TELEGRAM_TOKEN =', TELEGRAM_TOKEN ? '✅ Cargado (...' + TELEGRAM_TOKEN.slice(-4) + ')' : '❌ NO ENCONTRADO');
 console.log('🔍 Diagnóstico Bot: GEMINI_API_KEY =', GEMINI_API_KEY ? '✅ Cargada' : '❌ NO ENCONTRADA');
