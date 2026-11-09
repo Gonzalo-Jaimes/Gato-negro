@@ -19,7 +19,7 @@ Este documento detalla a las personas clave y al personal interno que labora en 
 ## 🏭 Trabajadores Internos (Planta)
 
 - **Deivis:** Trabajador interno.
-- **Brandon Vivas:** Trabajador interno (Hermano de Gonzalo Andres Jaimes, el creador del sistema ERP).
+- **Brandon Vivas:** Trabajador interno (Hermano de Gonzalo Andres Jaimes Quijano, el creador del sistema ERP).
 - **Ernesto:** Trabajador interno.
 - **Rene:** Trabajador interno.
 - **"Papa":** Trabajador interno (Conocido por este apodo en la fábrica).
