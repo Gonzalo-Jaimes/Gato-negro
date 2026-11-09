@@ -12,6 +12,8 @@ const path = require('path');
 // ============================================================
 const TELEGRAM_TOKEN = process.env.TELEGRAM_TOKEN;
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+// Modelo de chat de Ollama (cambia con OLLAMA_MODEL sin tocar el código)
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.1';
 // Modelos para transcribir notas de voz. Flash y flash-lite entran en el plan gratuito de la API.
 const GEMINI_AUDIO_MODEL = process.env.GEMINI_AUDIO_MODEL || 'gemini-2.5-flash';
 const GEMINI_AUDIO_FALLBACK = process.env.GEMINI_AUDIO_FALLBACK || 'gemini-2.5-flash-lite';
@@ -410,6 +412,14 @@ function obtenerFechaHoraColombia() {
  * Ahora soporta 'abono_pesos' para descontar de préstamos activos.
  */
 async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, color_cesta = null, esExtra = false, abono_pesos = 0) {
+    // Pasos de escritura ya guardados. Supabase no ofrece transacciones desde aquí, así que si un
+    // paso falla se corta y se informa exactamente qué quedó guardado, para corregirlo a mano.
+    const pasosGuardados = [];
+    const escribir = async (paso, promesa) => {
+        const { error } = await promesa;
+        if (error) throw new Error(`falló "${paso}" (${error.message})`);
+        pasosGuardados.push(paso);
+    };
     try {
         const empRes = await consultarDeudaEmpleado({ nombre_o_codigo });
         if (!empRes.encontrado) return empRes.mensaje;
@@ -464,7 +474,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
                 const colCestas = `${tiempo.columna}_cestas`;
                 updatedData[colCestas] = (reg[colCestas] || 0) + cestas;
             }
-            await supabase.from('recepcion_diaria').update(updatedData).eq('id', reg.id);
+            await escribir('registro diario', supabase.from('recepcion_diaria').update(updatedData).eq('id', reg.id));
         } else {
             // --- MODO PAGO DE DEUDA: sin despacho activo esta semana ---
             msgDetalle = `registrado como *Pago de Deuda* (sin despacho activo esta semana)`;
@@ -473,7 +483,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
         // 1.5 NOVEDAD: Descontar la deuda de tabacos inmediatamente en tiempo real
         if (!esExtra) {
             const nuevaDeuda = Math.max(0, (emp.deuda_tabacos || 0) - tabacos);
-            await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaDeuda }).eq('id', emp.id);
+            await escribir('deuda de tabacos', supabase.from('empleados_fabriquines').update({ deuda_tabacos: nuevaDeuda }).eq('id', emp.id));
         }
 
         // 1.6 NOVEDAD: Descontar abono en pesos de los préstamos activos
@@ -495,7 +505,7 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
                         const aDescontar = Math.min(saldo, pesosRestantes);
                         const nuevoSaldo = saldo - aDescontar;
                         const nuevoEstado = nuevoSaldo <= 0 ? 'pagado' : 'activo';
-                        await supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoEstado }).eq('id', p.id);
+                        await escribir('abono a préstamo', supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoEstado }).eq('id', p.id));
                         pesosRestantes -= aDescontar;
                     }
                 }
@@ -511,28 +521,28 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
         
         const { data: invTab } = await supabase.from('inventario').select('*').eq('material', materialInv).maybeSingle();
         if (invTab) {
-            await supabase.from('inventario').update({ cantidad: invTab.cantidad + tabacos }).eq('id', invTab.id);
+            await escribir('inventario de tabacos', supabase.from('inventario').update({ cantidad: invTab.cantidad + tabacos }).eq('id', invTab.id));
         } else {
-            await supabase.from('inventario').insert([{ material: materialInv, cantidad: tabacos, categoria: categoriaInv }]);
+            await escribir('inventario de tabacos', supabase.from('inventario').insert([{ material: materialInv, cantidad: tabacos, categoria: categoriaInv }]));
         }
 
-        await supabase.from('movimientos').insert([{
+        await escribir('movimiento (Kardex)', supabase.from('movimientos').insert([{
             fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: materialInv, cantidad: tabacos, usuario: 'Bot',
             descripcion: esPagoDeDeuda
                 ? `Pago de Deuda: ${emp.codigo} - ${emp.nombre}`
                 : `Registro Rápido ${esExtra ? '(EXTRA)' : ''}: ${emp.codigo} - ${emp.nombre}`
-        }]);
+        }]));
 
         // 3. Actualizar Inventario (Cestas)
         if (cestas > 0) {
             let colorFinal = color_cesta ? `Cestas ${color_cesta}` : 'Cestas';
             const { data: invCest } = await supabase.from('inventario').select('*').ilike('material', `%${colorFinal}%`).limit(1).maybeSingle();
             if (invCest) {
-                await supabase.from('inventario').update({ cantidad: invCest.cantidad + cestas }).eq('id', invCest.id);
-                await supabase.from('movimientos').insert([{
+                await escribir('inventario de cestas', supabase.from('inventario').update({ cantidad: invCest.cantidad + cestas }).eq('id', invCest.id));
+                await escribir('movimiento de cestas', supabase.from('movimientos').insert([{
                     fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'ENTRADA', material: invCest.material, cantidad: cestas, usuario: 'Bot',
                     descripcion: `Retorno Rápido: ${emp.codigo}`
-                }]);
+                }]));
             }
         }
 
@@ -585,7 +595,11 @@ async function registrarProduccionRapida(nombre_o_codigo, tabacos, cestas = 0, c
 
         return `✅ *Registro Exitoso*\n👤 Empleado: *${emp.nombre} (${emp.codigo})*\n📈 *+${tabacos.toLocaleString('es-CO')} u* ${msgDetalle}${cestas > 0 ? ` y *+${cestas}* cestas` : ''}.${msgAbono}${msgSaldo}`;
     } catch (e) {
-        return '❌ Error al registrar producción: ' + e.message;
+        const yaGuardado = pasosGuardados.length
+            ? `
+⚠️ *Ojo:* quedó guardado parcialmente (${pasosGuardados.join(', ')}). Revisa en el ERP antes de repetir el registro.`
+            : '';
+        return '❌ Error al registrar producción: ' + e.message + yaGuardado;
     }
 }
 
@@ -779,7 +793,7 @@ async function responderConOllama(chatId, textoUsuario) {
     try {
         // 1. Llamar a Ollama
         const response = await ollama.chat({
-            model: 'llama3.1', // Llama 3.1 8B es el rey del Tool Calling para la RTX 4050
+            model: OLLAMA_MODEL,
             messages: conversaciones[chatId],
             tools: herramientasOllama,
         });
@@ -833,7 +847,7 @@ async function responderConOllama(chatId, textoUsuario) {
 
             // 3. Volvemos a llamar a Ollama para que lea los datos y redacte la respuesta final
             const finalResponse = await ollama.chat({
-                model: 'llama3.1',
+                model: OLLAMA_MODEL,
                 messages: conversaciones[chatId]
             });
             
