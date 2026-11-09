@@ -277,6 +277,30 @@ pruebaLimpia('Texto libre fuera del modo chat: lo atiende la IA (ya no responde 
 
 
 
+pruebaLimpia('Modo chat IA: "Alcides 1250 tabacos y 3 cestas" va directo a confirmación, sin LLM', async () => {
+    await boton(ADMIN, 'menu_ia'); reset();
+    await bot.procesarMensajeSync(msg(ADMIN, 'Alcides 1250 tabacos y 3 cestas'));
+    assert.match(ultimoTexto(), /Confirma el registro/);
+    assert.strictEqual(log.ollamaLlamadas.length, 0, 'no debe consultar al LLM');
+    assert.strictEqual(escrituras(), 0);
+});
+
+pruebaLimpia('Qwen escribe la llamada como texto "registrando_produccion({...})": se rescata y pide confirmación', async () => {
+    guionOllama = [{ message: { role: 'assistant', content: 'registrando_produccion({"nombre_o_codigo": "F11", "tabacos": 1250, "cestas": 1, "esExtra": false})' } }];
+    await bot.procesarMensajeSync(msg(ADMIN, '1 cesta devuelta'));
+    assert.match(ultimoTexto(), /Confirma el registro/);
+    assert.match(ultimoTexto(), /1 cestas|1.250/);
+    assert.ok(!log.enviados.some(e => /registrando_produccion/.test(e.texto)), 'no debe mostrar la llamada cruda');
+    assert.strictEqual(escrituras(), 0);
+});
+
+pruebaLimpia('Llamada cruda que no se puede rescatar: se oculta y NO dice que se procesó', async () => {
+    guionOllama = [{ message: { role: 'assistant', content: 'hacer_magia({"a": 1})' } }];
+    await bot.procesarMensajeSync(msg(ADMIN, 'haz algo raro'));
+    assert.ok(!log.enviados.some(e => /hacer_magia/.test(e.texto)));
+    assert.match(ultimoTexto(), /No se guardó nada/);
+});
+
 // ================== EJECUCIÓN ==================
 (async () => {
     let ok = 0, fallos = 0;
