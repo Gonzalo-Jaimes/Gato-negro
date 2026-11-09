@@ -281,7 +281,11 @@ async function consultarDocumentacion({ tema }) {
         if (!fs.existsSync(filePath)) return { error: true, mensaje: `El archivo ${fileName} no existe en la base de conocimientos.` };
 
         const content = fs.readFileSync(filePath, 'utf-8');
-        return { documento_consultado: fileName, contenido: content };
+        return {
+            documento_consultado: fileName,
+            contenido: content,
+            instruccion: 'Usa este documento solo para contestar lo que el usuario preguntó, en máximo 3 frases. NO recites ni listes el documento completo.'
+        };
     } catch (e) {
         return { error: true, mensaje: e.message };
     }
@@ -751,6 +755,8 @@ REGLAS DE ORO:
 2. Cero Disculpas: ESTÁ ESTRICTAMENTE PROHIBIDO pedir perdón, decir "lo siento", "disculpa" o "cometí un error". Habla siempre con seguridad y alegría.
 3. Cero Alucinaciones: NUNCA inventes deudas, números ni nombres. Si no sabes algo, DEBES usar una herramienta. NUNCA inventes herramientas que no existan.
 4. Cero JSON: NUNCA escribas código JSON o estructuras de programación en el chat.
+5. Brevedad: responde SOLO lo que el usuario preguntó, en máximo 3 frases. No agregues listas de personal, datos extra ni información que no pidieron.
+6. Tu creador y el dueño de la empresa ya los sabes (están arriba): NO uses herramientas para eso.
 
 GATILLOS DE HERRAMIENTAS (¡OBLIGATORIO USARLAS!):
 - Si preguntan "¿quién debe?", "lista de deudores": INVOCA LA HERRAMIENTA listar_todos_los_deudores.
@@ -840,7 +846,29 @@ async function ejecutarHerramienta(nombre, args, ctx = {}) {
 // ============================================================
 // 🤖 PROCESAR MENSAJE CON OLLAMA (Local & Gratis)
 // ============================================================
+// Preguntas de identidad que se contestan al instante y sin LLM (no hay nada que "razonar" ni alucinar).
+const RESPUESTA_FUNDADOR = '🐾 El fundador y dueño de Gato Negro es *Gonzalo Jaimes Bastos* (Don Gonzalo).';
+const RESPUESTA_CREADOR = '🐾 Me creó *Gonzalo Andres Jaimes Quijano*, nieto de Don Gonzalo y creador del ERP de Gato Negro.';
+
+function respuestaDirecta(texto) {
+    const t = texto.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[¿?¡!.,]/g, ' ');
+    // "quién creó/fundó Gato Negro", "quién es el dueño", "cómo se llama el dueño/fundador"
+    if (/\bquien\b.*\b(creo|fundo|inicio)\b.*\b(gato negro|la empresa|la fabrica)\b/.test(t)
+        || /\b(quien es|como se llama|nombre d?el?)\b.*\b(dueno|fundador|patron)\b/.test(t)) return RESPUESTA_FUNDADOR;
+    // "quién te creó", "quién es tu creador", "quién te programó"
+    if (/\bquien\b.*\bte\b.*\b(creo|hizo|programo|desarrollo|diseno|invento)\b/.test(t)
+        || /\b(tu|su)\s+(creador|desarrollador|programador)\b/.test(t)) return RESPUESTA_CREADOR;
+    return null;
+}
+
 async function responderConOllama(chatId, textoUsuario, userId = chatId) {
+    const directa = respuestaDirecta(textoUsuario);
+    if (directa) {
+        if (!conversaciones[chatId]) conversaciones[chatId] = [{ role: 'system', content: SYSTEM_PROMPT }];
+        conversaciones[chatId].push({ role: 'user', content: textoUsuario }, { role: 'assistant', content: directa });
+        return directa;
+    }
+
     // Inicializar historial si no existe
     if (!conversaciones[chatId]) {
         conversaciones[chatId] = [{ role: 'system', content: SYSTEM_PROMPT }];
