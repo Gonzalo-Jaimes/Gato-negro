@@ -1,6 +1,6 @@
 # Fase 3 · Sistema de diseño y tokens
 
-Archivo fuente: `public/css/theme.css` (v5.0, 412 líneas, **73 tokens de diseño** en `:root`, 83 contando los 10 valores `--dark-*` de respaldo). Guía viva y comprobable: ruta `/guia_estilos` (rol admin; menú Administración → Guía de estilos).
+Archivo fuente: `public/css/theme.css` (v5.1, 583 líneas, **82 tokens de diseño** en `:root`, 92 contando los 10 valores `--dark-*` de respaldo; la Fase 4 añadió 9: `--primary-text`, `--success-text`, `--info-text` y `--chart-1…6`). Guía viva y comprobable: ruta `/guia_estilos` (rol admin; menú Administración → Guía de estilos).
 
 ## 1. Punto de partida (auditoría, antes de cambiar nada)
 
@@ -25,8 +25,12 @@ Archivo fuente: `public/css/theme.css` (v5.0, 412 líneas, **73 tokens de diseñ
 | Par (modo claro) | Contraste | ¿AA (≥ 4,5)? |
 |---|---:|---|
 | Texto principal / tarjeta | 15,56 | Sí |
-| Texto apagado / tarjeta | 5,03 | Sí |
-| Texto apagado / fondo de página | 4,57 | Sí (justo) |
+| Texto apagado `#6B5C4B` / tarjeta | 6,30 | Sí (la Fase 4 lo oscureció desde `#7A6B5A`, 5,03) |
+| Texto apagado / fondo de página | 5,73 | Sí (antes 4,57, justo) |
+| Texto apagado / zona hundida (`--bg-sunken`) | 5,25 | Sí |
+| `--primary-text` `#8F3F12` / insignia con fondo `--primary-soft` | 6,06 | Sí (antes `--primary`: 4,14) |
+| `--success-text` `#3C6A37` / `--success-soft` | 5,19 | Sí (antes 4,08) |
+| `--info-text` `#2F5875` / `--info-soft` | 6,27 | Sí (antes 4,38) |
 | Primario / tarjeta | 4,86 | Sí |
 | Texto claro sobre primario | 4,71 | Sí |
 | Éxito / tarjeta | 4,87 | Sí |
@@ -52,7 +56,7 @@ Escala de 4 px (`--space-1` a `--space-12`), radios `--radius-xs/sm/radius/full`
 
 Generado automáticamente desde `theme.css` (no se edita a mano). No lista los fondos degradados de varias líneas (`--login-bg`, `--dark-login-bg`).
 
-### 1. Color · marca (9 tokens)
+### 1. Color · marca (10 tokens)
 
 | Token | Valor (claro) | Valor en modo oscuro |
 |---|---|---|
@@ -62,6 +66,7 @@ Generado automáticamente desde `theme.css` (no se edita a mano). No lista los f
 | `--primary-rgb` | `180, 84, 26` | `217, 116, 58` |
 | `--primary` | `#B4541A` | `#D9743A` |
 | `--primary-hover` | `#9A4515` | `#E88A52` |
+| `--primary-text` | `#8F3F12` | `#F2A173` |
 | `--primary-soft` | `rgba(180, 84, 26, 0.12)` | `rgba(217, 116, 58, 0.16)` |
 | `--secondary` | `#6B4F2A` | — |
 | `--on-primary` | `#FFF8EE` | `#1A1008` |
@@ -74,16 +79,17 @@ Generado automáticamente desde `theme.css` (no se edita a mano). No lista los f
 | `--bg-card` | `#FFFCF6` | `var(--dark-card)` |
 | `--bg-sunken` | `#EFE7D8` | `var(--dark-sunken)` |
 | `--text-main` | `#2A2018` | `var(--dark-text)` |
-| `--text-muted` | `#7A6B5A` | `var(--dark-text-muted)` |
+| `--text-muted` | `#6B5C4B` | `var(--dark-text-muted)` |
 | `--border-color` | `#E2D8C6` | `var(--dark-border)` |
 | `--border-strong` | `#C9BBA3` | `var(--dark-border-strong)` |
 | `--overlay` | `rgba(22, 14, 6, 0.65)` | — |
 
-### 3. Color · semánticos (10 tokens)
+### 3. Color · semánticos (18 tokens)
 
 | Token | Valor (claro) | Valor en modo oscuro |
 |---|---|---|
 | `--success` | `#4F7A4A` | `#8DBF86` |
+| `--success-text` | `#3C6A37` | `#8DBF86` |
 | `--success-soft` | `rgba(79, 122, 74, 0.14)` | `rgba(141, 191, 134, 0.16)` |
 | `--danger` | `#A63D2F` | `#E58475` |
 | `--danger-hover` | `#8C3226` | `#EE9A8D` |
@@ -92,7 +98,14 @@ Generado automáticamente desde `theme.css` (no se edita a mano). No lista los f
 | `--warning-text` | `#8A5A00` | `#E3B04B` |
 | `--warning-soft` | `rgba(201, 138, 27, 0.16)` | `rgba(227, 176, 75, 0.16)` |
 | `--info` | `#3D6A8C` | `#86B4D8` |
+| `--info-text` | `#2F5875` | `#86B4D8` |
 | `--info-soft` | `rgba(61, 106, 140, 0.12)` | `rgba(134, 180, 216, 0.16)` |
+| `--chart-1` | `#B4541A` | `#D9743A` |
+| `--chart-2` | `#3D6A8C` | `#86B4D8` |
+| `--chart-3` | `#4F7A4A` | `#8DBF86` |
+| `--chart-4` | `#C98A1B` | `#E3B04B` |
+| `--chart-5` | `#7A4A6B` | `#C48BB3` |
+| `--chart-6` | `#6B4F2A` | `#B8956A` |
 
 ### 4. Espaciado (9 tokens)
 
@@ -179,6 +192,10 @@ Generado automáticamente desde `theme.css` (no se edita a mano). No lista los f
 | **Insignia** | `.badge` + `-success` `-danger` `-warning` `-info` `-neutral` | — |
 | **Tabla** | `table` / `th` / `td` globales con `.num` para cifras | hover de fila |
 | **Modal** | `.modal-backdrop` > `.modal-dialog` (+ `.modal-header` `.modal-title` `.modal-footer`); se abre con `.activo` | animación de entrada |
+| **KPI** (Fase 4) | `.kpi-grid` > `.kpi` (+ `.kpi-label` `.kpi-value` `.kpi-note`); `-principal`, `-success` `-danger` `-warning` `-info` | normal |
+| **Estado de módulo** (Fase 4) | `.state` (+ `-error`, `-denied`), `.skeleton`, `.spinner`, `.btn.is-loading` | vacío, sin resultados, error, sin permisos, cargando |
+| **Toast** (Fase 4) | `.toast-region` > `.toast` (+ `-success` `-danger` `-warning`) | entrada y salida animadas |
+| **Tabla de datos** (Fase 4) | `.table-toolbar` `.table-search` `.table-pager` `.table-cards`; atributos `data-sort`, `data-col` | búsqueda, filtro, orden, paginación, tarjetas en móvil |
 
 Alias heredados que siguen funcionando: `.premium-btn`, `.premium-card`, `.modal-overlay-pic`, `.modal-box-pic`.
 
@@ -214,7 +231,7 @@ html.dark-mode { --primary: #D9743A; }
 
 | Métrica | Antes | Después |
 |---|---:|---:|
-| Tokens de diseño en `:root` (sin `--dark-*`) | 32 | 73 |
+| Tokens de diseño en `:root` (sin `--dark-*`) | 32 | 82 |
 | Colores `#rrggbb` en `views/` | 631 | 341 |
 | Usos de `var(--…)` en `views/` | 616 | 941 |
 | `z-index` literales en el layout | 2 | 0 |
@@ -237,7 +254,7 @@ De los 341 colores restantes, **128** están en documentos de impresión o aisla
 - **Modal de la guía:** abre con el foco en "Cancelar", Escape lo cierra y el foco vuelve al botón que lo abrió.
 
 ## 8. Límites y pendientes
-- **Colores de `chart.js`** (dashboard): siguen siendo literales porque se dibujan en canvas; se leerán de los tokens con `getComputedStyle` en la Fase 4.
+- **Colores de `chart.js`** (dashboard): se dibujan en canvas y no aceptan `var()`; desde la Fase 4 se leen de los tokens `--chart-1…6` con `getComputedStyle` y la gráfica se redibuja al cambiar de modo claro/oscuro.
 - **Estilos inline:** los ~1165 atributos `style=` no se eliminaron en esta fase; se reducirán al reconstruir cada pantalla (Fase 4).
 - **Modales existentes** (picadura, fabriquines, equipos) conservan su CSS y su estructura; se migrarán al componente nuevo junto con la accesibilidad (`role="dialog"`, foco, Escape) en la Fase 4.
 - **Documentos de impresión:** conservan colores fijos a propósito.
@@ -245,4 +262,4 @@ De los 341 colores restantes, **128** están en documentos de impresión o aisla
 ## 9. Hallazgo nuevo descubierto al verificar
 **Los manejadores `onclick`/`onchange`/`oninput`/`onsubmit` en línea están bloqueados por el CSP.** `helmet` añade por defecto `script-src-attr 'none'`, y la configuración de `server.js` no lo sobrescribe. Medido en el navegador: el botón de modo oscuro (`onclick="toggleDarkMode()"`) **no hace nada** y la consola muestra "Executing inline event handler violates the following Content Security Policy directive 'script-src-attr 'none''". Afecta a 98 manejadores en 30 vistas (65 `onclick`, 15 `oninput`, 12 `onchange`, 5 `onsubmit`, 1 `onkeyup`): menú móvil, modales y filtros. **Riesgo mayor:** 7 confirmaciones `confirm()` de acciones críticas viven en esos manejadores (`empleados.ejs:40` borrar empleado, `usuarios.ejs:47` borrar usuario con un enlace GET, `lista.ejs:93` borrar máquina, `nomina.ejs:40` archivar nómina pagada, `factura_detalle.ejs:179` confirmar entrega de efectivo, `anilladores.ejs:67` validar y facturar, `envolvedoras_control.ejs:121` liquidar). Si el manejador no se ejecuta, el formulario o enlace procede **sin pedir confirmación**. Se deduce del código y del bloqueo medido; no se probó pulsando borrar para no destruir datos reales. La intención documentada en `server.js` era permitir los manejadores en línea. Ver hallazgo 21 en `01_diagnostico.md`; se consultó antes de tocar la configuración de seguridad.
 
-**Resolución (aprobada):** se añadió `scriptSrcAttr: ["'unsafe-inline'"]` en `server.js`, en un commit aparte. Es coherente con `scriptSrc`, que ya permitía scripts en línea, y el resto de directivas (`object-src 'none'`, `frame-ancestors 'self'`, `form-action 'self'`) no cambió. Verificación en el navegador: la cabecera ahora trae `script-src-attr 'unsafe-inline'`; el clic real en el botón de modo oscuro activa el tema (clase aplicada, preferencia guardada en `localStorage`, fondo `#16110C`) y un segundo clic lo restaura. **No se probaron** las confirmaciones de borrado pulsándolas, para no destruir datos reales. Deuda técnica: migrar los 98 manejadores a `addEventListener` y volver a `'none'` (Fase 4).
+**Resolución (aprobada):** se añadió `scriptSrcAttr: ["'unsafe-inline'"]` en `server.js`, en un commit aparte. Es coherente con `scriptSrc`, que ya permitía scripts en línea, y el resto de directivas (`object-src 'none'`, `frame-ancestors 'self'`, `form-action 'self'`) no cambió. Verificación en el navegador: la cabecera ahora trae `script-src-attr 'unsafe-inline'`; el clic real en el botón de modo oscuro activa el tema (clase aplicada, preferencia guardada en `localStorage`, fondo `#16110C`) y un segundo clic lo restaura. **No se probaron** las confirmaciones de borrado pulsándolas, para no destruir datos reales. Deuda técnica: migrar los 98 manejadores a `addEventListener` y volver a `'none'` (Fase 4, avance en `06_fase4_mejoras.md`).
