@@ -1,0 +1,243 @@
+<%- include('partials/header') %>
+<%
+    /* Catálogo de tokens que se muestra en la guía. El valor real se lee del CSS en el navegador,
+       así la guía nunca se desincroniza de theme.css (y cambia al activar el modo oscuro). */
+    const colores = [
+        ['Marca', ['--primary', '--primary-hover', '--primary-soft', '--secondary', '--on-primary']],
+        ['Superficies y texto', ['--bg-main', '--bg-card', '--bg-sunken', '--text-main', '--text-muted', '--border-color', '--border-strong']],
+        ['Semánticos', ['--success', '--success-soft', '--danger', '--danger-soft', '--warning', '--warning-text', '--warning-soft', '--info', '--info-soft']]
+    ];
+    const espaciado = ['--space-1', '--space-2', '--space-3', '--space-4', '--space-5', '--space-6', '--space-8', '--space-10', '--space-12'];
+    const tipografia = [['--text-xs', 'Texto XS'], ['--text-sm', 'Texto SM'], ['--text-base', 'Texto base'], ['--text-lg', 'Texto LG'], ['--text-xl', 'Texto XL'], ['--text-2xl', 'Texto 2XL'], ['--text-3xl', 'Texto 3XL']];
+    const radios = ['--radius-xs', '--radius-sm', '--radius', '--radius-full'];
+    const sombras = ['--shadow-sm', '--shadow-md', '--shadow-lg'];
+%>
+<style>
+    .gx-section { margin-bottom: var(--space-10); }
+    .gx-section > h2 { font-size: var(--text-2xl); margin-bottom: var(--space-2); }
+    .gx-lead { color: var(--text-muted); margin-bottom: var(--space-5); max-width: 70ch; }
+    .gx-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: var(--space-3); }
+    .gx-swatch { border: 1px solid var(--border-color); border-radius: var(--radius-sm); overflow: hidden; background: var(--bg-card); }
+    .gx-chip { height: 56px; border-bottom: 1px solid var(--border-color); }
+    .gx-meta { padding: var(--space-2) var(--space-3); font-size: var(--text-xs); }
+    .gx-meta code, .gx-code { font-family: Consolas, monospace; font-size: var(--text-xs); }
+    .gx-val { color: var(--text-muted); display: block; }
+    .gx-row { display: flex; flex-wrap: wrap; gap: var(--space-3); align-items: center; margin-bottom: var(--space-4); }
+    .gx-bar { background: var(--primary); height: 14px; border-radius: var(--radius-xs); }
+    .gx-spacing { display: grid; grid-template-columns: 110px 70px 1fr; gap: var(--space-3); align-items: center; font-size: var(--text-xs); margin-bottom: var(--space-2); }
+    .gx-radius { width: 88px; height: 64px; background: var(--primary-soft); border: 2px solid var(--primary); }
+    .gx-shadow { width: 120px; height: 64px; background: var(--bg-card); border-radius: var(--radius-sm); }
+    .gx-pre { background: var(--bg-sunken); border: 1px solid var(--border-color); border-radius: var(--radius-sm); padding: var(--space-4); overflow-x: auto; font-family: Consolas, monospace; font-size: var(--text-xs); line-height: 1.6; }
+    .gx-states { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: var(--space-4); }
+</style>
+
+<h1 style="font-size: var(--text-3xl); margin-bottom: var(--space-2);">Guía de estilos</h1>
+<p class="gx-lead">Sistema de diseño de Gato Negro: tokens y componentes. Todo lo que ves aquí usa únicamente variables de <code>public/css/theme.css</code>; activa el modo oscuro (🌓) para comprobar que los componentes se adaptan sin cambiar una línea.</p>
+
+<!-- ============ TOKENS DE COLOR ============ -->
+<section class="gx-section" aria-labelledby="gx-color">
+    <h2 id="gx-color">1. Color</h2>
+    <p class="gx-lead">El valor mostrado se lee del CSS en vivo. <strong>--warning</strong> sirve solo de relleno o borde (2,87:1 como texto); para texto de aviso se usa <strong>--warning-text</strong>.</p>
+    <% colores.forEach(function (grupo) { %>
+        <h3 style="margin: var(--space-4) 0 var(--space-2);"><%= grupo[0] %></h3>
+        <div class="gx-grid">
+            <% grupo[1].forEach(function (t) { %>
+                <div class="gx-swatch">
+                    <div class="gx-chip" style="background: var(<%= t %>);"></div>
+                    <div class="gx-meta"><code><%= t %></code><span class="gx-val" data-token="<%= t %>"></span></div>
+                </div>
+            <% }); %>
+        </div>
+    <% }); %>
+</section>
+
+<!-- ============ ESPACIADO ============ -->
+<section class="gx-section" aria-labelledby="gx-esp">
+    <h2 id="gx-esp">2. Espaciado (base 4 px)</h2>
+    <% espaciado.forEach(function (t) { %>
+        <div class="gx-spacing"><code><%= t %></code><span data-token="<%= t %>"></span><div class="gx-bar" style="width: var(<%= t %>);"></div></div>
+    <% }); %>
+</section>
+
+<!-- ============ TIPOGRAFÍA ============ -->
+<section class="gx-section" aria-labelledby="gx-tipo">
+    <h2 id="gx-tipo">3. Tipografía</h2>
+    <p class="gx-lead">Títulos en <strong>Outfit</strong>, interfaz y cifras en <strong>Inter</strong> (con <code>tabular-nums</code> en montos).</p>
+    <% tipografia.forEach(function (t) { %>
+        <div class="gx-row" style="margin-bottom: var(--space-2);">
+            <code class="gx-code" style="width: 90px;"><%= t[0] %></code>
+            <span style="font-size: var(--text<%= t[0].slice(6) %>); font-family: var(--font-head);"><%= t[1] %> · Fábrica de Tabacos Gato Negro</span>
+        </div>
+    <% }); %>
+    <p class="num" style="margin-top: var(--space-3);">Cifras tabulares: <strong>1.234.567</strong> · <strong>$ 13.447.850</strong> · <strong>785.089.296</strong></p>
+</section>
+
+<!-- ============ FORMA ============ -->
+<section class="gx-section" aria-labelledby="gx-forma">
+    <h2 id="gx-forma">4. Forma y profundidad</h2>
+    <div class="gx-row">
+        <% radios.forEach(function (t) { %>
+            <div><div class="gx-radius" style="border-radius: var(<%= t %>);"></div><code class="gx-code"><%= t %></code></div>
+        <% }); %>
+    </div>
+    <div class="gx-row">
+        <% sombras.forEach(function (t) { %>
+            <div><div class="gx-shadow" style="box-shadow: var(<%= t %>);"></div><code class="gx-code"><%= t %></code></div>
+        <% }); %>
+    </div>
+</section>
+
+<!-- ============ COMPONENTE: BOTÓN ============ -->
+<section class="gx-section" aria-labelledby="gx-btn">
+    <h2 id="gx-btn">5. Componente · Botón</h2>
+    <p class="gx-lead">Una clase base <code>.btn</code> y modificadores. Alto mínimo 42 px (<code>--control-h</code>); <code>.btn-lg</code> llega a 44 px, el mínimo táctil.</p>
+    <div class="gx-row">
+        <button type="button" class="btn">Primario</button>
+        <button type="button" class="btn btn-secondary">Secundario</button>
+        <button type="button" class="btn btn-success">Éxito</button>
+        <button type="button" class="btn btn-danger">Peligro</button>
+        <button type="button" class="btn btn-ghost">Fantasma</button>
+    </div>
+    <div class="gx-row">
+        <button type="button" class="btn btn-sm">Pequeño</button>
+        <button type="button" class="btn">Normal</button>
+        <button type="button" class="btn btn-lg">Grande</button>
+        <button type="button" class="btn" disabled>Deshabilitado</button>
+    </div>
+    <pre class="gx-pre">&lt;button class="btn btn-danger"&gt;Eliminar&lt;/button&gt;
+&lt;button class="btn btn-ghost btn-sm"&gt;Cancelar&lt;/button&gt;</pre>
+</section>
+
+<!-- ============ COMPONENTE: TARJETA ============ -->
+<section class="gx-section" aria-labelledby="gx-card">
+    <h2 id="gx-card">6. Componente · Tarjeta</h2>
+    <div class="gx-grid" style="grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));">
+        <article class="card">
+            <div class="card-header"><h3 class="card-title">Tarjeta básica</h3><span class="badge badge-success">Activo</span></div>
+            <p style="color: var(--text-muted);">Contenedor estándar con borde, radio y sombra de los tokens.</p>
+            <div class="card-footer"><button type="button" class="btn btn-ghost btn-sm">Ver</button><button type="button" class="btn btn-sm">Guardar</button></div>
+        </article>
+        <article class="card card-interactive">
+            <div class="card-header"><h3 class="card-title">Interactiva</h3></div>
+            <p style="color: var(--text-muted);">Se eleva al pasar el cursor. <span class="num">Total: <strong>785.089.296</strong></span></p>
+        </article>
+    </div>
+</section>
+
+<!-- ============ COMPONENTE: CAMPO ============ -->
+<section class="gx-section" aria-labelledby="gx-field">
+    <h2 id="gx-field">7. Componente · Campo de formulario (5 estados)</h2>
+    <p class="gx-lead">Etiqueta visible siempre (no se usa el placeholder como etiqueta), mensaje de ayuda o error asociado con <code>aria-describedby</code>, y estados normal, foco, error, deshabilitado y éxito.</p>
+    <div class="gx-states">
+        <div class="field">
+            <label for="gx-normal">Normal</label>
+            <input id="gx-normal" class="input" type="text" placeholder="Ej: F01" aria-describedby="gx-normal-h">
+            <span id="gx-normal-h" class="field-hint">Código del fabriquín.</span>
+        </div>
+        <div class="field">
+            <label for="gx-foco">Foco (haz clic o usa Tab)</label>
+            <input id="gx-foco" class="input" type="text" value="ALCIDES CORREA">
+            <span class="field-hint">Anillo de foco visible, no solo cambio de color.</span>
+        </div>
+        <div class="field">
+            <label for="gx-error">Error</label>
+            <input id="gx-error" class="input is-invalid" type="text" value="12x" aria-invalid="true" aria-describedby="gx-error-m">
+            <span id="gx-error-m" class="field-error">La cédula solo admite números (ej: 88193514).</span>
+        </div>
+        <div class="field">
+            <label for="gx-dis">Deshabilitado</label>
+            <input id="gx-dis" class="input" type="text" value="No editable" disabled>
+            <span class="field-hint">Se activa al elegir un fabriquín.</span>
+        </div>
+        <div class="field">
+            <label for="gx-ok">Éxito</label>
+            <input id="gx-ok" class="input is-valid" type="text" value="88193514" aria-describedby="gx-ok-m">
+            <span id="gx-ok-m" class="field-success">Documento válido.</span>
+        </div>
+        <div class="field">
+            <label for="gx-sel">Lista desplegable</label>
+            <select id="gx-sel" class="input"><option>Cestas rojas</option><option>Cestas negras</option></select>
+        </div>
+    </div>
+</section>
+
+<!-- ============ COMPONENTES: BADGE, TABLA ============ -->
+<section class="gx-section" aria-labelledby="gx-bt">
+    <h2 id="gx-bt">8. Componentes · Insignia y tabla</h2>
+    <div class="gx-row">
+        <span class="badge">Marca</span>
+        <span class="badge badge-success">Liquidado</span>
+        <span class="badge badge-warning">En proceso</span>
+        <span class="badge badge-danger">Rezago</span>
+        <span class="badge badge-info">Informativo</span>
+        <span class="badge badge-neutral">Archivado</span>
+    </div>
+    <table>
+        <caption class="gx-code" style="text-align: left; padding: var(--space-2) 0; color: var(--text-muted);">Ejemplo de tabla con cifras tabulares</caption>
+        <thead><tr><th scope="col">Material</th><th scope="col" class="num">Cantidad</th><th scope="col">Estado</th></tr></thead>
+        <tbody>
+            <tr><td>Capa</td><td class="num">10.161,5 kg</td><td><span class="badge badge-success">Disponible</span></td></tr>
+            <tr><td>Capote</td><td class="num">19.869,1 kg</td><td><span class="badge badge-warning">Bajo</span></td></tr>
+        </tbody>
+    </table>
+</section>
+
+<!-- ============ COMPONENTE: MODAL ============ -->
+<section class="gx-section" aria-labelledby="gx-modal">
+    <h2 id="gx-modal">9. Componente · Modal</h2>
+    <p class="gx-lead">Un solo patrón accesible: <code>role="dialog"</code>, <code>aria-modal</code>, foco que entra y vuelve, cierre con Escape y clic en el fondo.</p>
+    <button type="button" class="btn btn-danger" id="gx-abrir">Eliminar empleado…</button>
+
+    <div class="modal-backdrop" id="gx-modal-el">
+        <div class="modal-dialog" role="dialog" aria-modal="true" aria-labelledby="gx-modal-t" aria-describedby="gx-modal-d" style="max-width: 440px;">
+            <div class="modal-header"><h3 class="modal-title" id="gx-modal-t">¿Eliminar a ALCIDES CORREA?</h3></div>
+            <p id="gx-modal-d" style="color: var(--text-muted);">Se borrará el registro del empleado. Esta acción no se puede deshacer.</p>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-ghost" id="gx-cancelar">Cancelar</button>
+                <button type="button" class="btn btn-danger" id="gx-confirmar">Sí, eliminar</button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ============ FRAGMENTO COMPROBABLE ============ -->
+<section class="gx-section" aria-labelledby="gx-code">
+    <h2 id="gx-code">10. Fragmento de código</h2>
+<pre class="gx-pre">:root {
+    --primary: #B4541A;   --space-4: 16px;   --radius-sm: 10px;
+}
+html.dark-mode { --primary: #D9743A; }        /* el modo oscuro solo redefine tokens */
+
+.btn {
+    background: var(--btn-bg, var(--primary));
+    padding: var(--space-2) var(--space-5);
+    border-radius: var(--radius-sm);
+}
+.btn-danger { --btn-bg: var(--danger); }       /* variante = cambiar un token local */</pre>
+</section>
+
+<script>
+    /* Lee el valor real de cada token desde el CSS (siempre sincronizado con theme.css). */
+    function gxPintarValores() {
+        const cs = getComputedStyle(document.documentElement);
+        document.querySelectorAll('[data-token]').forEach(el => {
+            el.textContent = cs.getPropertyValue(el.dataset.token).trim();
+        });
+    }
+    gxPintarValores();
+    new MutationObserver(gxPintarValores).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
+
+    /* Modal de ejemplo: foco entra, Escape cierra y el foco vuelve al botón que lo abrió. */
+    (function () {
+        const abrir = document.getElementById('gx-abrir'), modal = document.getElementById('gx-modal-el');
+        const cancelar = document.getElementById('gx-cancelar'), confirmar = document.getElementById('gx-confirmar');
+        function cerrar() { modal.classList.remove('activo'); abrir.focus(); }
+        abrir.addEventListener('click', () => { modal.classList.add('activo'); cancelar.focus(); });
+        cancelar.addEventListener('click', cerrar);
+        confirmar.addEventListener('click', cerrar);
+        modal.addEventListener('click', e => { if (e.target === modal) cerrar(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape' && modal.classList.contains('activo')) cerrar(); });
+    })();
+</script>
+
+<%- include('partials/footer') %>

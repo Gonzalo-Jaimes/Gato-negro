@@ -183,6 +183,9 @@ router.get('/cierre_diario', isAuth, async (req, res) => {
     });
 });
 
+// Guia viva del sistema de diseño (tokens y componentes), solo administracion.
+router.get('/guia_estilos', isAdmin, (req, res) => res.render('guia_estilos'));
+
 router.get('/empleados', isAdmin, async (req, res) => {
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
     const { data: prestamos } = await supabase.from('prestamos_fabriquines').select('*').eq('estado', 'activo');

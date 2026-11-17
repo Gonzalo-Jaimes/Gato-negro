@@ -36,13 +36,13 @@
         <div class="stat-num" style="color:var(--primary);"><%= _totalStock %></div>
         <div class="stat-lbl">Total Sacos</div>
     </div>
-    <div class="stat-box" style="border-top: 4px solid #16a34a;">
-        <div class="stat-num" style="color:#16a34a;"><%= _kgStock.toFixed(0) %> kg</div>
+    <div class="stat-box" style="border-top: 4px solid var(--success);">
+        <div class="stat-num" style="color:var(--success);"><%= _kgStock.toFixed(0) %> kg</div>
         <div class="stat-lbl">Kg Procesados</div>
     </div>
     <% _pesosStock.forEach(p => { 
         let _colorVal = '#4d7c0f';
-        if (p == 35) _colorVal = '#1d4ed8';
+        if (p == 35) _colorVal = 'var(--info)';
         else if (p == 28) _colorVal = '#0284c7';
         else if (p == 21) _colorVal = '#0891b2';
         else if (p == 14) _colorVal = 'var(--success)';
@@ -85,7 +85,7 @@
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">CAPOTE EN BODEGA</div>
             <div style="font-size: 20px; font-weight: 900; color: var(--primary-hover);"><%= getInv('capote') %> <small style="font-size: 12px;">kg</small></div>
         </div>
-        <div class="card" style="padding: 12px; border-left: 4px solid #16a34a;">
+        <div class="card" style="padding: 12px; border-left: 4px solid var(--success);">
             <div style="font-size: 11px; color: var(--text-muted); font-weight: bold;">PICADURA BRUTA (HOJA)</div>
             <div style="font-size: 20px; font-weight: 900; color: var(--primary);"><%= getInv('picadura', ['saca', 'saco', 'procesada']) %> <small style="font-size: 12px;">kg</small></div>
         </div>
@@ -123,7 +123,7 @@
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px; text-align:center;">
                 <div>
                     <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Picadura</div>
-                    <div style="font-size:18px; font-weight:900; color:#16a34a;" id="meta-pica">0 kg</div>
+                    <div style="font-size:18px; font-weight:900; color:var(--success);" id="meta-pica">0 kg</div>
                 </div>
                 <div>
                     <div style="font-size:10px; color:var(--text-muted); text-transform:uppercase;">Meta Capa</div>
@@ -150,7 +150,7 @@
         <!-- Paso 3: Confirmación -->
         <div>
             <label style="font-size:12px; font-weight:bold; color:var(--primary); text-transform:uppercase; display:block; margin-bottom:6px;">2. Confirmar:</label>
-            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" class="premium-btn touch-target touch-mobile-full" style="width:100%; background:var(--success); color:white; font-size:15px; box-shadow: var(--shadow-sm); border: none; font-weight: bold;">
+            <button onclick="confirmarEntrega()" id="btn-confirmar-pic" class="btn touch-target touch-mobile-full" style="width:100%; background:var(--success); color:white; font-size:15px; box-shadow: var(--shadow-sm); border: none; font-weight: bold;">
                 ✅ DESPACHAR
             </button>
             <div id="resumen-sacos-sel" style="margin-top:8px; font-size:13px; color:var(--text-main); font-weight: bold; text-align: center;">
@@ -201,14 +201,14 @@
                 <!-- Resumen en vivo del calculado -->
                 <div id="resumen-calculo" style="background: #eff6ff; padding: 12px; border-radius: 8px; font-size: 13px; margin-bottom:10px; display:none;">
                     📊 Salida total: <strong id="txt-kg-salida">0</strong> kg — 
-                    Diferencia por humedad: <strong id="txt-diferencia" style="color: #16a34a;">+0 kg</strong>
+                    Diferencia por humedad: <strong id="txt-diferencia" style="color: var(--success);">+0 kg</strong>
                 </div>
 
                 <div>
                     <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:4px;">Nota (opcional):</label>
                     <input type="text" name="nota" placeholder="Ej: Lote con humedad alta" style="width:100%; padding:8px; border:1px solid var(--border-color); border-radius:6px; box-sizing:border-box; background:var(--bg-card); color:var(--text-main);">
                 </div>
-                <button type="submit" class="premium-btn" style="background: var(--primary); color: black;">💾 Registrar Pesada y Generar Sacos</button>
+                <button type="submit" class="btn" style="background: var(--primary); color: black;">💾 Registrar Pesada y Generar Sacos</button>
             </form>
         </div>
     </div>
@@ -218,7 +218,7 @@
         <div class="pic-card">
             <h3>📦 Sacos Disponibles por Lote</h3>
             <% if (lotes.length === 0) { %>
-                <p style="color: #9ca3af; text-align: center; padding: 20px;">Sin lotes registrados aún.</p>
+                <p style="color: var(--text-muted); text-align: center; padding: 20px;">Sin lotes registrados aún.</p>
             <% } else { %>
                 <% lotes.forEach(lote => { 
                     const sacosLote = sacosDisponibles.filter(s => s.lote_id === lote.id);
@@ -227,9 +227,9 @@
                     <div class="lote-card agotado">
                         <div style="display:flex; justify-content:space-between; align-items:center;">
                             <strong>Pesada <%= lote.fecha %></strong>
-                            <span style="font-size:11px; background:#f3f4f6; padding:3px 8px; border-radius:10px; color:var(--text-muted);">✅ Agotada</span>
+                            <span style="font-size:11px; background:var(--bg-sunken); padding:3px 8px; border-radius:10px; color:var(--text-muted);">✅ Agotada</span>
                         </div>
-                        <div style="font-size:12px; color:#9ca3af; margin-top:4px;"><%= lote.kg_entrada %> kg entrada → <%= lote.kg_salida %> kg salida</div>
+                        <div style="font-size:12px; color:var(--text-muted); margin-top:4px;"><%= lote.kg_entrada %> kg entrada → <%= lote.kg_salida %> kg salida</div>
                     </div>
                 <%  } else if (sacosLote.length > 0) { %>
                     <div class="lote-card activo">
@@ -238,7 +238,7 @@
                                 <strong style="font-size:15px;">Pesada <%= lote.fecha %></strong>
                                 <div style="font-size:11px; color:var(--text-muted);"><%= lote.kg_entrada %> kg bruta → <%= lote.kg_salida %> kg procesada (+<%= (lote.kg_salida - lote.kg_entrada).toFixed(1) %> kg humedad)</div>
                             </div>
-                            <span style="font-size:13px; font-weight:bold; color:#16a34a;"><%= sacosLote.length %> sacos</span>
+                            <span style="font-size:13px; font-weight:bold; color:var(--success);"><%= sacosLote.length %> sacos</span>
                         </div>
                         <div class="saco-selector" id="sacos-lote-<%= lote.id %>">
                             <% sacosLote.forEach(s => { %>
@@ -249,7 +249,7 @@
                                 </div>
                                 <span onclick="event.stopPropagation(); abrirDivision('<%= s.id %>','<%= s.numero_saco %>', <%= s.peso_kg || 0 %>)" 
                                       title="Dividir en sacos menores"
-                                      style="font-size:11px; color:#9ca3af; cursor:pointer; padding:1px 4px; border-radius:4px;">✂️</span>
+                                      style="font-size:11px; color:var(--text-muted); cursor:pointer; padding:1px 4px; border-radius:4px;">✂️</span>
                             </div>
                             <% }); %>
                         </div>
@@ -264,7 +264,7 @@
 <div class="pic-card" style="margin-bottom: 24px;">
     <h3>📋 Entregas Recientes de Sacas</h3>
     <% if (sacosEntregados.length === 0) { %>
-        <p style="color: #9ca3af;">Sin entregas registradas.</p>
+        <p style="color: var(--text-muted);">Sin entregas registradas.</p>
     <% } else { %>
     <table>
         <tr>
@@ -309,14 +309,14 @@
         <div style="display:flex; align-items:center; gap:10px; background:var(--bg-main); padding:9px; border-radius:8px;">
             <span class="saco-badge saco-<%= p %>"><%= p %> kg</span>
             <input type="number" id="div-qty-<%= p %>" min="0" value="0" 
-                   style="width:60px; padding:5px; border:1px solid #d1d5db; border-radius:5px; text-align:center;"
+                   style="width:60px; padding:5px; border:1px solid var(--border-color); border-radius:5px; text-align:center;"
                    oninput="recalcDivision()">
         </div>
         <% }); %>
     </div>
     <div id="div-preview" style="display:none; padding:10px; border-radius:8px; font-size:13px; margin-bottom:14px;"></div>
     <div style="display:flex; gap:10px;">
-        <button onclick="confirmarDivision()" style="flex:1; background:#1d4ed8; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer;">✂️ Dividir</button>
+        <button onclick="confirmarDivision()" style="flex:1; background:var(--info); color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer;">✂️ Dividir</button>
         <button onclick="document.getElementById('modal-division').classList.remove('activo')" style="flex:1; background:var(--text-muted); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer;">Cancelar</button>
     </div>
     <p id="div-error" style="color:var(--danger); font-size:13px; margin-top:8px; display:none;"></p>
@@ -400,7 +400,7 @@ async function confirmarDivision() {
         <div id="resumen-sacos-sel" style="background:#eff6ff; padding:12px; border-radius:8px; margin-bottom:16px; font-size:13px;"></div>
         
         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fabriquín (con factura pendiente):</label>
-        <select id="sel-empleado-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; font-size:14px;" onchange="actualizarMetasMaterial()">
+        <select id="sel-empleado-pic" style="width:100%; padding:9px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:14px; font-size:14px;" onchange="actualizarMetasMaterial()">
             <option value="">-- Seleccionar --</option>
             <% empleados.forEach(emp => { %>
             <option value="<%= emp.id %>"><%= emp.nombre %></option>
@@ -413,7 +413,7 @@ async function confirmarDivision() {
             <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; margin-bottom:15px;">
                 <div style="text-align:center;">
                     <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Meta Picadura</div>
-                    <div style="font-size:16px; font-weight:bold; color:#16a34a;" id="meta-pica">0 kg</div>
+                    <div style="font-size:16px; font-weight:bold; color:var(--success);" id="meta-pica">0 kg</div>
                 </div>
                 <div style="text-align:center;">
                     <div style="font-size:11px; color:var(--text-muted); text-transform:uppercase;">Meta Capa</div>
@@ -439,13 +439,13 @@ async function confirmarDivision() {
         </div>
 
         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Fecha de entrega:</label>
-        <input type="date" id="fecha-entrega-pic" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:14px; box-sizing:border-box;">
+        <input type="date" id="fecha-entrega-pic" style="width:100%; padding:9px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:14px; box-sizing:border-box;">
 
         <label style="font-size:13px; font-weight:bold; display:block; margin-bottom:6px;">Nota (opcional):</label>
-        <input type="text" id="nota-entrega-pic" placeholder="Ej: Despacho semana del lunes" style="width:100%; padding:9px; border:1px solid #d1d5db; border-radius:6px; margin-bottom:18px; box-sizing:border-box;">
+        <input type="text" id="nota-entrega-pic" placeholder="Ej: Despacho semana del lunes" style="width:100%; padding:9px; border:1px solid var(--border-color); border-radius:6px; margin-bottom:18px; box-sizing:border-box;">
 
         <div style="display:flex; gap:10px;">
-            <button onclick="confirmarEntrega()" style="flex:1; background:#16a34a; color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px;">✅ Confirmar Entrega</button>
+            <button onclick="confirmarEntrega()" style="flex:1; background:var(--success); color:white; border:none; padding:11px; border-radius:8px; font-weight:bold; cursor:pointer; font-size:14px;">✅ Confirmar Entrega</button>
             <button onclick="cerrarModalEntrega()" style="flex:1; background:var(--text-muted); color:white; border:none; padding:11px; border-radius:8px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
         <p id="pic-error" style="color:var(--danger); font-size:13px; margin-top:8px; display:none;"></p>

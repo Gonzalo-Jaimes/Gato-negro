@@ -42,7 +42,7 @@
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: var(--z-sticky);
         }
         .topbar-brand {
             font-family: var(--font-head);
@@ -160,54 +160,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* COMPONENTES GLOBALES REFINADOS */
-        .card { 
-            background: var(--bg-card); 
-            border-radius: var(--radius); 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            padding: 24px;
-            transition: box-shadow 0.3s;
-        }
-        .card:hover { box-shadow: var(--shadow-md); }
-        
-        /* FORMULARIO PREMIUM GLOBAL */
-        input, select, textarea {
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
-        }
-        label { color: var(--text-muted); font-weight: 500; font-size: 0.9rem; margin-bottom: 6px; display: block; }
-
-        table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            background: var(--bg-card);
-        }
-        th { 
-            background: var(--primary-soft);
-            padding: 14px; 
-            text-align: left; 
-            font-weight: 600; 
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border-color);
-        }
-        td { padding: 14px; border-bottom: 1px solid var(--border-color); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: var(--primary-soft); }
+        /* Tarjeta, campos, etiqueta y tabla globales: ver public/css/theme.css (sistema de diseño) */
 
         /* BOTONES TOPBAR */
         .btn-icon {
@@ -231,7 +184,7 @@
             .sidebar {
                 position: fixed;
                 left: -100%;
-                z-index: 1100;
+                z-index: var(--z-sidebar-mobile);
                 box-shadow: 20px 0 50px rgba(0,0,0,0.2);
             }
             .sidebar.mobile-open { left: 0; }
@@ -349,7 +302,8 @@
             ]},
             { etiqueta: 'Administración', items: [
                 { icono: '👥', texto: 'Empleados', href: '/empleados' },
-                { icono: '👤', texto: 'Accesos', href: '/usuarios' }
+                { icono: '👤', texto: 'Accesos', href: '/usuarios' },
+                { icono: '🎨', texto: 'Guía de estilos', href: '/guia_estilos' }
             ]}
         ];
     } else if (session.rol === 'mantenimiento') {
@@ -393,7 +347,7 @@
     </nav>
 
     <div style="margin-top: 40px; padding: 0 12px;">
-        <a href="/logout" class="premium-btn" style="display: block; text-align: center; text-decoration: none; padding: 12px; font-size: 0.9rem; background: transparent; color: var(--danger); border: 1px solid var(--danger);">SALIR DEL SISTEMA</a>
+        <a href="/logout" class="btn" style="display: block; text-align: center; text-decoration: none; padding: 12px; font-size: 0.9rem; background: transparent; color: var(--danger); border: 1px solid var(--danger);">SALIR DEL SISTEMA</a>
     </div>
 </aside>
 

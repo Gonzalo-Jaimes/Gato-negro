@@ -46,15 +46,15 @@
         <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Comparativa en Pesos Colombianos (COP)</p>
         
         <div style="display: flex; justify-content: space-between; font-size: 16px; background: rgba(var(--text-muted), 0.05); padding: 15px; border-radius: 12px; font-weight: bold;">
-            <div style="color: #10b981;">Ingresos:<br>$<%= finanzas.ingresos.toLocaleString('es-CO') %></div>
-            <div style="color: #ef4444;">Nómina:<br>$<%= finanzas.nomina.toLocaleString('es-CO') %></div>
-            <div style="color: #f59e0b;">Mtto Máquinas:<br>$<%= finanzas.mantenimiento.toLocaleString('es-CO') %></div>
+            <div style="color: var(--success);">Ingresos:<br>$<%= finanzas.ingresos.toLocaleString('es-CO') %></div>
+            <div style="color: var(--danger);">Nómina:<br>$<%= finanzas.nomina.toLocaleString('es-CO') %></div>
+            <div style="color: var(--warning-text);">Mtto Máquinas:<br>$<%= finanzas.mantenimiento.toLocaleString('es-CO') %></div>
             
             <% let balance = finanzas.ingresos - finanzas.nomina - finanzas.mantenimiento; %>
             <% if(balance >= 0) { %>
-                <div style="color: #10b981; border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
+                <div style="color: var(--success); border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
             <% } else { %>
-                <div style="color: #dc2626; border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
+                <div style="color: var(--danger); border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
             <% } %>
         </div>
     </div>

@@ -37,7 +37,7 @@
                         <span id="rezago_<%= p.id %>" style="font-weight: bold; color: gray;">-</span>
                     </div>
 
-                    <button type="submit" class="premium-btn" style="padding: 10px 15px; background: var(--primary); color: black;">📥 Recibir</button>
+                    <button type="submit" class="btn" style="padding: 10px 15px; background: var(--primary); color: black;">📥 Recibir</button>
                 </form>
             </td>
         </tr>
@@ -68,13 +68,13 @@
             
             <td style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                 <% if (r.total > 0) { %>
-                    <span style="color: #ef4444; font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(239, 68, 68, 0.2);">⚠️ Debe: <%= r.total %> tabacos</span>
+                    <span style="color: var(--danger); font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(239, 68, 68, 0.2);">⚠️ Debe: <%= r.total %> tabacos</span>
                 <% } else if (r.total < 0) { %>
-                    <span style="color: #10b981; font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(16, 185, 129, 0.2);">✅ Excedente: +<%= Math.abs(r.total) %> tabacos</span>
+                    <span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(16, 185, 129, 0.2);">✅ Excedente: +<%= Math.abs(r.total) %> tabacos</span>
                 <% } %>
                 
                 <% if (r.faltan_cestas > 0) { %>
-                    <span style="color: #f59e0b; font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(245, 158, 11, 0.2);">🧺 Debe: <%= r.faltan_cestas %> cesta(s)</span>
+                    <span style="color: var(--warning-text); font-weight: bold; background: rgba(245, 158, 11, 0.1); padding: 5px 12px; border-radius: 20px; font-size: 0.85rem; border: 1px solid rgba(245, 158, 11, 0.2);">🧺 Debe: <%= r.faltan_cestas %> cesta(s)</span>
                 <% } %>
                 
                 <% if (r.total > 0 || r.faltan_cestas > 0) { %>
@@ -86,10 +86,10 @@
                         <% } %>
  
                         <% if (r.faltan_cestas > 0) { %>
-                            <input type="number" name="cantidad_cestas" max="<%= r.faltan_cestas %>" placeholder="<%= r.faltan_cestas %> cest" style="width: 85px; border-color: #f59e0b;">
+                            <input type="number" name="cantidad_cestas" max="<%= r.faltan_cestas %>" placeholder="<%= r.faltan_cestas %> cest" style="width: 85px; border-color: var(--warning);">
                         <% } %>
  
-                        <button type="submit" class="premium-btn" style="padding: 5px 12px; background: var(--primary); color: black;">Pagar</button>
+                        <button type="submit" class="btn" style="padding: 5px 12px; background: var(--primary); color: black;">Pagar</button>
                     </form>
                 <% } %>
             </td>
