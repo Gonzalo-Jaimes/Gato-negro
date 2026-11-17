@@ -260,7 +260,8 @@
     UI.tabla = function (tabla, cfg) {
         cfg = cfg || {};
         const tamanos = cfg.tamanos || [10, 25, 50];
-        const est = { q: '', col: -1, dir: 1, pagina: 1, tamano: cfg.tamano || tamanos[0] };
+        const est = { q: '', col: -1, dir: 1, pagina: 1, tamano: cfg.tamano || tamanos[0], filtros: {} };
+        const filtrosCfg = cfg.filtros || [];   // [{ id, etiqueta, opciones: [[valor, texto]], coincide: (tr, valor) => bool }]
         const thead = tabla.tHead;
         const ths = thead ? Array.from(thead.rows[0].cells) : [];
         const tbody = tabla.tBodies[0];
@@ -280,6 +281,8 @@
         barra.innerHTML =
             '<div class="table-search"><label class="sr-only" for="' + id + '-q">' + esc(cfg.etiquetaBusqueda || 'Buscar en la tabla') + '</label>' +
             '<input type="search" id="' + id + '-q" class="input" placeholder="' + esc(cfg.placeholder || 'Buscar…') + '" autocomplete="off"></div>' +
+            filtrosCfg.map((f) => '<div class="table-filtro"><label class="table-filtro-etiqueta" for="' + id + '-f-' + f.id + '">' + esc(f.etiqueta) + '</label> <select id="' + id + '-f-' + f.id + '" class="input" data-filtro="' + f.id + '" style="min-height:34px;padding:2px 8px">' +
+                f.opciones.map((o) => '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>').join('') + '</select></div>').join('') +
             '<div class="table-meta" role="status" aria-live="polite"></div>';
         const envoltura = document.createElement('div');
         envoltura.className = 'table-wrap';
@@ -354,6 +357,7 @@
         function render(anunciar) {
             const total = filas.length;
             let vis = filas;
+            filtrosCfg.forEach((f) => { const v = est.filtros[f.id]; if (v) vis = vis.filter((fila) => f.coincide(fila.tr, v)); });
             if (est.q) {
                 // Ignora tildes, mayúsculas y puntuación: «88193514» encuentra «CC-88.193.514».
                 const q = norm(est.q), qc = q.replace(/[^a-z0-9]/g, '');
@@ -383,10 +387,11 @@
             if (!hayDatos) {
                 zonaEstado.appendChild(UI.estado('vacio', cfg.vacio));
             } else if (!hayResultados) {
+                const hayFiltro = Object.values(est.filtros).some(Boolean);
                 zonaEstado.appendChild(UI.estado('sin-resultados', {
-                    titulo: 'Sin resultados para «' + est.q + '»',
-                    texto: 'Revisa la ortografía o busca por otra palabra, código o documento.',
-                    acciones: [{ texto: 'Limpiar búsqueda', clase: 'btn-primary', onClick: () => { inputQ.value = ''; est.q = ''; est.pagina = 1; render(true); inputQ.focus(); } }]
+                    titulo: est.q ? 'Sin resultados para «' + est.q + '»' : 'Ningún registro coincide con el filtro',
+                    texto: 'Revisa la ortografía, busca por otra palabra' + (hayFiltro ? ' o cambia el filtro.' : ', código o documento.'),
+                    acciones: [{ texto: hayFiltro ? 'Quitar búsqueda y filtros' : 'Limpiar búsqueda', clase: 'btn-primary', onClick: () => { inputQ.value = ''; est.q = ''; est.filtros = {}; barra.querySelectorAll('[data-filtro]').forEach((s) => { s.value = ''; }); est.pagina = 1; render(true); inputQ.focus(); } }]
                 }));
             }
             meta.textContent = hayResultados
@@ -410,6 +415,7 @@
         let temporizador;
         inputQ.addEventListener('input', () => { clearTimeout(temporizador); temporizador = setTimeout(() => { est.q = inputQ.value; est.pagina = 1; render(); }, 120); });
         selN.addEventListener('change', () => { est.tamano = parseInt(selN.value, 10); est.pagina = 1; render(); });
+        barra.addEventListener('change', (e) => { const s = e.target.closest('[data-filtro]'); if (s) { est.filtros[s.dataset.filtro] = s.value; est.pagina = 1; render(); } });
         pie.addEventListener('click', (e) => { const b = e.target.closest('[data-p]'); if (b) { est.pagina += parseInt(b.dataset.p, 10); render(); } });
 
         function mostrarBloque(el) { envoltura.hidden = true; pie.hidden = true; barra.hidden = true; zonaEstado.replaceChildren(el); }

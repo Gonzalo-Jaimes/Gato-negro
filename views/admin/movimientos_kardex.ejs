@@ -240,6 +240,8 @@ document.addEventListener('DOMContentLoaded', function () {
     const tabla = UI.tabla(tablaEl, {
         tamanos: [25, 50, 100],
         etiquetaBusqueda: 'Buscar movimiento por material, usuario, fecha o detalle',
+        filtros: [{ id: 'tipo', etiqueta: 'Tipo', opciones: [['', 'Todos'], ['entrada', 'Entradas'], ['salida', 'Salidas']],
+            coincide: (tr, v) => { const n = parseFloat(tr.cells[1].dataset.valor) || 0; return v === 'entrada' ? n > 0 : n < 0; } }],
         placeholder: 'Buscar movimiento…',
         vacio: { icono: '🗂️', titulo: 'Aún no hay movimientos', texto: 'Cada ingreso, retiro o venta que registres arriba aparecerá aquí con su fecha y responsable.' }
     });
