@@ -45,6 +45,8 @@ a { color: #8a3d12; word-break: break-all; }
 figure { margin: 10px 0; page-break-inside: avoid; text-align: center; }
 figure img { max-width: 100%; max-height: 135mm; border: 1px solid #d9cdb8; }
 figcaption { font-size: 8.5pt; color: #6b5a45; margin-top: 3px; }
+td img { max-width: 100%; max-height: 95mm; border: 1px solid #d9cdb8; display: block; margin: 0 auto; }
+td:has(img) { text-align: center; }
 .grid { display: flex; gap: 8px; align-items: flex-start; justify-content: center; }
 .grid figure { flex: 1; margin: 0; }
 .grid img { max-height: 120mm; }
@@ -111,7 +113,7 @@ def main() -> None:
     )
     secciones = [md_a_html(md, f, primero=False) for f in fuentes]
     documento = (
-        f"<!doctype html><html lang='es'><head><meta charset='utf-8'><title>{html.escape(TITULO)}</title>"
+        f"<!doctype html><html lang='es'><head><meta charset='utf-8'><title>{html.escape(TITULO)}</title><base href='{AQUI.as_uri()}/'>"
         f"<style>{CSS}</style></head><body>{portada}{''.join(secciones)}{anexo_capturas()}</body></html>"
     )
 
