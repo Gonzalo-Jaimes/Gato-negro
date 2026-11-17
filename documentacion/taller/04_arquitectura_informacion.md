@@ -142,3 +142,8 @@ Verificación realizada:
 - **Acceso de `anillador` y `empacador`:** cambiar `/cierre_diario` de `isAdmin` a `isAuth` (una línea) los dejaría entrar a su pantalla. Es un cambio de permisos, por eso se consulta antes. Se haría en un commit aparte.
 - **Rutas duplicadas (A3, A4, A5):** no se eliminaron para no romper marcadores ni enlaces del bot; se documentan y el menú usa una sola URL canónica por pantalla.
 - **`views/base.ejs`:** código muerto; se puede borrar en una limpieza aparte.
+
+## 6. Evidencia
+- Antes: el menú original aparece en las capturas `capturas/antes/escritorio/*.jpg` (grupos colapsados, 5 grupos mezclados con rol y proceso).
+- Después: `capturas/despues/escritorio/6_menu_navegacion.jpg` (menú por proceso con el grupo de la página actual abierto y resaltado).
+- Comprobación de la ruta corregida: `/despacho_empaque` ahora redirige a `/despachos_empaque` y la página carga; las 24 rutas del menú admin responden 200.
