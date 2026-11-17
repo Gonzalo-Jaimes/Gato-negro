@@ -3,17 +3,25 @@
 <h1>🔄 Entradas, Salidas y Kardex</h1>
 <hr>
 
-<div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 30px;">
-    
-    <div class="card" style="border-top: 4px solid var(--success); flex: 1; min-width: 300px; padding: 20px;">
-        <h3 style="margin-top: 0; color: var(--success);">➕ Ingresar Material</h3>
-        <form action="/agregar_inventario" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
-            
-            <!-- 1. CATEGORÍA PRIMERO -->
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label>Categoría Principal:</label>
-                <select name="categoria" id="select_categoria_ingreso" required onchange="actualizarMateriales()" style="width: 100%;">
-                    <option value="">-- Selecciona una Categoría --</option>
+<style>
+    .kdx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-5); margin-bottom: var(--space-8); align-items: start; }
+    .kdx-grid .card { padding: var(--space-5); }
+    .kdx-grid h2 { font-size: var(--text-lg); margin-bottom: var(--space-4); }
+    .kdx-fila { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr); gap: var(--space-3); }
+    @media (max-width: 420px) { .kdx-fila { grid-template-columns: 1fr; } }
+    .kdx-alerta { margin-bottom: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-sm); background: var(--danger-soft); border: 1px solid var(--danger); }
+</style>
+
+<div class="kdx-grid">
+
+    <section class="card" style="border-top: 4px solid var(--success);" aria-labelledby="h-ingreso">
+        <h2 id="h-ingreso" style="color: var(--success);">➕ Ingresar material</h2>
+        <form action="/agregar_inventario" method="POST" id="form-ingreso" novalidate>
+            <div class="kdx-alerta field-error" data-form-alerta role="alert" hidden></div>
+            <div class="field">
+                <label for="select_categoria_ingreso">Categoría</label>
+                <select name="categoria" id="select_categoria_ingreso" class="input" required onchange="actualizarMateriales()">
+                    <option value="">Selecciona una categoría</option>
                     <option value="Materia Prima">🟤 Materia Prima</option>
                     <option value="Cestas">🧺 Cestas</option>
                     <option value="Tabacos">🚬 Tabacos (Producción)</option>
@@ -21,30 +29,27 @@
                     <option value="Insumos">🔧 Insumos / Papelería</option>
                 </select>
             </div>
-
-            <!-- 2. MATERIAL DEPENDIENTE -->
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label>Material Específico:</label>
-                <select id="select_material_dinamico" required onchange="checkMaterialOtro(this.value)" style="width: 100%;" disabled>
-                    <option value="">Primero elige una categoría...</option>
+            <div class="field">
+                <label for="select_material_dinamico">Material</label>
+                <select id="select_material_dinamico" class="input" required onchange="checkMaterialOtro(this.value)" disabled>
+                    <option value="">Primero elige una categoría</option>
                 </select>
-                <!-- Campo oculto para enviar el material final -->
                 <input type="hidden" name="material" id="input_material_final">
-                
-                <!-- Input manual si elige OTRO -->
-                <input type="text" id="input_material_manual" placeholder="Escribe el nombre del material..." style="display: none; margin-top: 8px; width: 100%; box-sizing: border-box;" oninput="document.getElementById('input_material_final').value = this.value;">
+                <label for="input_material_manual" class="sr-only">Nombre del material nuevo</label>
+                <input type="text" id="input_material_manual" class="input" placeholder="Nombre del material nuevo" style="display: none; margin-top: var(--space-2);" oninput="document.getElementById('input_material_final').value = this.value;">
             </div>
-
-            <!-- 3. CANTIDAD -->
-            <div style="display: flex; flex-direction: column; gap: 4px;">
-                <label>Cantidad (uds/kg):</label>
-                <input type="number" step="0.01" name="cantidad" placeholder="0.00" required style="width: 100%; box-sizing: border-box;">
+            <div class="field">
+                <label for="ing-cantidad">Cantidad</label>
+                <input type="number" step="0.01" name="cantidad" id="ing-cantidad" class="input" placeholder="0,00" inputmode="decimal" required>
+                <span class="field-hint" id="ing-cantidad-ayuda">Kilos para materia prima; unidades para cestas y tabacos.</span>
             </div>
-
-            <input type="text" name="descripcion" placeholder="Motivo o proveedor (Opcional)">
-            <button type="submit" class="btn" style="background: var(--success); color: black; font-weight: bold; width: 100%;">Registrar Ingreso</button>
+            <div class="field">
+                <label for="ing-desc">Motivo o proveedor <span style="font-weight: 400;">(opcional)</span></label>
+                <input type="text" name="descripcion" id="ing-desc" class="input" placeholder="Ej: compra a proveedor">
+            </div>
+            <button type="submit" class="btn btn-success btn-block">Registrar ingreso</button>
         </form>
-    </div>
+    </section>
 
     <script>
         const opcionesPorCategoria = {
@@ -99,117 +104,165 @@
         }
     </script>
 
-    <div class="card" style="border-top: 4px solid var(--danger); flex: 1; min-width: 300px; padding: 20px;">
-        <h3 style="margin-top: 0; color: var(--danger);">➖ Retirar Material</h3>
-        <form action="/restar_inventario" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
-            <select name="material_id" required id="select_retiro" onchange="document.getElementById('nombre_mat').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                <option value="">Selecciona qué vas a sacar...</option>
-                <% if(locals.inventario) { locals.inventario.forEach(function(i) { %>
-                    <option value="<%= i.id %>"><%= i.material %> (Disp: <%= i.cantidad %>)</option>
-                <% }); } %>
-            </select>
-            <input type="hidden" name="nombre_material" id="nombre_mat">
-            
-            <input type="number" step="0.01" name="cantidad_salida" placeholder="Cantidad a retirar" required>
-            <input type="text" name="descripcion_salida" placeholder="¿Para qué o para quién? (Opcional)">
-            <button type="submit" class="btn" style="background: var(--danger); color: white; font-weight: bold; width: 100%;">Registrar Salida</button>
-        </form>
-    </div>
-
-    <!-- TERCERA CAJA: VENTAS (Para generar Gráficas Financieras) -->
-    <div class="card" style="border-top: 4px solid var(--info); flex: 1; min-width: 300px; padding: 20px;">
-        <h3 style="margin-top: 0; color: var(--info);">💰 Registrar Venta</h3>
-        <form action="/registrar_venta" method="POST" style="display: flex; flex-direction: column; gap: 10px;">
-            <select name="material_id" required id="select_venta" onchange="document.getElementById('nombre_mat_vta').value = this.options[this.selectedIndex].text.split(' (')[0];">
-                <option value="">Selecciona el producto a vender...</option>
-                <% if(locals.inventario) { locals.inventario.forEach(function(i) { %>
-                    <option value="<%= i.id %>"><%= i.material %> (Disp: <%= i.cantidad %>)</option>
-                <% }); } %>
-            </select>
-            <input type="hidden" name="nombre_material" id="nombre_mat_vta">
-            
-            <div style="display: flex; gap: 10px;">
-                <input type="number" step="0.01" name="cantidad_vendida" placeholder="Cant." required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 1;">
-                <input type="number" step="1" name="valor_venta" placeholder="Ingreso $COP" required style="padding: 10px; border: 1px solid #ccc; border-radius: 5px; flex: 2;">
+    <section class="card" style="border-top: 4px solid var(--danger);" aria-labelledby="h-retiro">
+        <h2 id="h-retiro" style="color: var(--danger);">➖ Retirar material</h2>
+        <form action="/restar_inventario" method="POST" id="form-retiro" novalidate>
+            <div class="kdx-alerta field-error" data-form-alerta role="alert" hidden></div>
+            <div class="field">
+                <label for="select_retiro">Material a retirar</label>
+                <select name="material_id" required id="select_retiro" class="input" onchange="document.getElementById('nombre_mat').value = this.options[this.selectedIndex].text.split(' (')[0];">
+                    <option value="">Selecciona qué vas a sacar</option>
+                    <% if(locals.inventario) { locals.inventario.forEach(function(i) { %>
+                        <option value="<%= i.id %>" data-disp="<%= i.cantidad %>"><%= i.material %> (Disp: <%= i.cantidad %>)</option>
+                    <% }); } %>
+                </select>
+                <input type="hidden" name="nombre_material" id="nombre_mat">
             </div>
-            
-            <button type="submit" class="btn" style="background: var(--info); color: white; font-weight: bold; width: 100%;">Confirmar Venta</button>
+            <div class="field">
+                <label for="ret-cantidad">Cantidad a retirar</label>
+                <input type="number" step="0.01" name="cantidad_salida" id="ret-cantidad" class="input" placeholder="0,00" inputmode="decimal" required>
+                <span class="field-hint" id="ret-cantidad-ayuda">No puede superar lo disponible.</span>
+            </div>
+            <div class="field">
+                <label for="ret-desc">Motivo o destino <span style="font-weight: 400;">(opcional)</span></label>
+                <input type="text" name="descripcion_salida" id="ret-desc" class="input" placeholder="¿Para qué o para quién?">
+            </div>
+            <button type="submit" class="btn btn-danger btn-block">Registrar salida</button>
         </form>
-    </div>
+    </section>
+
+    <section class="card" style="border-top: 4px solid var(--info);" aria-labelledby="h-venta">
+        <h2 id="h-venta" style="color: var(--info);">💰 Registrar venta</h2>
+        <form action="/registrar_venta" method="POST" id="form-venta" novalidate>
+            <div class="kdx-alerta field-error" data-form-alerta role="alert" hidden></div>
+            <div class="field">
+                <label for="select_venta">Producto vendido</label>
+                <select name="material_id" required id="select_venta" class="input" onchange="document.getElementById('nombre_mat_vta').value = this.options[this.selectedIndex].text.split(' (')[0];">
+                    <option value="">Selecciona el producto a vender</option>
+                    <% if(locals.inventario) { locals.inventario.forEach(function(i) { %>
+                        <option value="<%= i.id %>" data-disp="<%= i.cantidad %>"><%= i.material %> (Disp: <%= i.cantidad %>)</option>
+                    <% }); } %>
+                </select>
+                <input type="hidden" name="nombre_material" id="nombre_mat_vta">
+            </div>
+            <div class="kdx-fila">
+                <div class="field">
+                    <label for="vta-cantidad">Cantidad</label>
+                    <input type="number" step="0.01" name="cantidad_vendida" id="vta-cantidad" class="input" placeholder="0" inputmode="decimal" required>
+                </div>
+                <div class="field">
+                    <label for="vta-valor">Ingreso (COP)</label>
+                    <input type="number" step="1" name="valor_venta" id="vta-valor" class="input" placeholder="150000" inputmode="numeric" required>
+                </div>
+            </div>
+            <button type="submit" class="btn btn-block" style="--btn-bg: var(--info); --btn-bg-hover: #2F5470; --btn-fg: #FFFFFF;">Confirmar venta</button>
+        </form>
+    </section>
 </div>
 
-<!-- DataTables CSS y jQuery -->
-<link rel="stylesheet" href="https://cdn.datatables.net/1.13.6/css/jquery.dataTables.min.css">
-<style>
-    /* Soporte básico para que DataTables encaje con el esquema visual */
-    .dataTables_wrapper .dataTables_length, .dataTables_wrapper .dataTables_filter, .dataTables_wrapper .dataTables_info, .dataTables_wrapper .dataTables_paginate {
-        margin-bottom: 20px;
-        margin-top: 10px;
-    }
-    table.dataTable.no-footer { border-bottom: 2px solid #ccc; }
-    body.dark-mode .dataTables_wrapper .dataTables_length, body.dark-mode .dataTables_wrapper .dataTables_filter, body.dark-mode .dataTables_wrapper .dataTables_info, body.dark-mode .dataTables_wrapper .dataTables_paginate {
-        color: #eee !important;
-    }
-    body.dark-mode .dataTables_wrapper .dataTables_filter input { background-color: #333; color: white; border: 1px solid #555; }
-    body.dark-mode .dataTables_wrapper .dataTables_length select { background-color: #333; color: white; border: 1px solid #555; }
-</style>
+<script>
+/* Validación con mensajes específicos; si todo es válido, el formulario se envía como siempre. */
+document.addEventListener('DOMContentLoaded', function () {
+    const num = (v) => parseFloat(String(v).replace(',', '.'));
+    const disponible = (selId) => { const s = document.getElementById(selId); const o = s.options[s.selectedIndex]; return o && o.dataset.disp !== undefined ? num(o.dataset.disp) : null; };
+    const nombreSel = (selId) => { const s = document.getElementById(selId); return s.options[s.selectedIndex] ? s.options[s.selectedIndex].text.split(' (')[0] : ''; };
+    const cantidad = (selId, etiqueta) => (v) => {
+        if (v === '') return 'Escribe la cantidad ' + etiqueta + '.';
+        const n = num(v);
+        if (!(n > 0)) return 'La cantidad debe ser mayor que cero (ejemplo: 25,5).';
+        const d = disponible(selId);
+        if (d !== null && n > d) return 'Solo hay ' + d + ' disponibles de ' + nombreSel(selId) + '; escribe ' + d + ' o menos.';
+        return null;
+    };
+    UI.form(document.getElementById('form-ingreso'), { campos: {
+        select_categoria_ingreso: (v) => v ? null : 'Elige la categoría del material.',
+        select_material_dinamico: (v) => v ? null : 'Elige el material (o "Otro" para uno nuevo).',
+        input_material_manual: (v) => document.getElementById('input_material_manual').style.display === 'none' || v ? null : 'Escribe el nombre del material nuevo.',
+        cantidad: (v) => v === '' ? 'Escribe la cantidad que ingresa.' : (num(v) > 0 ? null : 'La cantidad debe ser mayor que cero (ejemplo: 25,5).')
+    }});
+    UI.form(document.getElementById('form-retiro'), { campos: {
+        select_retiro: (v) => v ? null : 'Elige qué material vas a retirar.',
+        cantidad_salida: cantidad('select_retiro', 'que retiras')
+    }});
+    UI.form(document.getElementById('form-venta'), { campos: {
+        select_venta: (v) => v ? null : 'Elige el producto que se vendió.',
+        cantidad_vendida: cantidad('select_venta', 'vendida'),
+        valor_venta: (v) => v === '' ? 'Escribe cuánto dinero ingresó, en pesos (ejemplo: 150000).' : (num(v) >= 1 ? null : 'El ingreso debe ser de al menos $1.')
+    }});
+});
+</script>
 
-<h2 style="color: var(--text-main); border-bottom: 2px solid var(--border-color); padding-bottom: 10px;" class="dynamic-text">📅 Kardex Interactivo (Historial de Movimientos)</h2>
-<table id="tablaMovimientos" class="display" style="width:100%">
+<div class="emp-cab" style="display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); flex-wrap: wrap; border-bottom: 2px solid var(--border-color); padding-bottom: var(--space-3); margin: var(--space-8) 0 var(--space-4);">
+    <h2 id="h-kardex" style="color: var(--text-main);">📅 Kardex interactivo (historial de movimientos)</h2>
+    <button type="button" class="btn btn-ghost btn-sm" id="kdx-actualizar">↻ Actualizar</button>
+</div>
+
+<table id="tablaMovimientos" class="table-cards" aria-labelledby="h-kardex">
     <thead>
         <tr>
-            <th>Fecha / Hora</th>
-            <th>Movimiento</th>
-            <th>Material</th>
-            <th>Detalle / Destino</th>
+            <th scope="col" data-sort="texto" data-col="esencial">Fecha y hora</th>
+            <th scope="col" data-sort="numero" data-col="esencial">Movimiento</th>
+            <th scope="col" data-sort="texto" data-col="esencial">Material</th>
+            <th scope="col" data-sort="texto" data-col="secundaria">Registrado por</th>
+            <th scope="col" data-col="demanda">Detalle</th>
         </tr>
     </thead>
     <tbody>
-    <% if (locals.movimientos && locals.movimientos.length > 0) { %>
-        <% locals.movimientos.forEach(function(m) { %>
+    <% (locals.movimientos || []).forEach(function(m) {
+           const mat = String(m.material || '').toLowerCase();
+           let unidad = '';
+           if (/capa|capote|picadura|tripa|material|vena|recorte/.test(mat)) unidad = ' Kg';
+           else if (/cesta|saca|caja/.test(mat)) unidad = ' Uds';
+           const entrada = m.tipo_movimiento === 'ENTRADA';
+           const signed = (entrada ? 1 : -1) * (parseFloat(m.cantidad) || 0);
+    %>
         <tr>
-            <td style="font-size: 12px; font-weight: bold;">
-                <span style="display:none;"><%= m.fecha %> <%= m.hora %></span> <!-- Para ordenamiento invisible -->
-                <%= m.fecha %><br><span style="color: gray;"><%= m.hora %></span>
+            <td data-label="Fecha y hora" data-valor="<%= m.fecha %> <%= m.hora %>">
+                <strong style="font-size: var(--text-sm);"><%= m.fecha %></strong><br><span style="color: var(--text-muted); font-size: var(--text-xs);"><%= m.hora %></span>
             </td>
-            <td>
-                <% 
-                   let sufijo = "";
-                   let matStr = m.material.toLowerCase();
-                   if (matStr.includes('capa') || matStr.includes('capote') || matStr.includes('picadura') || matStr.includes('tripa') || matStr.includes('material') || matStr.includes('vena') || matStr.includes('recorte')) {
-                       sufijo = " Kg";
-                   } else if (matStr.includes('cesta') || matStr.includes('saca') || matStr.includes('caja')) {
-                       sufijo = " Uds";
-                   }
-                %>
-                <% if (m.tipo_movimiento === 'ENTRADA') { %>
-                    <span style="color: var(--success); font-weight: bold; background: rgba(16, 185, 129, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(16, 185, 129, 0.2);">+ <%= m.cantidad %><%= sufijo %></span>
-                <% } else { %>
-                    <span style="color: var(--danger); font-weight: bold; background: rgba(239, 68, 68, 0.1); padding: 5px 12px; border-radius: 20px; border: 1px solid rgba(239, 68, 68, 0.2);">- <%= m.cantidad %><%= sufijo %></span>
-                <% } %>
+            <td data-label="Movimiento" data-valor="<%= signed %>">
+                <span class="badge <%= entrada ? 'badge-success' : 'badge-danger' %>"><%= entrada ? '+' : '−' %> <%= m.cantidad %><%= unidad %></span>
+                <span class="sr-only"><%= entrada ? 'Entrada' : 'Salida' %></span>
             </td>
-            <td style="text-transform: capitalize; font-weight: bold;"><%= m.material %></td>
-            <td style="text-align: left; font-size: 14px;">
-                <b><%= m.usuario %>:</b> <%= m.descripcion %>
-            </td>
+            <td data-label="Material" style="text-transform: capitalize; font-weight: var(--weight-semibold);"><%= m.material %></td>
+            <td data-label="Registrado por"><%= m.usuario %></td>
+            <td data-label="Detalle"><%= m.descripcion || 'Sin detalle' %></td>
         </tr>
-        <% }); %>
-    <% } %>
+    <% }); %>
     </tbody>
 </table>
 
-<script src="https://code.jquery.com/jquery-3.7.0.min.js"></script>
-<script src="https://cdn.datatables.net/1.13.6/js/jquery.dataTables.min.js"></script>
 <script>
-    $(document).ready(function() {
-        $('#tablaMovimientos').DataTable({
-            "language": {
-                "url": "//cdn.datatables.net/plug-ins/1.13.6/i18n/es-ES.json"
-            },
-            "order": [], // Deja el orden por defecto como lo entrega la BD
-            "pageLength": 25 // Muestra 25 resultados por defecto para mayor visibilidad
-        });
+/* ui.js se carga con defer: se espera a DOMContentLoaded para usar UI */
+document.addEventListener('DOMContentLoaded', function () {
+    const tablaEl = document.getElementById('tablaMovimientos');
+    const btn = document.getElementById('kdx-actualizar');
+    const tabla = UI.tabla(tablaEl, {
+        tamanos: [25, 50, 100],
+        etiquetaBusqueda: 'Buscar movimiento por material, usuario, fecha o detalle',
+        placeholder: 'Buscar movimiento…',
+        vacio: { icono: '🗂️', titulo: 'Aún no hay movimientos', texto: 'Cada ingreso, retiro o venta que registres arriba aparecerá aquí con su fecha y responsable.' }
     });
+
+    /* Recarga: se vuelve a pedir la página y se toman sus filas (misma lógica de render que el servidor). */
+    async function recargar() {
+        UI.setLoading(btn, true);
+        tabla.cargando(6);
+        try {
+            const r = await fetch('/movimientos', { credentials: 'same-origin', headers: { Accept: 'text/html' } });
+            if (r.status === 401 || r.status === 403 || (r.redirected && /\/login/.test(r.url))) { tabla.denegado(); return; }
+            if (!r.ok) throw { mensaje: 'El servidor respondió con un error (' + r.status + ').' };
+            const doc = new DOMParser().parseFromString(await r.text(), 'text/html');
+            const filas = Array.from(doc.querySelectorAll('#tablaMovimientos tbody tr')).map((tr) => document.importNode(tr, true));
+            tabla.setFilas(filas);
+        } catch (err) {
+            tabla.error(err && err.mensaje ? err.mensaje : 'No hay conexión con el servidor. Revisa tu internet e inténtalo de nuevo.', recargar);
+        } finally {
+            UI.setLoading(btn, false);
+        }
+    }
+    btn.addEventListener('click', recargar);
+});
 </script>
 
 <%- include('../partials/footer') %>

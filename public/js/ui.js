@@ -94,10 +94,12 @@
     }
     document.addEventListener('submit', async (e) => {
         const f = e.target;
-        if (!f.matches || !f.matches('form[data-confirm]') || f.dataset.confirmado) return;
-        e.preventDefault();
         const submitter = e.submitter;
-        if (await UI.confirm(opcionesDeDataset(f))) {
+        // La confirmación puede estar en el botón que envía (p. ej. «Liquidar») o en el formulario entero.
+        const fuente = submitter && submitter.dataset && submitter.dataset.confirm ? submitter : (f.matches && f.matches('form[data-confirm]') ? f : null);
+        if (!fuente || f.dataset.confirmado) return;
+        e.preventDefault();
+        if (await UI.confirm(opcionesDeDataset(fuente))) {
             f.dataset.confirmado = '1';
             if (f.requestSubmit) f.requestSubmit(submitter); else f.submit();
             setTimeout(() => delete f.dataset.confirmado, 0);
@@ -231,6 +233,7 @@
             }
             const datos = {};
             Object.keys(reglas).forEach((n) => { datos[n] = (form.elements[n].value || '').trim(); });
+            if (!cfg.enviar) { UI.setLoading(boton, true); form.submit(); return; } // envío clásico tras validar
             UI.setLoading(boton, true);
             try {
                 const r = await cfg.enviar(datos);
@@ -262,6 +265,11 @@
         const ths = thead ? Array.from(thead.rows[0].cells) : [];
         const tbody = tabla.tBodies[0];
         const mostrarPorCol = ths.some((t) => t.dataset.col === 'demanda');
+        // Si hay columnas «bajo demanda», se añade una columna de acciones (sin título visible) para el botón «Ver detalle».
+        if (mostrarPorCol && thead && !ths.some((h) => h.classList.contains('acciones'))) {
+            const h = document.createElement('th'); h.className = 'acciones'; h.dataset.col = 'esencial'; h.scope = 'col';
+            h.innerHTML = '<span class="sr-only">Detalle</span>'; thead.rows[0].appendChild(h); ths.push(h);
+        }
 
         const raiz = document.createElement('div');
         raiz.className = 'tabla-datos';
@@ -309,7 +317,8 @@
                 if (celdas.length) {
                     const btn = document.createElement('button');
                     btn.type = 'button'; btn.className = 'btn btn-ghost btn-sm'; btn.textContent = 'Ver detalle'; btn.setAttribute('aria-expanded', 'false');
-                    const dest = tr.querySelector('td.acciones') || tr.cells[tr.cells.length - 1];
+                    let dest = tr.querySelector('td.acciones');
+                    if (!dest) { dest = document.createElement('td'); dest.className = 'acciones'; tr.appendChild(dest); }
                     dest.appendChild(btn);
                     btn.addEventListener('click', () => {
                         const abierto = btn.getAttribute('aria-expanded') === 'true';

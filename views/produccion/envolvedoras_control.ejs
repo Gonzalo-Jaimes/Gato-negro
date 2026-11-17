@@ -118,7 +118,7 @@
                     <button type="submit"
                             formaction="/liquidar_envolvedora/<%= reg.id %>"
                             class="btn btn-success btn-sm btn-liquidar"
-                            onclick="return confirm('¿Liquidar a <%= emp.nombre %>?\nPago: $<%= pago.toLocaleString('es-CO') %> por <%= totalOut %> cestas.')">
+                            data-confirm="Pago: $<%= pago.toLocaleString('es-CO') %> por <%= totalOut %> cestas. La liquidación cierra el registro de esta semana." data-confirm-titulo="¿Liquidar a <%= emp.nombre %>?" data-confirm-ok="Sí, liquidar">
                         ✅ Liquidar
                     </button>
                     <% } %>

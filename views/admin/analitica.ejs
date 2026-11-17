@@ -1,175 +1,198 @@
 <%- include('../partials/header') %>
+<%
+    const fmt = (n) => Number(n || 0).toLocaleString('es-CO');
+    const balance = finanzas.ingresos - finanzas.nomina - finanzas.mantenimiento;
+    const superavit = balance >= 0;
+%>
+<style>
+    .dash-cab { margin-bottom: var(--space-6); }
+    .dash-cab p { color: var(--text-muted); margin-top: var(--space-1); }
+    .dash-graf-cab { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4); }
+    .dash-controles { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-4); flex: 1 1 460px; max-width: 720px; }
+    .dash-controles .field { margin-bottom: 0; }
+    .dash-lienzo { position: relative; height: clamp(240px, 42vh, 420px); }
+    .dash-datos summary { cursor: pointer; font-weight: var(--weight-semibold); margin-top: var(--space-4); color: var(--primary); }
+    .dash-datos table { margin-top: var(--space-3); }
+</style>
 
-<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-    <div>
-        <h1 style="margin: 0;">📊 Dashboard Analítico y Financiero</h1>
-        <p style="color: gray; margin-top: 5px;">Métricas de producción empresarial y balance de comprobación automatizado.</p>
+<header class="dash-cab">
+    <h1>📊 Dashboard analítico y financiero</h1>
+    <p>Resumen del balance acumulado y de la producción. Los valores están en pesos colombianos (COP).</p>
+</header>
+
+<!-- Nivel 1 y 2: lo primero que debe entenderse (balance) y sus componentes -->
+<section aria-labelledby="h-balance">
+    <h2 id="h-balance" class="sr-only">Cierre contable acumulado</h2>
+    <div class="kpi-grid">
+        <article class="kpi kpi-principal <%= superavit ? 'kpi-success' : 'kpi-danger' %>">
+            <div class="kpi-label">Balance neto</div>
+            <div class="kpi-value"><span aria-hidden="true"><%= superavit ? '▲' : '▼' %></span> <%= superavit ? '' : '−' %>$<%= fmt(Math.abs(balance)) %></div>
+            <div class="kpi-note"><strong><%= superavit ? 'Superávit' : 'Déficit' %></strong> · ingresos menos nómina y mantenimiento</div>
+        </article>
+        <article class="kpi kpi-success">
+            <div class="kpi-label">Ingresos</div>
+            <div class="kpi-value">$<%= fmt(finanzas.ingresos) %></div>
+            <div class="kpi-note">Ventas registradas</div>
+        </article>
+        <article class="kpi kpi-danger">
+            <div class="kpi-label">Nómina</div>
+            <div class="kpi-value">$<%= fmt(finanzas.nomina) %></div>
+            <div class="kpi-note">Pagos a trabajadores</div>
+        </article>
+        <article class="kpi kpi-warning">
+            <div class="kpi-label">Mantenimiento de máquinas</div>
+            <div class="kpi-value">$<%= fmt(finanzas.mantenimiento) %></div>
+            <div class="kpi-note">Costos de equipos</div>
+        </article>
     </div>
-</div>
-<hr style="margin-bottom: 30px;">
+</section>
 
-<!-- CONTENEDOR DE GRÁFICAS Y CONTROLES -->
-<div class="card" style="border-top: 4px solid var(--primary); margin-bottom: 30px;">
-    <h3 style="margin-top: 0; color: var(--primary);">📈 BI Dashboard: Generador de Gráficas Dinámicas</h3>
-    <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 20px;">Filtra y visualiza millones de movimientos por material.</p>
-    
-    <div style="display: flex; gap: 20px; flex-wrap: wrap; margin-bottom: 20px;">
-        <div style="flex: 1; min-width: 250px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 5px;">1. Selecciona el Dataset a Visualizar:</label>
-            <select id="biDataset" onchange="renderBiChart()">
-                <option value="TABACOS_PRODUCCION">🚬 Tabacos Fabricados (Acumulado Total)</option>
-                <option value="MATERIA_PRIMA">🟤 Uso de Materias Primas (Capa, Capote, Picadura)</option>
-                <option value="CESTAS">🧺 Inventario y Movimiento de Cestas Físicas</option>
-                <option value="EGRESOS_VS_INGRESOS">💵 Rentabilidad (Ingresos vs Gastos)</option>
-            </select>
+<!-- Nivel 2: gráfica; los controles (nivel 4) quedan junto a su título -->
+<section class="card" style="border-top: 4px solid var(--primary); margin-bottom: var(--space-6);" aria-labelledby="h-grafica">
+    <div class="dash-graf-cab">
+        <div>
+            <h2 id="h-grafica" style="font-size: var(--text-xl);">Producción y movimientos</h2>
+            <p id="dash-resumen" class="field-hint" style="margin-top: var(--space-1);"></p>
         </div>
-        <div style="flex: 1; min-width: 250px;">
-            <label style="font-weight: bold; display: block; margin-bottom: 5px;">2. Tipo de Gráfica Geometría:</label>
-            <select id="biType" onchange="renderBiChart()">
-                <option value="bar">📊 Gráfica de Barras (Cantidades)</option>
-                <option value="pie">🥧 Gráfica de Torta (Proporciones / Pie)</option>
-                <option value="doughnut">🍩 Gráfica de Dona (Rentabilidad)</option>
-                <option value="line">📈 Gráfica de Líneas (Tendencias)</option>
-            </select>
+        <div class="dash-controles">
+            <div class="field">
+                <label for="biDataset">Datos a mostrar</label>
+                <select id="biDataset" class="input">
+                    <option value="TABACOS_PRODUCCION">🚬 Tabacos fabricados (acumulado)</option>
+                    <option value="MATERIA_PRIMA">🟤 Uso de materias primas</option>
+                    <option value="CESTAS">🧺 Movimiento de cestas</option>
+                    <option value="EGRESOS_VS_INGRESOS">💵 Ingresos frente a gastos</option>
+                </select>
+            </div>
+            <div class="field">
+                <label for="biType">Tipo de gráfica</label>
+                <select id="biType" class="input">
+                    <option value="bar">📊 Barras</option>
+                    <option value="pie">🥧 Torta</option>
+                    <option value="doughnut">🍩 Dona</option>
+                    <option value="line">📈 Líneas</option>
+                </select>
+            </div>
         </div>
     </div>
 
-    <div style="width: 100%; max-height: 500px; display: flex; justify-content: center;">
-        <canvas id="miGranGrafica" style="max-height: 400px;"></canvas>
-    </div>
-</div>
-
-<div style="display: flex; flex-wrap: wrap; gap: 30px; justify-content: center; margin-bottom: 40px;">
-    <!-- Resumen Macro Financiero Rápido -->
-    <div class="card" style="border-top: 4px solid var(--primary); flex: 1; min-width: 400px;">
-        <h3 style="text-align: center; color: var(--text-main); margin-top: 0;">💵 Cierre Contable Macro (Acumulado Total)</h3>
-        <p style="text-align: center; color: var(--text-muted); font-size: 13px; margin-bottom: 20px;">Comparativa en Pesos Colombianos (COP)</p>
-        
-        <div style="display: flex; justify-content: space-between; font-size: 16px; background: rgba(var(--text-muted), 0.05); padding: 15px; border-radius: 12px; font-weight: bold;">
-            <div style="color: var(--success);">Ingresos:<br>$<%= finanzas.ingresos.toLocaleString('es-CO') %></div>
-            <div style="color: var(--danger);">Nómina:<br>$<%= finanzas.nomina.toLocaleString('es-CO') %></div>
-            <div style="color: var(--warning-text);">Mtto Máquinas:<br>$<%= finanzas.mantenimiento.toLocaleString('es-CO') %></div>
-            
-            <% let balance = finanzas.ingresos - finanzas.nomina - finanzas.mantenimiento; %>
-            <% if(balance >= 0) { %>
-                <div style="color: var(--success); border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
-            <% } else { %>
-                <div style="color: var(--danger); border-left: 1px solid var(--border-color); padding-left: 15px;">Balance Neto:<br>$<%= balance.toLocaleString('es-CO') %></div>
-            <% } %>
+    <div id="dash-grafica-zona">
+        <div class="dash-lienzo">
+            <canvas id="miGranGrafica" role="img" aria-label="Gráfica de producción y movimientos" aria-describedby="dash-resumen"></canvas>
         </div>
+        <details class="dash-datos">
+            <summary>Ver los datos de la gráfica en tabla</summary>
+            <table id="dash-tabla">
+                <caption class="sr-only">Valores representados en la gráfica</caption>
+                <thead><tr><th scope="col">Categoría</th><th scope="col" class="num">Valor</th></tr></thead>
+                <tbody></tbody>
+            </table>
+        </details>
     </div>
-</div>
+    <div id="dash-estado" aria-live="polite"></div>
+</section>
 
-<span id="finanzasData" 
-      data-ingresos="<%= finanzas.ingresos %>" 
-      data-nomina="<%= finanzas.nomina %>" 
-      data-mantenimiento="<%= finanzas.mantenimiento %>"
-      data-raw="<%= JSON.stringify(raw_movs || []) %>"
-      style="display:none;"></span>
+<!-- Datos crudos como JSON (no en un atributo HTML) -->
+<script type="application/json" id="raw-data"><%- JSON.stringify(raw_movs || []).replace(/</g, '\\u003c') %></script>
+<script type="application/json" id="finanzas-data"><%- JSON.stringify({ ingresos: finanzas.ingresos, nomina: finanzas.nomina, mantenimiento: finanzas.mantenimiento }) %></script>
 
-<!-- CDN de Chart.js -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<!-- Versión fijada de Chart.js (antes: «chart.js» sin versión) -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
 
 <script>
-    // 1. Cargar la Nube de Datos Crudos de Supabase que Express nos envió
-    const RAW_DB = JSON.parse(document.getElementById('finanzasData').getAttribute('data-raw') || '[]');
+    let RAW_DB = [];
+    let FIN = { ingresos: 0, nomina: 0, mantenimiento: 0 };
+    let datosOk = true;
+    try {
+        RAW_DB = JSON.parse(document.getElementById('raw-data').textContent || '[]');
+        FIN = JSON.parse(document.getElementById('finanzas-data').textContent || '{}');
+    } catch (e) { datosOk = false; }
+
     let mainChartInstance = null;
+    const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+    const fmt = (n) => Number(n).toLocaleString('es-CO');
+
+    /* Cada conjunto de datos devuelve etiquetas y valores; los colores salen de los tokens (--chart-N). */
+    function calcular(dataset) {
+        const suma = (filtro) => RAW_DB.reduce((t, r) => t + (filtro(r) ? (Number(r.cantidad) || 0) : 0), 0);
+        const mat = (r) => String(r.material || '').toLowerCase();
+        if (dataset === 'TABACOS_PRODUCCION') {
+            const entrada = (r) => r.tipo_movimiento === 'ENTRADA' && r.material;
+            return { etiquetas: ['Tabacos normales', 'Tabacos anillados', 'Envolturas'], valores: [
+                suma((r) => entrada(r) && !mat(r).includes('anillado') && !mat(r).includes('envoltura') && (mat(r).includes('normal') || mat(r) === 'tabacos' || mat(r) === 'tabaco')),
+                suma((r) => entrada(r) && mat(r).includes('anillado')),
+                suma((r) => entrada(r) && mat(r).includes('envoltura'))
+            ], unidad: 'unidades' };
+        }
+        if (dataset === 'MATERIA_PRIMA') {
+            const salida = (r) => r.tipo_movimiento === 'SALIDA' && r.material;
+            return { etiquetas: ['Capa (kg)', 'Capote (kg)', 'Picadura (kg)'], valores: [
+                suma((r) => salida(r) && mat(r).includes('capa')), suma((r) => salida(r) && mat(r).includes('capote')), suma((r) => salida(r) && mat(r).includes('picadura'))
+            ], unidad: 'kilogramos' };
+        }
+        if (dataset === 'CESTAS') {
+            return { etiquetas: ['Cestas rojas', 'Cestas azules', 'Cestas negras'], valores: [
+                suma((r) => mat(r).includes('cesta') && mat(r).includes('roja')), suma((r) => mat(r).includes('cesta') && mat(r).includes('azul')), suma((r) => mat(r).includes('cesta') && mat(r).includes('negra'))
+            ], unidad: 'unidades' };
+        }
+        return { etiquetas: ['Ingresos', 'Nómina', 'Mantenimiento'], valores: [Number(FIN.ingresos) || 0, Number(FIN.nomina) || 0, Number(FIN.mantenimiento) || 0], unidad: 'pesos (COP)' };
+    }
 
     function renderBiChart() {
-        if (mainChartInstance) mainChartInstance.destroy();
+        const zona = document.getElementById('dash-grafica-zona');
+        const estado = document.getElementById('dash-estado');
+        estado.replaceChildren();
+        if (mainChartInstance) { mainChartInstance.destroy(); mainChartInstance = null; }
 
-        const datasetFiltro = document.getElementById('biDataset').value;
-        const tipoGrafica = document.getElementById('biType').value;
-        const ctx = document.getElementById('miGranGrafica').getContext('2d');
-
-        let labelsArr = [];
-        let dataArr = [];
-        let bgColors = [];
-
-        // ALGORITMOS DE AGRUPACIÓN (MAP REDUCE) SEGÚN LO SELECCIONADO
-        if (datasetFiltro === "TABACOS_PRODUCCION") {
-            let n = 0, a = 0, e = 0;
-            RAW_DB.forEach(row => {
-               if (row.tipo_movimiento === "ENTRADA" && row.material) {
-                   let mat = row.material.toLowerCase();
-                   if (mat.includes('anillado')) a += row.cantidad;
-                   else if (mat.includes('envoltura')) e += row.cantidad;
-                   else if (mat.includes('normal') || mat === 'tabacos' || mat === 'tabaco') n += row.cantidad;
-               }
-            });
-            labelsArr = ['Tabacos Normales', 'Tabacos Anillados', 'Envolturas'];
-            dataArr = [n, a, e];
-            bgColors = ['#10b981', '#3b82f6', '#8b5cf6'];
-        } 
-        else if (datasetFiltro === "MATERIA_PRIMA") {
-            let capa = 0, capote = 0, picadura = 0;
-            RAW_DB.forEach(row => {
-               if (row.tipo_movimiento === "SALIDA" && row.material) {
-                   let mat = row.material.toLowerCase();
-                   if (mat.includes('capa')) capa += row.cantidad;
-                   if (mat.includes('capote')) capote += row.cantidad;
-                   if (mat.includes('picadura')) picadura += row.cantidad;
-               }
-            });
-            labelsArr = ['Kilogramos de Capa', 'Kilogramos de Capote', 'Kilogramos de Picadura'];
-            dataArr = [capa, capote, picadura];
-            bgColors = ['#dc2626', '#f59e0b', '#22c55e'];
+        if (!datosOk) {   // estado de error: antes la gráfica quedaba vacía sin explicación
+            zona.hidden = true;
+            estado.appendChild(UI.estado('error', { titulo: 'No se pudieron leer los datos de la gráfica', texto: 'Recarga la página. Si el problema continúa, avisa al administrador del sistema.', acciones: [{ texto: 'Recargar', clase: 'btn-primary', onClick: () => location.reload() }] }));
+            return;
         }
-        else if (datasetFiltro === "CESTAS") {
-            let rojas = 0, azules = 0, negras = 0;
-            RAW_DB.forEach(row => {
-               if (row.material) {
-                   let mat = row.material.toLowerCase();
-                   if (mat.includes('cesta') && mat.includes('roja')) rojas += row.cantidad;
-                   if (mat.includes('cesta') && mat.includes('azul')) azules += row.cantidad;
-                   if (mat.includes('cesta') && mat.includes('negra')) negras += row.cantidad;
-               }
-            });
-            labelsArr = ['Cestas Rojas', 'Cestas Azules', 'Cestas Negras'];
-            dataArr = [rojas, azules, negras];
-            bgColors = ['#ef4444', '#3b82f6', '#111827'];
-        }
-        else if (datasetFiltro === "EGRESOS_VS_INGRESOS") {
-            const domNode = document.getElementById('finanzasData');
-            labelsArr = ['Ingresos', 'Costos de Nómina', 'Mantenimientos'];
-            dataArr = [
-                parseFloat(domNode.getAttribute('data-ingresos')) || 0,
-                parseFloat(domNode.getAttribute('data-nomina')) || 0,
-                parseFloat(domNode.getAttribute('data-mantenimiento')) || 0
-            ];
-            bgColors = ['#10b981', '#ef4444', '#f59e0b'];
-        }
+        const dataset = document.getElementById('biDataset').value;
+        const tipo = document.getElementById('biType').value;
+        const d = calcular(dataset);
+        const total = d.valores.reduce((a, b) => a + b, 0);
 
-        // DIBUJAR
-        mainChartInstance = new Chart(ctx, {
-            type: tipoGrafica,
-            data: {
-                labels: labelsArr,
-                datasets: [{
-                    label: 'Registros',
-                    data: dataArr,
-                    backgroundColor: bgColors,
-                    borderWidth: 1
-                }]
-            },
+        // Estado vacío: sin movimientos para este conjunto
+        if (total === 0) {
+            zona.hidden = true;
+            document.getElementById('dash-resumen').textContent = '';
+            estado.appendChild(UI.estado('vacio', { icono: '📊', titulo: 'Sin datos para mostrar', texto: 'Todavía no hay movimientos registrados para «' + document.getElementById('biDataset').selectedOptions[0].text.replace(/^\S+\s/, '') + '». Registra ingresos o salidas en el Kardex.', acciones: [{ texto: 'Ir al Kardex', clase: 'btn-primary', href: '/movimientos' }] }));
+            return;
+        }
+        zona.hidden = false;
+
+        // Texto alternativo (resumen para lectores de pantalla y para quien no distingue colores)
+        const mayor = d.valores.indexOf(Math.max.apply(null, d.valores));
+        document.getElementById('dash-resumen').textContent = 'Mayor valor: ' + d.etiquetas[mayor] + ' con ' + fmt(d.valores[mayor]) + ' ' + d.unidad + ' (' + Math.round(d.valores[mayor] / total * 100) + '% del total).';
+        const cuerpo = document.querySelector('#dash-tabla tbody');
+        cuerpo.replaceChildren(...d.etiquetas.map((e, i) => { const tr = document.createElement('tr'); const a = document.createElement('td'); a.textContent = e; const b = document.createElement('td'); b.className = 'num'; b.textContent = fmt(d.valores[i]); tr.append(a, b); return tr; }));
+        document.getElementById('miGranGrafica').setAttribute('aria-label', 'Gráfica de ' + document.getElementById('biDataset').selectedOptions[0].text.replace(/^\S+\s/, '').toLowerCase() + ': ' + d.etiquetas.map((e, i) => e + ' ' + fmt(d.valores[i])).join(', '));
+
+        const colores = [css('--chart-1'), css('--chart-2'), css('--chart-3')];
+        const horizontal = tipo === 'bar';   // barras horizontales: las etiquetas largas caben también en móvil
+        mainChartInstance = new Chart(document.getElementById('miGranGrafica').getContext('2d'), {
+            type: tipo,
+            data: { labels: d.etiquetas, datasets: [{ label: d.unidad, data: d.valores, backgroundColor: colores, borderColor: css('--bg-card'), borderWidth: 2, borderRadius: tipo === 'bar' ? 6 : 0, tension: 0.3, pointRadius: tipo === 'line' ? 5 : undefined }] },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
+                responsive: true, maintainAspectRatio: false, indexAxis: horizontal ? 'y' : 'x',
                 plugins: {
-                    legend: { 
-                        display: (tipoGrafica === 'pie' || tipoGrafica === 'doughnut') ? true : false,
-                        labels: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-main').trim() }
-                    }
+                    legend: { display: tipo === 'pie' || tipo === 'doughnut', labels: { color: css('--text-main'), font: { family: css('--font-main') } } },
+                    tooltip: { callbacks: { label: (c) => ' ' + fmt(c.raw) + ' ' + d.unidad } }
                 },
-                scales: {
-                    x: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() } },
-                    y: { ticks: { color: getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() } }
+                scales: (tipo === 'pie' || tipo === 'doughnut') ? {} : {
+                    x: { ticks: { color: css('--text-muted') }, grid: { color: css('--border-color') } },
+                    y: { ticks: { color: css('--text-muted') }, grid: { color: css('--border-color') } }
                 }
             }
         });
     }
 
-    // Dibujar la gráfica principal apenas cargue
+    document.getElementById('biDataset').addEventListener('change', renderBiChart);
+    document.getElementById('biType').addEventListener('change', renderBiChart);
+    // Los colores de un canvas no se actualizan solos: se redibuja al cambiar el modo claro/oscuro.
+    new MutationObserver(renderBiChart).observe(document.documentElement, { attributes: true, attributeFilter: ['class'] });
     window.addEventListener('load', renderBiChart);
 </script>
 

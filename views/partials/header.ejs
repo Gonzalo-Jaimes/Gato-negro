@@ -103,7 +103,7 @@
         }
         .nav-item:hover {
             background: var(--primary-soft);
-            color: var(--primary);
+            color: var(--primary-text);
         }
         .nav-item.active {
             background: var(--primary);
@@ -111,7 +111,7 @@
             box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
         }
         .submenu a.active {
-            color: var(--primary);
+            color: var(--primary-text);
             background: var(--primary-soft);
             font-weight: 600;
             box-shadow: inset 2px 0 0 var(--primary);
@@ -132,7 +132,7 @@
             border-radius: 0 8px 8px 0;
             transition: all 0.2s;
         }
-        .submenu a:hover { color: var(--primary); background: var(--primary-soft); }
+        .submenu a:hover { color: var(--primary-text); background: var(--primary-soft); }
 
         /* NAVEGACIÓN: grupos desplegables accesibles */
         .nav-icon { display: inline-block; width: 1.4em; text-align: center; }
@@ -143,7 +143,7 @@
             transform: rotate(-45deg); transition: transform 0.15s ease-out;
         }
         .nav-toggle[aria-expanded="true"]::after { transform: rotate(45deg); }
-        .nav-toggle.has-active { color: var(--primary); font-weight: 600; }
+        .nav-toggle.has-active { color: var(--primary-text); font-weight: 600; }
         .sidebar a:focus-visible, .nav-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
         @media (prefers-reduced-motion: reduce) { .nav-toggle::after { transition: none; } }
 

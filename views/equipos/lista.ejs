@@ -90,7 +90,7 @@
             <% if (session && session.rol === 'admin') { %>
             <button onclick="document.getElementById('modal-editar-<%= m.id %>').classList.add('activo')" style="background: var(--primary); padding: 6px 12px; margin-bottom: 5px; color: var(--on-primary); font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">✏️ Editar</button>
             <br>
-            <a href="/eliminar/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">
+            <a href="/eliminar/<%= m.id %>" data-confirm="Se borrará la máquina «<%= m.nombre %>» de forma permanente. Esta acción no se puede deshacer." data-confirm-titulo="¿Borrar la máquina <%= m.nombre %>?" data-confirm-ok="Sí, borrar" data-confirm-tipo="peligro">
                 <button style="background: var(--danger); padding: 6px 12px; color: white; border-radius: 6px; border: none; cursor: pointer;">🗑 Borrar</button>
             </a>
             <% } %>

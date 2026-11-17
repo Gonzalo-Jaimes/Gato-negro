@@ -140,7 +140,7 @@
                 <div class="tarjeta-material card <%= item.esAgrupado ? 'interactiva' : '' %>" 
                      data-nombre="<%= item.material.toLowerCase() %>" 
                      data-cat="<%= nombreCategoria.toLowerCase() %>" 
-                     style="border-left: 6px solid <%= colorBorde %>; width: 220px; background: rgba(var(--text-muted), 0.03); cursor: <%= item.esAgrupado ? 'pointer' : 'default' %>;"
+                     style="border-left: 6px solid <%= colorBorde %>; width: 220px; background: var(--bg-sunken); cursor: <%= item.esAgrupado ? 'pointer' : 'default' %>;"
                      <% if (item.esAgrupado) { %> onclick="toggleBreakdown(this)" <% } %>>
                     
                     <h3 style="margin: 0 0 10px 0; color: var(--text-main); text-transform: capitalize; font-size: 18px;">

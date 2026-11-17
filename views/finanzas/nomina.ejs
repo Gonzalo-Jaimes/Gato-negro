@@ -37,7 +37,7 @@
                                     <a href="/imprimir_nomina_v18/<%= c.id %>" target="_blank" class="btn" style="padding: 8px 15px; font-size: 0.85rem; text-decoration: none;">
                                         📄 PDF
                                     </a>
-                                    <form action="/archivar_cierre_v18/<%= c.id %>" method="POST" style="margin: 0;" onsubmit="return confirm('¿Seguro que ya pagó y archiva esta nómina?');">
+                                    <form action="/archivar_cierre_v18/<%= c.id %>" method="POST" style="margin: 0;" data-confirm="Se registrará el pago y la nómina quedará archivada. Confírmalo solo si ya entregaste el dinero." data-confirm-titulo="¿Marcar la nómina como pagada?" data-confirm-ok="Sí, ya pagué">
                                         <button type="submit" class="btn" style="padding: 8px 15px; font-size: 0.85rem; background: var(--primary); color: black;">
                                             ✅ Pagar
                                         </button>

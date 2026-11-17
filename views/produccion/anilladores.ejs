@@ -64,7 +64,7 @@
                             <strong>Ganancia Estimada:</strong> <span style="color:var(--success); font-weight:bold;">$<%= t.total_ganado.toLocaleString('es-CO') %></span>
                         </p>
                         
-                        <form action="/anilladores/validar_tarea/<%= t.id %>" method="POST" style="margin-top: 15px;" onsubmit="return confirm('¿Validar tarea y facturar <%= t.cantidad_cestas %> cestas? Esto pasará los tabacos al inventario de Anillados.');">
+                        <form action="/anilladores/validar_tarea/<%= t.id %>" method="POST" style="margin-top: 15px;" data-confirm="Se facturarán <%= t.cantidad_cestas %> cestas y los tabacos pasarán al inventario de Anillados." data-confirm-titulo="¿Validar la tarea y facturar?" data-confirm-ok="Sí, validar y facturar">
                             <input type="hidden" name="cantidad_cestas" value="<%= t.cantidad_cestas %>">
                             <button type="submit" class="btn touch-target touch-mobile-full" style="width: 100%; background: var(--success); color: white; border: none; padding: 10px; font-weight: bold; font-size: 13px;">
                                 ✅ Validar y Facturar

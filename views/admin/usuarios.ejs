@@ -44,7 +44,7 @@
         <td style="text-transform: capitalize;"><%= u.rol %></td>
         <td>
             <% if (u.usuario !== 'admin') { %>
-                <a href="/eliminar_usuario/<%= u.id %>" onclick="return confirm('¿Borrar usuario?')">
+                <a href="/eliminar_usuario/<%= u.id %>" data-confirm="Se eliminará el acceso de «<%= u.usuario %>» al sistema. Esta acción no se puede deshacer." data-confirm-titulo="¿Borrar al usuario <%= u.usuario %>?" data-confirm-ok="Sí, borrar" data-confirm-tipo="peligro">
                     <button class="btn" style="background: var(--danger); padding: 6px 12px; font-size: 12px; min-width: auto;">🗑 Eliminar</button>
                 </a>
             <% } else { %>
