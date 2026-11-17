@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, bcrypt, mostrarAlerta, obtenerHoraColombia, registrarAuditoria } = require('../lib/shared');
-const { isAdmin } = require('../lib/middleware');
+const { isAdmin, isAuth } = require('../lib/middleware');
 
 // ---------------- LOGIN / LOGOUT ----------------
 
@@ -154,8 +154,33 @@ router.post('/restar_inventario', isAdmin, async (req, res) => {
     res.redirect('/movimientos');
 });
 
-router.get('/cierre_diario', isAdmin, async (req, res) => {
-    res.render('admin/cierre_diario');
+// Panel del trabajador (Mi Cierre de Produccion). Cada rol operativo ve SOLO sus datos (req.session.usuario).
+// Restaura la logica del server original: la refactorizacion modular la dejo con isAdmin y sin datos (500 para todos).
+const ROLES_CIERRE = ['fabriquin', 'fabricacion', 'envolvedor', 'anillador', 'empacador'];
+
+router.get('/cierre_diario', isAuth, async (req, res) => {
+    if (!ROLES_CIERRE.includes(req.session.rol)) return res.redirect('/');
+    const usuario = req.session.usuario;
+
+    const { data: produccion } = await supabase.from('produccion_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'PENDIENTE').order('fecha', { ascending: false });
+    const ganancia_semana = (produccion || []).reduce((s, p) => s + parseFloat(p.total_ganado || 0), 0);
+
+    const { data: deudas } = await supabase.from('deudores_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'ACTIVA');
+    const deuda_total = (deudas || []).reduce((s, d) => s + parseFloat(d.monto_deuda || 0), 0);
+
+    const { data: tareas_asignadas } = await supabase.from('pedidos')
+        .select('*').eq('usuario', usuario).order('id', { ascending: false });
+
+    res.render('admin/cierre_diario', {
+        produccion: produccion || [],
+        ganancia_semana,
+        deuda_total,
+        saldo_neto: ganancia_semana - deuda_total,
+        usuario,
+        tareas_asignadas: tareas_asignadas || []
+    });
 });
 
 router.get('/empleados', isAdmin, async (req, res) => {
