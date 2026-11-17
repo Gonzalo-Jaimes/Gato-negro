@@ -50,16 +50,18 @@ Global (`public/css/theme.css`): 226 líneas, 56 variables, **1 sola** regla `:f
 | 6 | /empleados | Lista sin buscador, orden ni paginación; `th` sin `scope` | Alto con muchos trabajadores | Alta | Buscar, ordenar, paginar (Fase 4) |
 | 7 | /empleados (móvil) | La tabla se corta: la columna Herramienta queda fuera de pantalla y el formulario aprieta los inputs ("Non", "Cédu") | Alto en planta con celular | Alta | Vista de tarjetas en móvil; formulario en una columna |
 | 8 | /movimientos | Tres formularios (ingreso, salida, venta) compiten arriba; en móvil la tabla queda lejos | Medio: jerarquía confusa | Media | Pestañas o acordeón por tipo de movimiento |
-| 9 | /movimientos | La tabla depende de jQuery 3.7 + DataTables por CDN, sin SRI | Medio: rendimiento y riesgo de cadena de suministro | Media | Fijar integridad (SRI) o reemplazar por componente propio |
+| 9 | /movimientos y /analitica | Scripts de terceros por CDN: jQuery 3.7 + DataTables (Kardex) y `chart.js` **sin versión fijada** (Analítica); 0 atributos `integrity` en todas las vistas | Medio: rendimiento y riesgo de cadena de suministro (verificado con búsqueda en `views/`) | Media | Fijar versión + SRI o reemplazar por componente propio |
 | 10 | /movimientos | 11 de 13 controles sin label; 186 estilos inline; `th` sin `scope` | Medio | Media | Etiquetar y normalizar estilos |
 | 11 | /bodega | 8 tarjetas KPI de igual peso: "303 sacos" pesa lo mismo que "0 sobrantes" | Alto: no se entiende qué importa primero | Alta | Jerarquía por niveles (ver `02_jerarquia_visual.md`) |
 | 12 | /bodega (tableta/móvil) | Cada KPI de un número ocupa una fila completa: se desperdicia el alto de la pantalla | Medio | Media | Grid auto-fit de 2–4 columnas |
-| 13 | /bodega | 4 modales sin `role="dialog"`/`aria-modal`; sin gestión de foco | Alto para teclado y lectores | Alta | Un solo componente modal accesible |
+| 13 | /bodega | 4 modales sin `role="dialog"`/`aria-modal`; el código de `picadura.ejs` no tiene `.focus()` ni cierre con Escape (verificado por búsqueda en el archivo) | Alto para teclado y lectores | Alta | Un solo componente modal accesible |
 | 14 | /analitica | El dato clave (Balance neto, hoy negativo) queda debajo de la gráfica | Alto: nivel 1 de jerarquía bajo el pliegue | Alta | KPIs resumen arriba; gráfica debajo |
 | 15 | /analitica | Gráfica de barras con una categoría dominante (≈60 000 vs ≈0): las otras no se leen | Medio | Media | Escala/etiquetas de valor y orden por magnitud |
 | 16 | /analitica | 2 selects sin label; 0 atributos ARIA; la gráfica no tiene alternativa textual | Medio | Media | Labels y descripción de la gráfica |
 | 17 | Navegación | Emojis como iconos del menú; "Recepción" aparece en 3 módulos y "Asignar" en 3 con nombres distintos | Medio: ambigüedad y render inconsistente por sistema | Media | Rediseño de arquitectura (Fase 2) |
-| 18 | Global | Solo 1 regla `:focus-visible`, 2 `@media`, sin skip link, 0 ARIA en 4 de 5 pantallas | Alto: teclado y adaptabilidad deficientes | Alta | Foco global, breakpoints, skip link (Fases 3–4) |
+| 18 | Global | Estilos de foco mínimos (2 coincidencias de `:focus` en `theme.css` y `header.ejs`), solo 3 `@media` en todo el sistema (2 en `theme.css`, 1 en `header.ejs`; 0 en las 5 vistas base), **0 skip links en todas las vistas**, 0 ARIA en 4 de 5 pantallas | Alto: teclado y adaptabilidad deficientes | Alta | Foco global, breakpoints, skip link (Fases 3–4) |
+
+Limitación de las capturas "antes" de `/analitica`: la gráfica de `chart.js` se carga desde CDN y en las capturas del commit `a24fbc5` el recuadro aparece vacío porque la foto se tomó antes de que terminara de dibujarse (en la versión actual sí se ve). El hallazgo 15 se basa en la captura de la versión actual, con DOM idéntico. Si se necesita la imagen "antes" con la gráfica dibujada, hay que recapturarla desde `a24fbc5` esperando unos segundos.
 
 Pendiente de medir con herramienta (no afirmado aún): contraste de textos secundarios (subtítulos grises sobre fondo crema) y tiempos de carga; se medirá con Lighthouse en la Fase 4.
 
