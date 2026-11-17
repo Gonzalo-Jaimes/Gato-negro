@@ -44,12 +44,23 @@ Cambios a implementar en código (Fase 3–4):
 - Mover "Cierre contable" arriba como fila de 4 KPIs; Balance Neto con tamaño mayor y color semántico.
 - Controles de la gráfica junto al título de la gráfica, con `<label>` real.
 - Texto alternativo de la gráfica (`aria-describedby`) con los valores principales.
-- Breakpoints: 4 KPIs → 2×2 en tableta → 1 columna en móvil.
+- Breakpoints: balance a ancho completo y 3 KPI en fila (escritorio y tableta) → una columna en móvil.
 
-## 4. Comparación (se completará con la captura "después")
+## 4. Comparación (antes frente a después, implementada)
 
-| | Antes | Después |
+Capturas: `capturas/antes/escritorio/1_dashboard_analitica.jpg` frente a `capturas/despues/escritorio/1_dashboard_analitica.jpg` (también en móvil y tableta).
+
+| Nivel | Antes | Después (`views/admin/analitica.ejs`) |
 |---|---|---|
-| Primer elemento bajo el título | Selects de la gráfica | Balance Neto |
-| Métrica clave visible sin scroll | No | Sí |
-| Controles con label | 0 de 2 | 2 de 2 |
+| 1 · Lo primero que debe entenderse | Balance neto en la segunda tarjeta, bajo el pliegue, en un texto de igual peso que los demás | **Balance neto** a ancho completo y tamaño mayor, con símbolo ▼/▲ y «Déficit/Superávit», primer elemento bajo el título |
+| 2 · Información relevante | Ingresos, nómina y mantenimiento mezclados en una sola línea; gráfica sin explicación (y, en la versión original, **sin dibujarse**) | Tres KPI en fila y la gráfica con resumen textual («Mayor valor: …, 90 % del total») y tabla alternativa |
+| 3 · Apoyo | Subtítulo gris claro, casi ilegible | Subtítulo con el texto atenuado más oscuro (5,73:1) y nota bajo cada KPI |
+| 4 · Acciones secundarias | Dos selects **antes** que la métrica, sin etiqueta asociada | Selects junto al título de la gráfica, con `<label for>` visible |
+| 5 · Auxiliar | Pie de página | Sin cambio |
+
+| Medida | Antes | Después |
+|---|---|---|
+| Primer elemento bajo el título | Selects de la gráfica | Balance neto |
+| Métrica clave visible sin desplazarse (1366×768, 768×1024 y 375×812) | No | **Sí** (comprobado en las capturas de los 3 tamaños) |
+| Controles con etiqueta | 0 de 2 | **2 de 2** |
+| La gráfica se dibuja | No (error de JSON) | Sí, en 4 conjuntos de datos y 4 tipos |
