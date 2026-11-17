@@ -1,0 +1,79 @@
+{
+  "estructural": {
+    "prompt_debil": {
+      "mantiene_name_y_action": true,
+      "etiquetas_con_for_valido": "3/3",
+      "inputs_con_aria_describedby": "2/3",
+      "aria_invalid_dinamico": false,
+      "regiones_de_error_o_estado": 0,
+      "mensajes_de_error_especificos_en_js": 0,
+      "foco_al_primer_invalido": false,
+      "colores_hex_fijos": 6,
+      "usos_de_tokens_var": 0,
+      "clases_del_sistema_de_diseno": "0/5",
+      "estados_cubiertos": {
+        "foco": true,
+        "error": true,
+        "deshabilitado": false,
+        "exito": false
+      },
+      "objetivo_tactil_44px": false,
+      "usa_placeholder_como_ejemplo": 3,
+      "responsive_una_columna_en_movil": true
+    },
+    "prompt_estructurado": {
+      "mantiene_name_y_action": true,
+      "etiquetas_con_for_valido": "3/3",
+      "inputs_con_aria_describedby": "3/3",
+      "aria_invalid_dinamico": true,
+      "regiones_de_error_o_estado": 5,
+      "mensajes_de_error_especificos_en_js": 16,
+      "foco_al_primer_invalido": true,
+      "colores_hex_fijos": 0,
+      "usos_de_tokens_var": 32,
+      "clases_del_sistema_de_diseno": "5/5",
+      "estados_cubiertos": {
+        "foco": true,
+        "error": true,
+        "deshabilitado": true,
+        "exito": true
+      },
+      "objetivo_tactil_44px": true,
+      "usa_placeholder_como_ejemplo": 0,
+      "responsive_una_columna_en_movil": true
+    }
+  },
+  "comportamiento_vs_servidor": {
+    "prompt_debil": {
+      "casos": 38,
+      "coinciden": 25,
+      "porcentaje": 65.8,
+      "difieren": [
+        "codigo: «ABCD1» servidor=inválido, débil=válido",
+        "codigo: «F-1» servidor=inválido, débil=válido",
+        "codigo: «1F» servidor=inválido, débil=válido",
+        "codigo: «F12345» servidor=inválido, débil=válido",
+        "codigo: «AB» servidor=inválido, débil=válido",
+        "codigo: «F01 » servidor=válido, débil=inválido",
+        "nombre: «Ana3» servidor=inválido, débil=válido",
+        "nombre: «Carlos_Ruiz» servidor=inválido, débil=válido",
+        "nombre: «   » servidor=inválido, débil=válido",
+        "cedula: «88193514» servidor=válido, débil=inválido",
+        "cedula: «12.345.678» servidor=válido, débil=inválido",
+        "cedula: «cc-88193514» servidor=válido, débil=inválido",
+        "cedula: «V-12 345 678» servidor=válido, débil=inválido"
+      ]
+    },
+    "prompt_estructurado": {
+      "casos": 38,
+      "coinciden": 34,
+      "porcentaje": 89.5,
+      "difieren": [
+        "cedula: «CC1020304050» servidor=válido, estructurado=inválido",
+        "cedula: «12.345.678» servidor=válido, estructurado=inválido",
+        "cedula: «CE-12345678» servidor=válido, estructurado=inválido",
+        "cedula: «V-12 345 678» servidor=válido, estructurado=inválido"
+      ]
+    }
+  }
+}
