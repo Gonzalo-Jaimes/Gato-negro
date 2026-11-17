@@ -38,7 +38,7 @@ Criterio para la pantalla más débil: `/bodega` concentra **1361 atributos `sty
 
 Global (`public/css/theme.css`): 226 líneas, 56 variables, **1 sola** regla `:focus-visible`, **2** `@media` en total, 1 bloque `prefers-reduced-motion`.
 
-## 3. Matriz de hallazgos (19)
+## 3. Matriz de hallazgos (20)
 
 | # | Pantalla | Hallazgo | Impacto | Prioridad | Acción / corrección |
 |---|---|---|---|---|---|
@@ -61,6 +61,7 @@ Global (`public/css/theme.css`): 226 líneas, 56 variables, **1 sola** regla `:f
 | 17 | Navegación | Emojis como iconos del menú; "Recepción" aparece en 3 módulos y "Asignar" en 3 con nombres distintos | Medio: ambigüedad y render inconsistente por sistema | Media | Rediseño de arquitectura (Fase 2) |
 | 18 | Global | Estilos de foco mínimos (2 coincidencias de `:focus` en `theme.css` y `header.ejs`), solo 3 `@media` en todo el sistema (2 en `theme.css`, 1 en `header.ejs`; 0 en las 5 vistas base), **0 skip links en todas las vistas**, 0 ARIA en 4 de 5 pantallas | Alto: teclado y adaptabilidad deficientes | Alta | Foco global, breakpoints, skip link (Fases 3–4) |
 | 19 | /analitica (estado original) | La gráfica del dashboard **no se dibuja**: `JSON.parse` falla en consola (`Expected property name or '}' in JSON`) porque `analitica.ejs:67` inyectaba el JSON con `<%-` (sin escapar) dentro del atributo `data-raw="..."`, cuyas comillas dobles cortaban el atributo | Alto: el dashboard principal queda sin su visualización clave y sin aviso al usuario | Alta | Escapar con `<%=` (corregido en `de97435`); mejor aún, pasar los datos en un `<script type="application/json">` y mostrar un estado de error si falla |
+| 20 | /cierre_diario (todos los roles) | "Mi Cierre de Producción" **devuelve 500 para todos**: la ruta renderiza la vista sin datos (`ganancia_semana is not defined`) y además exige rol admin, aunque es la pantalla de inicio de anilladores y empacadores tras el login; estos rebotan al login sin ningún mensaje | Alto: dos roles no pueden usar el sistema y el trabajador no ve su pago | Alta | Restaurar la consulta original filtrada por el usuario de la sesión, permitir solo roles operativos y mostrar estado de error si falla (corregido en commit aparte) |
 
 Sobre las capturas "antes" de `/analitica`: en el commit original `a24fbc5` el recuadro de la gráfica aparece **vacío incluso tras esperar 5 s**. No es un problema de captura sino el hallazgo 19: un error real de la aplicación original. La captura se conserva tal cual como evidencia. El hallazgo 15 (escala de la gráfica) se observó en la versión actual, donde la gráfica ya se dibuja.
 
@@ -69,7 +70,7 @@ Pendiente de medir con herramienta (no afirmado aún): contraste de textos secun
 Evidencia del hallazgo 19: capturas `capturas/antes/*/1_dashboard_analitica.jpg` (recuadro vacío) y error de consola en `a24fbc5`, línea 410 de la página renderizada. Diferencia verificada con `git show a24fbc5:views/admin/analitica.ejs` frente a la versión actual.
 
 ## 4. Prioridad resumida
-- **Alta (12):** 1, 2, 3, 4, 5, 6, 7, 11, 13, 14, 18, 19
+- **Alta (13):** 1, 2, 3, 4, 5, 6, 7, 11, 13, 14, 18, 19, 20
 - **Media (7):** 8, 9, 10, 12, 15, 16, 17
 
-Total: 19 hallazgos (requisito: mínimo 15). Prioridad Baja: ninguno por ahora; se añadirán los menores que aparezcan al implementar.
+Total: 20 hallazgos (requisito: mínimo 15). Prioridad Baja: ninguno por ahora; se añadirán los menores que aparezcan al implementar.

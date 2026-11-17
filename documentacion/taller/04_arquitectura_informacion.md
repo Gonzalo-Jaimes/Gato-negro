@@ -59,7 +59,7 @@ Páginas del rol admin SIN entrada en el menú:
 | A8 | Código muerto de navegación: `views/base.ejs` (layout con menú antiguo, ninguna ruta lo usa) y `locals.currentUrl` (nunca se define; el ítem activo funciona por JavaScript con `location.pathname`) | Búsqueda en `src/` y `views/` |
 
 ### Hallazgo funcional (acceso por rol)
-Los roles `anillador` y `empacador` son redirigidos tras el login a `/cierre_diario` (`admin.js` líneas 31 y 59), pero esa ruta exige `isAdmin` (`admin.js` línea 157, `middleware.js`). Resultado: vuelven a `/login`. El menú operativo ("Mi producción") apunta a la misma ruta. **No se modifica sin aprobación**, porque cambia permisos; ver sección 5.
+Los roles `anillador` y `empacador` son redirigidos tras el login a `/cierre_diario` (`admin.js` líneas 31 y 59), pero esa ruta exige `isAdmin` (`admin.js` línea 157, `middleware.js`). Resultado: vuelven a `/login`. El menú operativo ("Mi producción") apunta a la misma ruta. Además la ruta fallaba con 500 para cualquier rol (renderizaba sin datos). Corregido en un commit aparte; ver sección 5.
 
 ## 2. Principios usados para el rediseño
 1. **Agrupar por proceso**, no por quién usa la pantalla: la cadena real es Bodega → Fabriquines → Envolvedoras → Anilladores → Empaque.
@@ -139,11 +139,12 @@ Verificación realizada:
 - Al pedir las 24 rutas con la sesión de administrador, **23 respondieron 200 y una dio 500** (`/despacho_empaque`, ver A3). Se enlazó entonces la ruta canónica `/despachos_empaque` y la ruta rota se corrigió en un commit aparte (redirige a la canónica).
 
 ## 5. Pendientes que requieren decisión
-- **Acceso de `anillador` y `empacador`:** cambiar `/cierre_diario` de `isAdmin` a `isAuth` (una línea) los dejaría entrar a su pantalla. Es un cambio de permisos, por eso se consulta antes. Se haría en un commit aparte.
+- **Acceso de `anillador` y `empacador` (RESUELTO, commit aparte):** al revisar la ruta resultó que `/cierre_diario` fallaba con 500 **para todos**, no solo por el permiso: renderizaba la vista sin datos. La lógica original (anterior a la refactorización modular, recuperada del historial de git) consultaba la producción pendiente, las deudas activas y los pedidos del usuario de la sesión. Se restauró, limitada a los roles `fabriquin`, `fabricacion`, `envolvedor`, `anillador` y `empacador`, cada uno solo con sus propios datos. Admin y mantenimiento son redirigidos a la landing. Verificado con un arnés de prueba por rol (ver 04, sección 6); falta probar con un usuario real de esos roles.
 - **Rutas duplicadas (A3, A4, A5):** no se eliminaron para no romper marcadores ni enlaces del bot; se documentan y el menú usa una sola URL canónica por pantalla.
 - **`views/base.ejs`:** código muerto; se puede borrar en una limpieza aparte.
 
 ## 6. Evidencia
 - Antes: el menú original aparece en las capturas `capturas/antes/escritorio/*.jpg` (grupos colapsados, 5 grupos mezclados con rol y proceso).
 - Después: `capturas/despues/escritorio/6_menu_navegacion.jpg` (menú por proceso con el grupo de la página actual abierto y resaltado).
+- Prueba de `/cierre_diario` por rol (arnés con sesión simulada, datos reales de Supabase filtrados por un usuario inexistente): sin sesión → 302 `/login`; admin y mantenimiento → 302 `/`; `anillador`, `empacador` y `fabriquin` → 200, con el título, el bloque "A Favor" y sin errores de plantilla. Con datos reales de un trabajador no se probó (no hay credenciales de ese rol).
 - Comprobación de la ruta corregida: `/despacho_empaque` ahora redirige a `/despachos_empaque` y la página carga; las 24 rutas del menú admin responden 200.
