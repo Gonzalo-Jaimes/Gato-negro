@@ -38,7 +38,7 @@ Criterio para la pantalla más débil: `/bodega` concentra **1361 atributos `sty
 
 Global (`public/css/theme.css`): 226 líneas, 56 variables, **1 sola** regla `:focus-visible`, **2** `@media` en total, 1 bloque `prefers-reduced-motion`.
 
-## 3. Matriz de hallazgos (18)
+## 3. Matriz de hallazgos (19)
 
 | # | Pantalla | Hallazgo | Impacto | Prioridad | Acción / corrección |
 |---|---|---|---|---|---|
@@ -60,13 +60,16 @@ Global (`public/css/theme.css`): 226 líneas, 56 variables, **1 sola** regla `:f
 | 16 | /analitica | 2 selects sin label; 0 atributos ARIA; la gráfica no tiene alternativa textual | Medio | Media | Labels y descripción de la gráfica |
 | 17 | Navegación | Emojis como iconos del menú; "Recepción" aparece en 3 módulos y "Asignar" en 3 con nombres distintos | Medio: ambigüedad y render inconsistente por sistema | Media | Rediseño de arquitectura (Fase 2) |
 | 18 | Global | Estilos de foco mínimos (2 coincidencias de `:focus` en `theme.css` y `header.ejs`), solo 3 `@media` en todo el sistema (2 en `theme.css`, 1 en `header.ejs`; 0 en las 5 vistas base), **0 skip links en todas las vistas**, 0 ARIA en 4 de 5 pantallas | Alto: teclado y adaptabilidad deficientes | Alta | Foco global, breakpoints, skip link (Fases 3–4) |
+| 19 | /analitica (estado original) | La gráfica del dashboard **no se dibuja**: `JSON.parse` falla en consola (`Expected property name or '}' in JSON`) porque `analitica.ejs:67` inyectaba el JSON con `<%-` (sin escapar) dentro del atributo `data-raw="..."`, cuyas comillas dobles cortaban el atributo | Alto: el dashboard principal queda sin su visualización clave y sin aviso al usuario | Alta | Escapar con `<%=` (corregido en `de97435`); mejor aún, pasar los datos en un `<script type="application/json">` y mostrar un estado de error si falla |
 
-Limitación de las capturas "antes" de `/analitica`: la gráfica de `chart.js` se carga desde CDN y en las capturas del commit `a24fbc5` el recuadro aparece vacío porque la foto se tomó antes de que terminara de dibujarse (en la versión actual sí se ve). El hallazgo 15 se basa en la captura de la versión actual, con DOM idéntico. Si se necesita la imagen "antes" con la gráfica dibujada, hay que recapturarla desde `a24fbc5` esperando unos segundos.
+Sobre las capturas "antes" de `/analitica`: en el commit original `a24fbc5` el recuadro de la gráfica aparece **vacío incluso tras esperar 5 s**. No es un problema de captura sino el hallazgo 19: un error real de la aplicación original. La captura se conserva tal cual como evidencia. El hallazgo 15 (escala de la gráfica) se observó en la versión actual, donde la gráfica ya se dibuja.
 
 Pendiente de medir con herramienta (no afirmado aún): contraste de textos secundarios (subtítulos grises sobre fondo crema) y tiempos de carga; se medirá con Lighthouse en la Fase 4.
 
+Evidencia del hallazgo 19: capturas `capturas/antes/*/1_dashboard_analitica.jpg` (recuadro vacío) y error de consola en `a24fbc5`, línea 410 de la página renderizada. Diferencia verificada con `git show a24fbc5:views/admin/analitica.ejs` frente a la versión actual.
+
 ## 4. Prioridad resumida
-- **Alta (11):** 1, 2, 3, 4, 5, 6, 7, 11, 13, 14, 18
+- **Alta (12):** 1, 2, 3, 4, 5, 6, 7, 11, 13, 14, 18, 19
 - **Media (7):** 8, 9, 10, 12, 15, 16, 17
 
-Total: 18 hallazgos (requisito: mínimo 15). Prioridad Baja: ninguno por ahora; se añadirán los menores que aparezcan al implementar.
+Total: 19 hallazgos (requisito: mínimo 15). Prioridad Baja: ninguno por ahora; se añadirán los menores que aparezcan al implementar.
