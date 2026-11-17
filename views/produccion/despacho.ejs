@@ -273,7 +273,8 @@
         </div>
 
         <hr style="margin-bottom: 20px;">
-        <button type="submit" id="btn_submit" class="btn btn-success btn-block btn-lg" disabled>
+        <p id="ayuda_submit" class="field-hint" style="text-align: center; margin-bottom: 8px;">Para habilitar el botón verde: elige al fabriquín y pulsa «Calcular pesaje».</p>
+        <button type="submit" id="btn_submit" class="btn btn-success btn-block btn-lg" aria-describedby="ayuda_submit" disabled>
             🖨️ Registrar Salida e Imprimir Formato
         </button>
     </form>
@@ -343,6 +344,7 @@
 
         document.getElementById('resultado_calculo').style.display = 'none';
         document.getElementById('btn_submit').disabled = true;
+        document.getElementById('ayuda_submit').hidden = false;   // vuelve a explicar por qué está deshabilitado
     }
 
     function validarAbono() {
@@ -413,6 +415,7 @@
 
         document.getElementById('resultado_calculo').style.display = 'block';
         document.getElementById('btn_submit').disabled = false;
+        document.getElementById('ayuda_submit').hidden = true;    // ya está habilitado: la ayuda sobra
     }
 </script>
 
