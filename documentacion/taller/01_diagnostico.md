@@ -3,7 +3,9 @@
 Fecha de medición: 2026-11-17 · Servidor local `localhost:3001` · Rama `feature/taller-mejoramiento`
 Método: inspección en navegador (escritorio 1366 px, tableta 768 px, móvil 375 px) y conteo programático en el DOM de cada pantalla.
 
-> Nota de honestidad: las capturas "antes" corresponden al código actual de `main`, que ya incluye el rediseño artesanal parcial (tokens cobre, landing, loader). Es la línea base **de este taller**. Las cifras de la columna Evidencia son medidas reales, no estimaciones.
+> Origen de las capturas: las 15 capturas "antes" se tomaron del **commit original `a24fbc5`** (anterior al rediseño artesanal), ejecutado en un worktree aparte en el puerto 3002 con la misma base de datos. Las métricas de la sección 2 se midieron en ambas versiones (`a24fbc5` y la rama actual) y **coinciden**: el rediseño previo cambió CSS y paleta, no la estructura DOM, por lo que los hallazgos estructurales (labels, ARIA, estilos inline, modales, `alert`/`confirm`) son válidos para el estado original. Las cifras son medidas reales, no estimaciones.
+>
+> Diferencia visible entre versiones: en `a24fbc5` el tema es frío (azul/gris, tipografía en negrita pesada en el menú) y `/movimientos` muestra barra de scroll horizontal en escritorio; en la versión actual el menú y la paleta cobre ya fueron mejorados.
 
 ## 1. Pantallas base y capturas originales
 
