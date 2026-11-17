@@ -19,6 +19,10 @@ app.use(helmet({
         directives: {
             defaultSrc: ["'self'"],
             scriptSrc: ["'self'", "'unsafe-inline'", "https://cdn.jsdelivr.net", "https://cdn.tailwindcss.com", "https://code.jquery.com", "https://cdn.datatables.net"],
+            // helmet fija script-src-attr 'none' por defecto, lo que bloquea los onclick/onchange/onsubmit en linea
+            // de las vistas (modo oscuro, menu movil, modales y los confirm() de borrado/pago). Se alinea con scriptSrc,
+            // que ya permite scripts en linea. Pendiente a largo plazo: migrarlos a addEventListener y volver a 'none'.
+            scriptSrcAttr: ["'unsafe-inline'"],
             styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdn.jsdelivr.net", "https://cdn.datatables.net"],
             fontSrc: ["'self'", "https://fonts.gstatic.com", "data:"],
             imgSrc: ["'self'", "data:", "blob:"],
