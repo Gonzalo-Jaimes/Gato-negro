@@ -148,3 +148,11 @@ Verificación realizada:
 - Después: `capturas/despues/escritorio/6_menu_navegacion.jpg` (menú por proceso con el grupo de la página actual abierto y resaltado).
 - Prueba de `/cierre_diario` por rol (arnés con sesión simulada, datos reales de Supabase filtrados por un usuario inexistente): sin sesión → 302 `/login`; admin y mantenimiento → 302 `/`; `anillador`, `empacador` y `fabriquin` → 200, con el título, el bloque "A Favor" y sin errores de plantilla. Con datos reales de un trabajador no se probó (no hay credenciales de ese rol).
 - Comprobación de la ruta corregida: `/despacho_empaque` ahora redirige a `/despachos_empaque` y la página carga; las 24 rutas del menú admin responden 200.
+
+### Prueba de `/cierre_diario` con un usuario real (rol trabajador)
+Realizada el 2026-11-17 con una sesión real de un usuario operativo (captura `capturas/despues/escritorio/7_cierre_diario_trabajador.jpg`):
+- Tras el login la pantalla **carga sin error** (antes: 500 y rebote al login). Título "Mi Cierre de Producción", tres tarjetas y dos tablas.
+- Menú lateral con solo **Pedidos** y **Mi producción** (activo). Coincide con el rol.
+- **Control de acceso:** con esa sesión, las 10 páginas de administración probadas (`/nomina`, `/inventario`, `/analitica`, `/usuarios`, `/empleados`, `/movimientos`, `/despacho`, `/facturas`, `/bodega`, `/mermas`) redirigen y no cargan; responden 200 solo `/pedidos`, `/cierre_diario` y `/maquinas`.
+- **Estado con datos:** este usuario no tenía producción, deudas ni pedidos, así que se vio el estado vacío (tarjetas en $0 y mensajes "No te han asignado ningún material aún" / "No tienes producciones pendientes"). El estado con datos se comprobó renderizando la vista con datos de muestra (montos, filas y estados "Liquidado"/"En proceso" correctos); **no** con datos reales.
+- Observación pre-existente, sin cambios: `/maquinas` es accesible a cualquier usuario autenticado (usa `isAuth`), aunque no aparece en su menú. Queda anotada para revisión de permisos.
