@@ -1,0 +1,163 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><title>Kit de pruebas con usuarios - Gato Negro ERP</title>
+<style>
+@page { size: A4; margin: 14mm; }
+* { box-sizing: border-box; }
+body { font: 10.5pt/1.4 "Segoe UI", Arial, sans-serif; color: #1c1712; margin: 0; }
+h1 { font-size: 16pt; color: #7a3b12; margin: 0 0 4px; }
+h2 { font-size: 12pt; color: #7a3b12; margin: 12px 0 4px; }
+.pag { page-break-after: always; }
+.pag:last-child { page-break-after: auto; }
+table { width: 100%; border-collapse: collapse; margin: 6px 0; }
+th, td { border: 1px solid #555; padding: 5px 6px; vertical-align: top; text-align: left; }
+th { background: #eee3d2; font-size: 9.5pt; }
+.lin { border-bottom: 1px solid #333; display: inline-block; min-width: 150px; height: 1.2em; }
+.caja { border: 1px solid #555; padding: 6px 8px; margin: 6px 0; }
+.obs { font-size: 9pt; color: #444; }
+.alto td { height: 62px; }
+.tarjeta { border: 2px dashed #7a3b12; padding: 14px 16px; margin: 0 0 18px; min-height: 120px; }
+.tarjeta h2 { margin-top: 0; font-size: 13pt; }
+.tarjeta p { font-size: 13pt; margin: 6px 0; }
+.chk::before { content: "\2610  "; }
+ul { margin: 4px 0 4px 18px; padding: 0; }
+</style></head><body>
+
+<!-- 1. Guía del moderador y consentimiento -->
+<section class="pag">
+<h1>Pruebas con usuarios · Guía del moderador</h1>
+<p class="obs">Gato Negro ERP · Taller de Mejoramiento SaaS · Tecnologías de la Industria 4.0 · 2026-II</p>
+
+<h2>Antes de cada sesión</h2>
+<ul>
+<li class="chk">App abierta y con sesión de administrador, en la pantalla de inicio. Participante P2: en el celular (375 px).</li>
+<li class="chk">Recalcular la respuesta de la Tarea 2 (Kardex: filtro «Salidas» + búsqueda «capa») y anotarla en la hoja del participante.</li>
+<li class="chk">Tarea 1 escribe en la base de datos: solo con aprobación del equipo y con el código de prueba de la hoja (ZZ91, ZZ92, ZZ93). Eliminar el registro al terminar.</li>
+<li class="chk">Cronómetro, bolígrafo, tarjetas de tareas recortadas, hoja de registro del participante.</li>
+</ul>
+
+<h2>Guion</h2>
+<ol>
+<li><strong>Bienvenida (2 min):</strong> «Estamos probando el sistema, no a ti. No hay respuestas incorrectas. Si algo es confuso, es culpa del sistema. Puedes parar cuando quieras.»</li>
+<li><strong>Pensar en voz alta:</strong> «Mientras lo haces, cuéntame qué piensas y qué esperas que pase.»</li>
+<li><strong>Entregar la tarjeta</strong> y empezar el cronómetro cuando termine de leerla.</li>
+<li><strong>Frases permitidas:</strong> «¿Qué esperabas que pasara?», «¿Qué harías ahora?», «Sigue como lo harías normalmente».</li>
+<li><strong>Prohibido:</strong> señalar botones, leer el nombre de una pantalla, decir «casi» o «ya casi». Más de 1 minuto atascado: dar <em>una</em> pista general y anotar 0,5.</li>
+<li><strong>Al terminar cada tarea:</strong> preguntar el SEQ (1 = muy difícil … 7 = muy fácil) y «¿qué fue lo más confuso?».</li>
+<li><strong>Cierre (3 min):</strong> «¿Qué es lo primero que cambiarías?», «¿Qué te gustó?».</li>
+</ol>
+
+<h2>Cómo puntuar</h2>
+<table>
+<tr><th>Éxito</th><th>Errores</th></tr>
+<tr><td>1 = completa sin ayuda · 0,5 = completa tras una pista · 0 = no completa o se agota el límite</td>
+<td>Cada clic equivocado, cada mensaje de error del sistema y cada petición de ayuda.</td></tr>
+</table>
+
+<h2>Consentimiento del participante</h2>
+<p>Entiendo que se evalúa el sistema y no a mí, que puedo parar cuando quiera, y que se anotarán mis tiempos y comentarios. Mis datos se usarán solo en el informe del taller.</p>
+<p><span class="chk">Acepto que se anoten mis comentarios.</span> &nbsp; <span class="chk">Acepto que se grabe la pantalla (opcional).</span> &nbsp; <span class="chk">Prefiero anonimato.</span></p>
+<p>Nombre (o iniciales): <span class="lin"></span> &nbsp; Firma: <span class="lin"></span> &nbsp; Fecha: <span class="lin" style="min-width:90px"></span></p>
+</section>
+
+<!-- 2. Tarjetas para el participante -->
+<section class="pag">
+<h1>Tarjetas de tareas (recortar por la línea)</h1>
+<p class="obs">Se entrega una por vez. Solo escenario; sin nombres de pantallas ni botones.</p>
+
+<div class="tarjeta"><h2>Tarea 1</h2>
+<p>Hoy empezó a trabajar <strong>Marta Ruiz Gómez</strong>. Su documento es <strong>CC-52123456</strong> y le toca el código <strong>ZZ91 / ZZ92 / ZZ93</strong> (el moderador marca el suyo: ☐ ZZ91 ☐ ZZ92 ☐ ZZ93).</p>
+<p>Regístrala en el sistema.</p></div>
+
+<div class="tarjeta"><h2>Tarea 2</h2>
+<p>La dueña quiere saber <strong>cuántas veces ha salido material de capa</strong> de la bodega y <strong>de qué fue la última salida</strong>.</p>
+<p>Dime las dos cosas.</p></div>
+
+<div class="tarjeta"><h2>Tarea 3</h2>
+<p>A <strong>Blanca Alvarado</strong> hay que asignarle <strong>2 500 tabacos</strong> hoy.</p>
+<p>Averigua cuántos kilos de capa, capote y picadura se le deben entregar y cuántas cestas. <em>(No registres la salida.)</em></p></div>
+</section>
+
+<!-- 3-5. Hojas de registro -->
+<section class="pag">
+<h1>Hoja de registro · Participante P1</h1>
+<p><strong>Fecha:</strong> <span class="lin" style="min-width:100px"></span> &nbsp; <strong>Dispositivo:</strong> Computador &nbsp; <strong>Observador:</strong> <span class="lin"></span></p>
+<p><strong>Perfil:</strong> administrativo con hojas de cálculo · Edad: <span class="lin" style="min-width:50px"></span> Ocupación: <span class="lin"></span></p>
+<p>Experiencia previa con sistemas similares: <span class="lin" style="min-width:300px"></span></p>
+<div class="caja obs"><strong>Para el observador:</strong> código Tarea 1 = <strong>ZZ91</strong> · T2: respuesta de referencia hoy = <span class="lin" style="min-width:60px"></span> salidas de «capa» (recalcular) · T3: capa 2,5 kg, capote 4,5 kg, picadura 17,5 kg, 2 cestas.</div>
+<table class="alto">
+<tr><th style="width:17%">Tarea</th><th style="width:11%">Éxito<br>1 / 0,5 / 0</th><th style="width:11%">Tiempo<br>mm:ss</th><th style="width:9%">Errores</th><th style="width:9%">SEQ<br>1–7</th><th>Dónde dudó · frases textuales</th></tr>
+<tr><td>1 · Registrar trabajador<br><span class="obs">límite 4 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2 · Historial del Kardex<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3 · Asignación en Despacho<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p><strong>Previsiones a verificar:</strong> T1 ¿escribe el documento con o sin «CC-»? ¿lee la ayuda? · T2 ¿encuentra «Ver detalle» y el filtro «Tipo»? · T3 ¿entiende que debe calcular el pesaje? ¿elige de la lista?</p>
+<p><strong>Lo primero que cambiaría (palabras del participante):</strong></p>
+<div class="caja" style="height:70px"></div>
+<p><strong>Lo que le gustó:</strong></p>
+<div class="caja" style="height:50px"></div>
+<p class="obs">☐ Registro ZZ91 eliminado al terminar</p>
+</section>
+
+<section class="pag">
+<h1>Hoja de registro · Participante P2</h1>
+<p><strong>Fecha:</strong> <span class="lin" style="min-width:100px"></span> &nbsp; <strong>Dispositivo:</strong> Celular (375 px) &nbsp; <strong>Observador:</strong> <span class="lin"></span></p>
+<p><strong>Perfil:</strong> operario o persona de planta · Edad: <span class="lin" style="min-width:50px"></span> Ocupación: <span class="lin"></span></p>
+<p>Experiencia previa con sistemas similares: <span class="lin" style="min-width:300px"></span></p>
+<div class="caja obs"><strong>Para el observador:</strong> código Tarea 1 = <strong>ZZ92</strong> · T2: respuesta de referencia hoy = <span class="lin" style="min-width:60px"></span> salidas de «capa» (recalcular) · T3: capa 2,5 kg, capote 4,5 kg, picadura 17,5 kg, 2 cestas.</div>
+<table class="alto">
+<tr><th style="width:17%">Tarea</th><th style="width:11%">Éxito<br>1 / 0,5 / 0</th><th style="width:11%">Tiempo<br>mm:ss</th><th style="width:9%">Errores</th><th style="width:9%">SEQ<br>1–7</th><th>Dónde dudó · frases textuales</th></tr>
+<tr><td>1 · Registrar trabajador<br><span class="obs">límite 4 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2 · Historial del Kardex<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3 · Asignación en Despacho<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p><strong>Previsiones a verificar (móvil):</strong> las listas son tarjetas; ¿toca «Eliminar» sin querer? ¿los botones se alcanzan con el pulgar? ¿el teclado tapa el campo?</p>
+<p><strong>Lo primero que cambiaría (palabras del participante):</strong></p>
+<div class="caja" style="height:70px"></div>
+<p><strong>Lo que le gustó:</strong></p>
+<div class="caja" style="height:50px"></div>
+<p class="obs">☐ Registro ZZ92 eliminado al terminar</p>
+</section>
+
+<section class="pag">
+<h1>Hoja de registro · Participante P3</h1>
+<p><strong>Fecha:</strong> <span class="lin" style="min-width:100px"></span> &nbsp; <strong>Dispositivo:</strong> Computador &nbsp; <strong>Observador:</strong> <span class="lin"></span></p>
+<p><strong>Perfil:</strong> poca experiencia digital · Edad: <span class="lin" style="min-width:50px"></span> Ocupación: <span class="lin"></span></p>
+<p>Experiencia previa con sistemas similares: <span class="lin" style="min-width:300px"></span></p>
+<div class="caja obs"><strong>Para el observador:</strong> código Tarea 1 = <strong>ZZ93</strong> · T2: respuesta de referencia hoy = <span class="lin" style="min-width:60px"></span> salidas de «capa» (recalcular) · T3: capa 2,5 kg, capote 4,5 kg, picadura 17,5 kg, 2 cestas.</div>
+<table class="alto">
+<tr><th style="width:17%">Tarea</th><th style="width:11%">Éxito<br>1 / 0,5 / 0</th><th style="width:11%">Tiempo<br>mm:ss</th><th style="width:9%">Errores</th><th style="width:9%">SEQ<br>1–7</th><th>Dónde dudó · frases textuales</th></tr>
+<tr><td>1 · Registrar trabajador<br><span class="obs">límite 4 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2 · Historial del Kardex<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3 · Asignación en Despacho<br><span class="obs">límite 5 min</span></td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p><strong>Previsiones a verificar:</strong> ¿hay jerga que no entiende? ¿se pierde en el menú? ¿lee los mensajes de error y los entiende?</p>
+<p><strong>Lo primero que cambiaría (palabras del participante):</strong></p>
+<div class="caja" style="height:70px"></div>
+<p><strong>Lo que le gustó:</strong></p>
+<div class="caja" style="height:50px"></div>
+<p class="obs">☐ Registro ZZ93 eliminado al terminar</p>
+</section>
+
+<!-- 6. Consolidado -->
+<section class="pag">
+<h1>Consolidado de las 3 sesiones</h1>
+<table class="alto">
+<tr><th>Tarea</th><th>Éxito medio</th><th>Tiempo medio</th><th>Mín.–máx.</th><th>Errores por persona</th><th>SEQ medio</th></tr>
+<tr><td>1 · Registrar trabajador</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>2 · Historial del Kardex</td><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td>3 · Asignación en Despacho</td><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p class="obs">Con 3 personas el análisis es cualitativo. Un problema que aparece en 2 de 3 ya es prioritario.</p>
+
+<h2>Mejora prioritaria</h2>
+<p class="obs">Prioridad = personas afectadas (de 3) × severidad (0 = no es problema … 4 = catastrófico). Gana el mayor puntaje; si hay empate, el que impide completar una tarea.</p>
+<table class="alto">
+<tr><th>Problema observado</th><th style="width:11%">Personas</th><th style="width:11%">Severidad</th><th style="width:11%">Prioridad</th><th style="width:28%">Cambio propuesto</th></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+<tr><td></td><td></td><td></td><td></td><td></td></tr>
+</table>
+<p class="obs">Al terminar: fotografiar o escanear estas hojas y pasarlas al equipo para completar <code>09_pruebas_con_usuarios.md</code>.</p>
+</section>
+</body></html>
