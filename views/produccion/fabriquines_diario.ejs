@@ -104,6 +104,10 @@
     const histEmp  = (historialPrestamos || {})[emp.id] || [];
     const totalRecibido = (reg.lun_tabacos||0)+(reg.mar_tabacos||0)+(reg.mie_tabacos||0)+(reg.jue_tabacos||0)+(reg.vie_tabacos||0)+(reg.sab_tabacos||0);
     const pendiente = emp.deuda_tabacos - totalRecibido;
+    const cestasRecibidas = (reg.lun_cestas||0)+(reg.mar_cestas||0)+(reg.mie_cestas||0)+(reg.jue_cestas||0)+(reg.vie_cestas||0)+(reg.sab_cestas||0);
+    const infoCestas = (typeof cestasInfo !== 'undefined' && cestasInfo[emp.id]) || { prestadas: 0, color: null };
+    const cestasFaltan = infoCestas.prestadas - cestasRecibidas;
+    const colorCesta = infoCestas.color ? infoCestas.color.replace(/^Cestas\s*/i, '').toLowerCase() : '';
     const saldoPrestamo = prestamo ? parseInt(prestamo.saldo_pendiente) : 0;
 %>
 
@@ -117,6 +121,12 @@
             <span class="badge-pendiente <%= pendiente <= 0 ? 'verde' : 'rojo' %>" id="badge-<%= emp.id %>" data-deuda="<%= emp.deuda_tabacos %>" style="margin-top: 4px;">
                 <%= pendiente <= 0 ? '✅ Tarea Completa' : '⏳ Pendiente: ' + pendiente.toLocaleString('es-CO') + ' tabs' %>
             </span>
+            <% if (infoCestas.prestadas > 0 || cestasRecibidas > 0) { %>
+            <span class="badge-pendiente <%= cestasFaltan <= 0 ? 'verde' : 'rojo' %>" id="badge-cestas-<%= emp.id %>"
+                  data-prestadas="<%= infoCestas.prestadas %>" data-color="<%= colorCesta %>" style="margin-top: 4px;">
+                <%= cestasFaltan <= 0 ? '✅ Cestas completas (' + cestasRecibidas + ' de ' + infoCestas.prestadas + ')' + (cestasFaltan < 0 ? ' · ' + Math.abs(cestasFaltan) + ' de más' : '') : '🧺 Faltan ' + cestasFaltan + (cestasFaltan === 1 ? ' cesta' : ' cestas') + (colorCesta ? ' ' + colorCesta : '') + ' (entregó ' + cestasRecibidas + ' de ' + infoCestas.prestadas + ')' %>
+            </span>
+            <% } %>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <% if (saldoPrestamo > 0) { %>
@@ -265,7 +275,25 @@
         });
     });
 
+    function recalcularCestas(empId) {
+        const badge = document.getElementById('badge-cestas-' + empId);
+        if (!badge) return;
+        const prestadas = parseInt(badge.getAttribute('data-prestadas')) || 0;
+        const color = badge.getAttribute('data-color');
+        let entregadas = 0;
+        document.querySelectorAll('.inp-cestas[data-emp="' + empId + '"]').forEach(i => entregadas += parseInt(i.value) || 0);
+        const faltan = prestadas - entregadas;
+        if (faltan <= 0) {
+            badge.textContent = '✅ Cestas completas (' + entregadas + ' de ' + prestadas + ')' + (faltan < 0 ? ' · ' + Math.abs(faltan) + ' de más' : '');
+            badge.className = 'badge-pendiente verde';
+        } else {
+            badge.textContent = '🧺 Faltan ' + faltan + (faltan === 1 ? ' cesta' : ' cestas') + (color ? ' ' + color : '') + ' (entregó ' + entregadas + ' de ' + prestadas + ')';
+            badge.className = 'badge-pendiente rojo';
+        }
+    }
+
     function recalcularDeuda(empId) {
+        recalcularCestas(empId);
         const badge = document.getElementById('badge-' + empId);
         if (!badge) return;
         const deuda = parseInt(badge.getAttribute('data-deuda')) || 0;
@@ -287,10 +315,8 @@
             const form = document.createElement("form");
             form.method = "POST";
             form.action = "/liquidar_semana/" + registroId;
-            form.target = "_blank";
             document.body.appendChild(form);
-            form.submit();
-            setTimeout(() => window.location.href = '/nomina', 2500);
+            form.submit();   // misma pestaña: el servidor guarda y abre el comprobante de liquidación
         }
     }
 

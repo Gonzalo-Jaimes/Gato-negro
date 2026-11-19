@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { supabase, mostrarAlerta, obtenerHoraColombia, registrarAuditoria } = require('../lib/shared');
 const { isAdmin, isAuth } = require('../lib/middleware');
+const { calcularLiquidacion, cestasPrestadasPorEmpleado } = require('../lib/liquidacion');
 
 // ---------------- DESPACHO DE TAREAS ----------------
 
@@ -153,8 +154,12 @@ router.get('/recepcion_diaria', isAdmin, async (req, res) => {
         });
     } catch(e) {}
 
+    let cestasInfo = {};
+    try { cestasInfo = await cestasPrestadasPorEmpleado(supabase, empleadosActivos); } catch (e) { console.error('[recepcion_diaria] cestas:', e.message); }
+
     res.render('produccion/fabriquines_diario', { 
         empleados: empleadosActivos, 
+        cestasInfo,
         registros: registros || [], 
         prestamos: prestamosActivos,
         successMsg: req.query.ok || null,
@@ -189,6 +194,22 @@ router.post('/recepcion_diaria_guardar', isAdmin, async (req, res) => {
     const newExtra = parseInt(req.body.extra_tabacos) || 0;
     const newRecorte = parseFloat(req.body.recorte_kg) || 0;
     const newVena = parseFloat(req.body.vena_kg) || 0;
+
+    // Abono a préstamo escrito en la tarjeta: antes se enviaba pero ninguna ruta lo procesaba
+    const abonoPedido = parseInt(req.body.abono_prestamo) || 0;
+    if (abonoPedido > 0 && req.body.prestamo_id) {
+        const { data: prest } = await supabase.from('prestamos_fabriquines')
+            .select('id, saldo_pendiente').eq('id', req.body.prestamo_id).eq('empleado_id', empId).eq('estado', 'activo').maybeSingle();
+        if (prest) {
+            const saldo = parseFloat(prest.saldo_pendiente) || 0;
+            const monto = Math.min(abonoPedido, saldo);
+            const nuevoSaldo = Math.max(0, saldo - monto);
+            const { error: eP } = await supabase.from('prestamos_fabriquines').update({ saldo_pendiente: nuevoSaldo, estado: nuevoSaldo === 0 ? 'pagado' : 'activo' }).eq('id', prest.id);
+            if (eP) return res.send(mostrarAlerta('Abono NO registrado', 'No se pudo actualizar el préstamo: ' + eP.message, 'error', '/recepcion_diaria'));
+            const { error: eA } = await supabase.from('abonos_prestamo').insert([{ prestamo_id: prest.id, empleado_id: parseInt(empId), monto_abono: monto, fecha_abono: tiempo.fecha, semana_ref: 'recepcion diaria', tipo: 'abono', nota: 'Abono en recepción diaria' }]);
+            if (eA) return res.send(mostrarAlerta('Abono NO registrado', 'El préstamo se actualizó pero no quedó el historial: ' + eA.message, 'error', '/recepcion_diaria'));
+        }
+    }
 
     let oldTab = 0, oldCest = 0, oldExt = 0, oldRec = 0, oldVen = 0;
     if (regId && regId !== '') {
@@ -413,17 +434,29 @@ router.get('/historial_prestamo/:empleado_id', isAdmin, async (req, res) => {
 router.post('/liquidar_semana/:id', isAdmin, async (req, res) => {
     const regId = req.params.id;
     const { data: reg } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('id', regId).single();
-    if (!reg || reg.estado === 'liquidado') return res.send(mostrarAlerta('Error', 'Hoja no encontrada o ya liquidada.', 'error'));
+    if (!reg || ['liquidado', 'pagado_y_archivado'].includes(reg.estado)) return res.send(mostrarAlerta('No se puede liquidar', 'La hoja no existe o ya fue liquidada.', 'error', '/recepcion_diaria'));
     const emp = reg.empleados_fabriquines;
-    const total_tabacos = reg.lun_tabacos + reg.mar_tabacos + reg.mie_tabacos + reg.jue_tabacos + reg.vie_tabacos + reg.sab_tabacos;
-    const VALOR_TABACO = 85, VALOR_RECORTE = 6500, VALOR_VENA = 3500, VALOR_EXTRA = 230;
-    const total_ganado = (total_tabacos * VALOR_TABACO) + (reg.recorte_kg * VALOR_RECORTE) + (reg.vena_kg * VALOR_VENA) + (reg.extra_tabacos * VALOR_EXTRA);
+    const liq = await calcularLiquidacion(supabase, reg);
+    const extras = (parseFloat(reg.recorte_kg) || 0) + (parseFloat(reg.vena_kg) || 0) + (parseInt(reg.extra_tabacos) || 0);
+    if (liq.total_tabacos <= 0 && extras <= 0) {
+        return res.send(mostrarAlerta('Hoja vacía', 'No hay tabacos, recorte, vena ni extras guardados. Guarde la producción antes de liquidar.', 'warning', '/recepcion_diaria'));
+    }
     const tiempo = obtenerHoraColombia();
-    await supabase.from('recepcion_diaria').update({ estado: 'liquidado', total_ganado }).eq('id', regId);
-    let nueva_deuda = Math.max(0, emp.deuda_tabacos - total_tabacos);
-    await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nueva_deuda }).eq('id', emp.id);
-    await supabase.from('produccion_fabriquines').insert([{ fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: total_tabacos, precio_por_unidad: VALOR_TABACO, total_ganado, estado: 'PAGADO' }]);
-    res.redirect('/nomina');
+    try {
+        // total_ganado = lo que se paga (neto de abonos), igual al comprobante y a la lista de Nómina
+        const { error: e1 } = await supabase.from('recepcion_diaria').update({ estado: 'liquidado', total_ganado: liq.total_neto }).eq('id', regId);
+        if (e1) throw e1;
+        const nueva_deuda = Math.max(0, (parseInt(emp.deuda_tabacos) || 0) - liq.total_tabacos);
+        const { error: e2 } = await supabase.from('empleados_fabriquines').update({ deuda_tabacos: nueva_deuda }).eq('id', emp.id);
+        if (e2) throw e2;
+        const { error: e3 } = await supabase.from('produccion_fabriquines').insert([{ fecha: tiempo.fecha, usuario: emp.nombre, cantidad_producida: liq.total_tabacos, precio_por_unidad: liq.valor_tabaco, total_ganado: liq.total_neto, estado: 'PAGADO' }]);
+        if (e3) console.error('[liquidar_semana] produccion_fabriquines:', e3.message);
+    } catch (e) {
+        console.error('[liquidar_semana]', e.message || e);
+        return res.send(mostrarAlerta('Liquidación NO completada', 'No se pudo guardar: ' + (e.message || 'error desconocido') + '. Revise la hoja antes de repetir.', 'error', '/recepcion_diaria'));
+    }
+    // Post/Redirect/Get: se abre el comprobante de liquidación en esta misma pestaña
+    res.redirect('/imprimir_nomina_v18/' + regId + '?liquidado=1');
 });
 
 // ---------------- PEDIDOS ----------------

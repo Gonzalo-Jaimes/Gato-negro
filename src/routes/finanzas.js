@@ -3,6 +3,7 @@ const router = express.Router();
 const { supabase, mostrarAlerta, obtenerHoraColombia } = require('../lib/shared');
 const { isAdmin } = require('../lib/middleware');
 const GatoNegroPDF = require('../lib/pdf_gen');
+const { calcularLiquidacion } = require('../lib/liquidacion');
 
 // ---------------- DASHBOARD ANALÍTICO ----------------
 
@@ -115,28 +116,15 @@ router.get('/factura/pdf/:id', isAdmin, async (req, res) => {
 // ---------------- IMPRIMIR NÓMINA V18 ----------------
 
 router.get('/imprimir_nomina_v18/:id', isAdmin, async (req, res) => {
-    const regId = req.params.id;
-    const { data: reg } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('id', regId).single();
+    const { data: reg } = await supabase.from('recepcion_diaria').select('*, empleados_fabriquines(*)').eq('id', req.params.id).single();
     if (!reg) return res.redirect('/nomina');
     const emp = reg.empleados_fabriquines;
-    const total_cestas = reg.lun_cestas + reg.mar_cestas + reg.mie_cestas + reg.jue_cestas + reg.vie_cestas + reg.sab_cestas;
-    const total_tabacos = reg.lun_tabacos + reg.mar_tabacos + reg.mie_tabacos + reg.jue_tabacos + reg.vie_tabacos + reg.sab_tabacos;
-    const VALOR_TABACO = 85, VALOR_RECORTE = 6500, VALOR_VENA = 3500, VALOR_EXTRA = 230;
-    const pago_tabacos = total_tabacos * VALOR_TABACO;
-    const pago_recorte = reg.recorte_kg * VALOR_RECORTE;
-    const pago_vena = reg.vena_kg * VALOR_VENA;
-    const pago_extras = reg.extra_tabacos * VALOR_EXTRA;
-    let total_ganado = pago_tabacos + pago_recorte + pago_vena + pago_extras;
-    let descuentos = 0, desglose_descuentos = [];
-    try {
-        const { data: abonos } = await supabase.from('abonos_prestamo').select('monto_abono, tipo, nota, fecha_abono').eq('empleado_id', emp.id).gte('fecha_abono', reg.semana_inicio);
-        if (abonos) { abonos.forEach(a => { const monto = parseFloat(a.monto_abono || 0); const tipo = a.tipo || 'abono'; if (monto > 0 && (tipo === 'abono' || tipo === 'descuento_sueldo')) { descuentos += monto; desglose_descuentos.push({ tipo, monto, nota: a.nota, fecha: a.fecha_abono }); } }); }
-    } catch(e) {}
-    const total_neto = Math.max(0, total_ganado - descuentos);
+    const liq = await calcularLiquidacion(supabase, reg);
     res.render('finanzas/formato_nomina', {
         empleado: emp, reg, tiempo: obtenerHoraColombia(),
-        totales: { tabacos: total_tabacos, cestas: total_cestas },
-        pagos: { pago_tabacos, pago_recorte, pago_vena, pago_extras, total_bruto: total_ganado, descuentos, desglose_descuentos, total_neto, valor_tabaco: VALOR_TABACO, valor_recorte: VALOR_RECORTE, valor_vena: VALOR_VENA, valor_extra: VALOR_EXTRA }
+        totales: { tabacos: liq.total_tabacos, cestas: liq.total_cestas },
+        pagos: { pago_tabacos: liq.pago_tabacos, pago_recorte: liq.pago_recorte, pago_vena: liq.pago_vena, pago_extras: liq.pago_extras, total_bruto: liq.total_bruto, descuentos: liq.descuentos, desglose_descuentos: liq.desglose_descuentos, total_neto: liq.total_neto, valor_tabaco: liq.valor_tabaco, valor_recorte: liq.valor_recorte, valor_vena: liq.valor_vena, valor_extra: liq.valor_extra },
+        liquidadoAhora: req.query.liquidado === '1'
     });
 });
 
