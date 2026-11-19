@@ -153,8 +153,8 @@
     }
 
     // ── Liquidar ──
-    function liquidarSemana(registroId) {
-        if (confirm("¿Liquidar la semana de este Anillador? Se actualizará la deuda y el inventario global.")) {
+    async function liquidarSemana(registroId) {
+        if (await UI.confirm({ titulo: 'Liquidar la semana', mensaje: 'Se actualizará la deuda del anillador y el inventario global.', confirmar: 'Sí, liquidar' })) {
             const form = document.createElement("form");
             form.method = "POST";
             form.action = "/anilladores/liquidar_semana/" + registroId;

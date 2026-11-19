@@ -146,8 +146,8 @@
     }
 
     // ── Liquidar ──
-    function liquidarSemana(registroId) {
-        if (confirm("¿Liquidar la semana de este Empacador? Se cerrará la hoja de recepción.")) {
+    async function liquidarSemana(registroId) {
+        if (await UI.confirm({ titulo: 'Liquidar la semana', mensaje: 'Se cerrará la hoja de recepción de este empacador.', confirmar: 'Sí, liquidar' })) {
             const form = document.createElement("form");
             form.method = "POST";
             form.action = "/empacadores/liquidar_semana/" + registroId;

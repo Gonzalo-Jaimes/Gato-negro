@@ -310,8 +310,8 @@
     }
 
     // ── Liquidar ──
-    function liquidarSemana(registroId) {
-        if (confirm("¿Liquidar la semana de este Fabriquín? Se cerrará la hoja, actualizará la deuda y generará la Nómina.")) {
+    async function liquidarSemana(registroId) {
+        if (await UI.confirm({ titulo: 'Liquidar la semana', mensaje: 'Se cerrará la hoja de este fabriquín, se actualizará su deuda y se generará la nómina. Volverá a aparecer en esta lista cuando tenga una tarea nueva.', confirmar: 'Sí, liquidar' })) {
             const form = document.createElement("form");
             form.method = "POST";
             form.action = "/liquidar_semana/" + registroId;
