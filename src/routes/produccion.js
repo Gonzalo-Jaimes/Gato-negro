@@ -73,7 +73,7 @@ router.post('/despachar_tarea', isAdmin, async (req, res) => {
 
     let despachoId = null;
     try {
-        const { data: dReg } = await supabase.from('despachos_registro').insert([{
+        const { data: dReg, error: errDesp } = await supabase.from('despachos_registro').insert([{
             empleado_id:   empleado.id,
             fecha:         tiempo.fecha,
             meta_tabacos:  fisicoEntregado,
@@ -90,13 +90,17 @@ router.post('/despachar_tarea', isAdmin, async (req, res) => {
             nuevo_prestamo: nuevo_prestamo,
             estado:        'pendiente'
         }]).select().single();
-        if (dReg) despachoId = dReg.id;
-    } catch(e) { console.log('Despacho no guardado en DB:', e.message); }
+        if (errDesp) throw errDesp;
+        despachoId = dReg.id;
+    } catch(e) {
+        console.error('[despachar_tarea] No se guardó el despacho:', e.message || e);
+        return res.send(mostrarAlerta('Despacho NO guardado', 'No se pudo registrar el despacho en la base de datos (' + (e.message || 'error desconocido') + '). No entregue el material hasta resolverlo.', 'error', '/despacho'));
+    }
 
     res.render('produccion/hoja_despacho', {
         empleado: { id: empleado.id, nombre: empleado.nombre, codigo: empleado.codigo },
         despacho: {
-            id:           despachoId || empleado.id,
+            id:           despachoId,
             fecha_semana: `${tiempo.fecha} ${tiempo.hora}`,
             meta_tabacos: nuevaMeta,
             color_cesta:  colorCesta,
@@ -113,6 +117,32 @@ router.post('/despachar_tarea', isAdmin, async (req, res) => {
         sacos: []
     });
 });
+
+// ---------------- KARDEX DE DESPACHOS ----------------
+// La salida de materia prima se registra cuando el material sale fisicamente de bodega
+// (entrega confirmada), no al emitir la orden. Descuenta inventario y deja la fila en el Kardex.
+async function registrarSalidaDespacho(empleado, despacho, kg, usuario) {
+    const tiempo = obtenerHoraColombia();
+    const items = [
+        { material: 'capa', kg: kg.capa },
+        { material: 'capote', kg: kg.capote },
+        { material: 'picadura bruta', kg: kg.picadura }
+    ];
+    for (const it of items) {
+        if (!(it.kg > 0)) continue;
+        const { data: inv } = await supabase.from('inventario').select('id, cantidad').eq('material', it.material).maybeSingle();
+        if (inv) {
+            const { error: eInv } = await supabase.from('inventario').update({ cantidad: parseFloat(inv.cantidad) - it.kg }).eq('id', inv.id);
+            if (eInv) throw eInv;
+        }
+        const { error: eMov } = await supabase.from('movimientos').insert([{
+            fecha: tiempo.fecha, hora: tiempo.hora, tipo_movimiento: 'SALIDA', material: it.material,
+            cantidad: parseFloat(it.kg.toFixed(2)), usuario: usuario || 'Admin',
+            descripcion: `Despacho Tarea [${despacho.meta_tabacos}] a ${empleado.codigo} - ${empleado.nombre} (Factura #${despacho.id})`
+        }]);
+        if (eMov) throw eMov;
+    }
+}
 
 // ---------------- RECEPCIÓN DIARIA ----------------
 
@@ -247,6 +277,19 @@ router.get('/entregas_historicas', isAdmin, async (req, res) => {
         .select('*, empleados_fabriquines(*)')
         .order('id', { ascending: false });
     res.render('produccion/historial_entregas', { entregas: entregas || [] });
+});
+
+router.get('/despachos_historicos', isAdmin, async (req, res) => {
+    const { data: despachos, error } = await supabase.from('despachos_registro')
+        .select('*').order('id', { ascending: false }).limit(500);
+    if (error) console.error('[despachos_historicos]', error.message);
+    const ids = [...new Set((despachos || []).map(d => d.empleado_id))];
+    const mapa = {};
+    if (ids.length) {
+        const { data: emps } = await supabase.from('empleados_fabriquines').select('id, codigo, nombre').in('id', ids);
+        (emps || []).forEach(e => { mapa[e.id] = e; });
+    }
+    res.render('produccion/historial_despachos', { despachos: despachos || [], empleados: mapa, errorDB: error ? error.message : null });
 });
 
 // ---------------- ÁREA DE EMPAQUE (RESTAURADA) ----------------
@@ -502,6 +545,7 @@ router.post('/entregar_sacos', isAdmin, async (req, res) => {
             deuda_tabacos: (parseInt(empleado.deuda_tabacos) || 0) + despacho.meta_tabacos
         }).eq('id', empleado_id);
         await supabase.from('despachos_registro').update({ estado: 'entregado', capa_kg: capaKgReal, capote_kg: capoteKgReal, picadura_kg: totalPicaduraKg }).eq('id', despacho.id);
+        await registrarSalidaDespacho(empleado, despacho, { capa: capaKgReal, capote: capoteKgReal, picadura: totalPicaduraKg }, req.session.usuario);
         await registrarAuditoria(req, 'BODEGA', 'ENTREGA DE MATERIAL', { fabriquin: empleado.nombre, factura_id: despacho.id });
         return res.json({ ok: true, msg: 'Entrega completada.' });
     } catch(e) { return res.json({ ok: false, msg: e.message }); }
@@ -527,6 +571,7 @@ router.post('/confirmar_entrega_bodega', isAdmin, async (req, res) => {
         await supabase.from('empleados_fabriquines').update({ deuda_tabacos: (parseInt(empleado.deuda_tabacos) || 0) + despacho.meta_tabacos }).eq('id', empleado.id);
         await supabase.from('recepcion_diaria').insert([{ empleado_id, usuario: empleado.codigo, fecha_registro: tiempo.fecha, estado: 'pendiente' }]);
         await supabase.from('despachos_registro').update({ estado: 'entregado', capa_kg: capaKg, capote_kg: capoteKg, picadura_kg: totalPicaduraKg }).eq('id', despacho_id);
+        await registrarSalidaDespacho(empleado, despacho, { capa: capaKg, capote: capoteKg, picadura: totalPicaduraKg }, req.session.usuario);
         return res.send(mostrarAlerta('Material Entregado', `Salida registrada para ${empleado.nombre}.`, 'success', '/facturas'));
     } catch(e) { return res.send(mostrarAlerta('Error', 'No se pudo procesar.', 'error')); }
 });

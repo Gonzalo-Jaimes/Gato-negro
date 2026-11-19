@@ -1,0 +1,65 @@
+<%- include('../partials/header') %>
+
+<h1>📦 Historial de despachos de material</h1>
+<hr>
+
+<p style="color: var(--text-muted); font-size: 15px; margin-bottom: 20px;">
+    Cada orden de despacho emitida desde la pantalla Despacho. <strong>Pendiente</strong> significa que la orden existe pero el material aún no se ha entregado en Bodega; al confirmar la entrega pasa a <strong>Entregado</strong> y se registra la salida en el Kardex.
+</p>
+
+<% if (errorDB) { %>
+    <div class="card" role="alert" style="border-left: 4px solid var(--danger); margin-bottom: 20px;">No se pudo leer el historial: <%= errorDB %></div>
+<% } %>
+
+<div style="margin-bottom: 20px;">
+    <label for="buscadorDespachos" style="display:block; font-weight:600; margin-bottom:6px;">Buscar</label>
+    <input type="text" id="buscadorDespachos" placeholder="Fabriquín, código, fecha o estado" style="width: 100%; max-width: 500px; padding: 12px 18px; border-radius: 30px; font-size: 16px;">
+</div>
+
+<div class="card" style="overflow-x: auto; padding: 0;">
+    <table style="width: 100%; border-collapse: collapse; text-align: center; min-width: 820px;" id="tablaDespachos">
+        <caption style="text-align:left; padding: 12px 15px; color: var(--text-muted);"><%= despachos.length %> despachos (máximo 500 recientes)</caption>
+        <thead>
+            <tr>
+                <th scope="col" style="padding: 12px; text-align: left;">N°</th>
+                <th scope="col" style="padding: 12px; text-align: left;">Fabriquín</th>
+                <th scope="col" style="padding: 12px;">Fecha</th>
+                <th scope="col" style="padding: 12px;">Tabacos</th>
+                <th scope="col" style="padding: 12px;">Capa (kg)</th>
+                <th scope="col" style="padding: 12px;">Capote (kg)</th>
+                <th scope="col" style="padding: 12px;">Picadura (kg)</th>
+                <th scope="col" style="padding: 12px;">Cestas</th>
+                <th scope="col" style="padding: 12px;">Estado</th>
+                <th scope="col" style="padding: 12px;">Hoja</th>
+            </tr>
+        </thead>
+        <tbody>
+        <% if (despachos.length === 0) { %>
+            <tr><td colspan="10" style="padding: 30px; color: var(--text-muted);">Aún no hay despachos registrados.</td></tr>
+        <% } %>
+        <% despachos.forEach(d => { const e = empleados[d.empleado_id] || {}; const ent = d.estado === 'entregado'; %>
+            <tr class="fila-despacho" style="border-top: 1px solid var(--border);">
+                <td style="padding: 12px; text-align: left;">#<%= d.id %></td>
+                <td style="padding: 12px; text-align: left;"><strong><%= e.codigo || '—' %></strong> <%= e.nombre || '' %></td>
+                <td style="padding: 12px;"><%= d.fecha %></td>
+                <td style="padding: 12px;"><%= Number(d.meta_tabacos || 0).toLocaleString('es-CO') %></td>
+                <td style="padding: 12px;"><%= Number(d.capa_kg || 0).toFixed(2) %></td>
+                <td style="padding: 12px;"><%= Number(d.capote_kg || 0).toFixed(2) %></td>
+                <td style="padding: 12px;"><%= Number(d.picadura_kg || 0).toFixed(2) %></td>
+                <td style="padding: 12px;"><%= d.cestas_cant || 0 %> <%= d.color_cesta || '' %></td>
+                <td style="padding: 12px;"><span style="font-weight:700; color: <%= ent ? 'var(--success)' : 'var(--warning, #b45309)' %>;"><%= ent ? 'Entregado' : 'Pendiente' %></span></td>
+                <td style="padding: 12px;"><a href="/reimprimir_factura/<%= d.id %>" target="_blank" rel="noopener">Ver hoja</a></td>
+            </tr>
+        <% }) %>
+        </tbody>
+    </table>
+</div>
+
+<script>
+    document.getElementById('buscadorDespachos').addEventListener('input', function () {
+        const q = this.value.toLowerCase();
+        document.querySelectorAll('#tablaDespachos .fila-despacho').forEach(tr => {
+            tr.style.display = tr.textContent.toLowerCase().includes(q) ? '' : 'none';
+        });
+    });
+</script>

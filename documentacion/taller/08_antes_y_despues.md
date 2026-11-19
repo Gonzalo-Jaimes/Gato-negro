@@ -82,3 +82,14 @@ Las imágenes «antes» son capturas reales del **commit original `a24fbc5`** (a
 | 3 · Despacho | 2, 3, 4, 18 | Resueltos en lo medido; 1 hallazgo de estilo inline sin tocar |
 | 4 · Kardex | 8 (parcial), 9 (parcial), 10 | Resueltos en lo medido; falta el atributo `integrity` de `chart.js` |
 | 5 · Bodega | 1 (parcial), 13 (parcial) | **Parcial**: 11 y 12 abiertos |
+
+## Defecto funcional hallado en las pruebas con usuarios · el despacho no dejaba rastro
+
+Al ejecutar la Tarea 3 (Despacho) con usuarios reales, los datos no aparecían ni en el Kardex ni en el historial de entregas.
+
+| Campo | Registro |
+|---|---|
+| **Causa** | (1) `POST /despachar_tarea` solo creaba una orden `pendiente` en `despachos_registro`; la salida de capa, capote y picadura no se escribía en `movimientos` en ningún paso del flujo, ni siquiera al confirmar la entrega en Bodega. (2) `/entregas_historicas` lee `recepcion_diaria` (devoluciones), no los despachos. (3) El insert ignoraba el campo `error` que devuelve Supabase, así que un fallo de guardado se mostraba como éxito. |
+| **Cambio en código** | `src/routes/produccion.js`: el insert ahora valida el error y, si falla, muestra alerta y no emite la hoja; nueva función `registrarSalidaDespacho` que, al confirmar la entrega (`/entregar_sacos` y `/confirmar_entrega_bodega`), descuenta `inventario` y escribe una fila SALIDA por material en el Kardex; nueva pantalla `/despachos_historicos` (`views/produccion/historial_despachos.ejs`) con búsqueda y estado pendiente/entregado, enlazada en el menú. |
+| **Decisión de diseño** | La salida se registra al **entregar** el material (cuando sale físicamente), como definió la versión 2.9.0 al separar factura y entrega; el despacho solo emite la orden. |
+| **Verificación** | Prueba del helper con base simulada (3 filas de Kardex y 3 descuentos de inventario) y render de la vista. Falta la prueba de extremo a extremo con sesión de administrador. |
