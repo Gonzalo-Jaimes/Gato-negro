@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { supabase, bcrypt, mostrarAlerta, obtenerHoraColombia, registrarAuditoria } = require('../lib/shared');
-const { isAdmin } = require('../lib/middleware');
+const { isAdmin, isAuth, quiereJSON } = require('../lib/middleware');
 
 // ---------------- LOGIN / LOGOUT ----------------
 
@@ -154,9 +154,37 @@ router.post('/restar_inventario', isAdmin, async (req, res) => {
     res.redirect('/movimientos');
 });
 
-router.get('/cierre_diario', isAdmin, async (req, res) => {
-    res.render('admin/cierre_diario');
+// Panel del trabajador (Mi Cierre de Produccion). Cada rol operativo ve SOLO sus datos (req.session.usuario).
+// Restaura la logica del server original: la refactorizacion modular la dejo con isAdmin y sin datos (500 para todos).
+const ROLES_CIERRE = ['fabriquin', 'fabricacion', 'envolvedor', 'anillador', 'empacador'];
+
+router.get('/cierre_diario', isAuth, async (req, res) => {
+    if (!ROLES_CIERRE.includes(req.session.rol)) return res.redirect('/');
+    const usuario = req.session.usuario;
+
+    const { data: produccion } = await supabase.from('produccion_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'PENDIENTE').order('fecha', { ascending: false });
+    const ganancia_semana = (produccion || []).reduce((s, p) => s + parseFloat(p.total_ganado || 0), 0);
+
+    const { data: deudas } = await supabase.from('deudores_fabriquines')
+        .select('*').eq('usuario', usuario).eq('estado', 'ACTIVA');
+    const deuda_total = (deudas || []).reduce((s, d) => s + parseFloat(d.monto_deuda || 0), 0);
+
+    const { data: tareas_asignadas } = await supabase.from('pedidos')
+        .select('*').eq('usuario', usuario).order('id', { ascending: false });
+
+    res.render('admin/cierre_diario', {
+        produccion: produccion || [],
+        ganancia_semana,
+        deuda_total,
+        saldo_neto: ganancia_semana - deuda_total,
+        usuario,
+        tareas_asignadas: tareas_asignadas || []
+    });
 });
+
+// Guia viva del sistema de diseño (tokens y componentes), solo administracion.
+router.get('/guia_estilos', isAdmin, (req, res) => res.render('guia_estilos'));
 
 router.get('/empleados', isAdmin, async (req, res) => {
     const { data: empleados } = await supabase.from('empleados_fabriquines').select('*').order('codigo');
@@ -180,18 +208,63 @@ router.get('/eliminar_usuario/:id', isAdmin, async (req, res) => {
 
 // ---------------- CRUD EMPLEADOS ----------------
 
+// ---------------- EMPLEADOS (fabriquines) ----------------
+// Responden JSON cuando la petición lo pide (ui.js) y conservan la redirección clásica sin JavaScript.
+
+// Mismas reglas que el formulario del navegador (views/admin/empleados.ejs); el servidor es la validación que cuenta.
+function validarEmpleado({ codigo, nombre, cedula }) {
+    const campos = {};
+    if (!codigo) campos.codigo = 'Escribe el código del trabajador (ejemplo: F01).';
+    else if (!/^[A-Z]{1,3}\d{1,4}$/.test(codigo)) campos.codigo = 'El código lleva letras y luego números, sin espacios (ejemplo: F01 o AN12).';
+    if (!nombre) campos.nombre = 'Escribe el nombre completo del trabajador.';
+    else if (nombre.length < 3) campos.nombre = 'El nombre es muy corto: escribe al menos 3 letras.';
+    else if (nombre.length > 80) campos.nombre = 'El nombre es muy largo: usa máximo 80 caracteres.';
+    else if (!/^[\p{L}][\p{L}\s.'-]*$/u.test(nombre)) campos.nombre = 'El nombre solo puede tener letras, espacios, punto, apóstrofo o guion.';
+    if (!cedula) campos.cedula = 'Escribe el documento de identidad (ejemplo: CC-88193514).';
+    else if (!/^[A-Za-z]{0,2}-?\d{5,12}$/.test(cedula.replace(/[.\s]/g, ''))) campos.cedula = 'El documento debe tener entre 5 y 12 números, con prefijo opcional (CC-, V-, E-).';
+    return campos;
+}
+
+router.get('/api/empleados', isAdmin, async (req, res) => {
+    const { data, error } = await supabase.from('empleados_fabriquines').select('id, codigo, nombre, cedula').order('codigo');
+    if (error) return res.status(500).json({ ok: false, mensaje: 'No se pudo consultar la lista de trabajadores.' });
+    res.json({ ok: true, empleados: data || [] });
+});
+
 router.post('/agregar_empleado', isAdmin, async (req, res) => {
-    await supabase.from('empleados_fabriquines').insert([{
-        codigo: req.body.codigo.toUpperCase(),
-        nombre: req.body.nombre,
-        cedula: req.body.cedula,
-        deuda_tabacos: 0
-    }]);
+    const json = quiereJSON(req);
+    const datos = {
+        codigo: String(req.body.codigo || '').trim().toUpperCase(),
+        nombre: String(req.body.nombre || '').trim().replace(/\s+/g, ' '),
+        cedula: String(req.body.cedula || '').trim()
+    };
+    const campos = validarEmpleado(datos);
+    if (!Object.keys(campos).length) {
+        const { data: repetido } = await supabase.from('empleados_fabriquines').select('id').eq('codigo', datos.codigo).limit(1);
+        if (repetido && repetido.length) campos.codigo = `Ya existe un trabajador con el código ${datos.codigo}. Usa otro código.`;
+    }
+    if (Object.keys(campos).length) {
+        if (json) return res.status(422).json({ ok: false, mensaje: 'Revisa los datos marcados.', campos });
+        return res.send(mostrarAlerta('Datos incompletos', Object.values(campos)[0], 'warning', '/empleados'));
+    }
+    const { data, error } = await supabase.from('empleados_fabriquines')
+        .insert([{ ...datos, deuda_tabacos: 0 }]).select('id, codigo, nombre, cedula').single();
+    if (error) {
+        if (json) return res.status(500).json({ ok: false, mensaje: 'No se pudo guardar en la base de datos. Inténtalo de nuevo.' });
+        return res.send(mostrarAlerta('No se pudo guardar', 'Inténtalo de nuevo en un momento.', 'error', '/empleados'));
+    }
+    if (json) return res.status(201).json({ ok: true, empleado: data });
     res.redirect('/empleados');
 });
 
 router.post('/eliminar_empleado/:id', isAdmin, async (req, res) => {
-    await supabase.from('empleados_fabriquines').delete().eq('id', req.params.id);
+    const json = quiereJSON(req);
+    const { error } = await supabase.from('empleados_fabriquines').delete().eq('id', req.params.id);
+    if (error) {
+        if (json) return res.status(500).json({ ok: false, mensaje: 'No se pudo eliminar al trabajador. Inténtalo de nuevo.' });
+        return res.send(mostrarAlerta('No se pudo eliminar', 'Inténtalo de nuevo en un momento.', 'error', '/empleados'));
+    }
+    if (json) return res.json({ ok: true });
     res.redirect('/empleados');
 });
 

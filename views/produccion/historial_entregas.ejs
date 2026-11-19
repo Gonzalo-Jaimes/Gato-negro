@@ -56,23 +56,23 @@
                         let diasCestas = [lote.lun_cestas, lote.mar_cestas, lote.mie_cestas, lote.jue_cestas, lote.vie_cestas, lote.sab_cestas];
                 %>
                 <!-- FILA PRINCIPAL -->
-                <tr class="fila-entrega" style="border-bottom: 1px solid #e5e7eb; cursor: pointer;" onclick="toggleDetalle(<%= idx %>)">
+                <tr class="fila-entrega" style="border-bottom: 1px solid var(--border-color); cursor: pointer;" onclick="toggleDetalle(<%= idx %>)">
                     <td style="padding: 15px; font-weight: bold; text-align: left; text-transform: capitalize;">
                         <%= lote.empleados_fabriquines ? lote.empleados_fabriquines.codigo + ' - ' + lote.empleados_fabriquines.nombre : 'DESCONOCIDO' %>
                     </td>
                     
-                    <td style="padding: 15px; font-weight: bold; color: #4b5563;"><%= rangoVisual %></td>
+                    <td style="padding: 15px; font-weight: bold; color: var(--text-muted);"><%= rangoVisual %></td>
                     
-                    <td style="padding: 15px; font-size: 18px; font-weight: 900; color: #2563eb;"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
-                    <td style="padding: 15px; font-size: 16px; font-weight: bold; color: #059669;"><%= sumaCestas %> cestas</td>
-                    <td style="padding: 15px; font-weight: bold; color: #dc2626;"><%= lote.recorte_kg ? lote.recorte_kg.toFixed(2) : '0.00' %> kg</td>
+                    <td style="padding: 15px; font-size: 18px; font-weight: 900; color: var(--info);"><%= sumaLote.toLocaleString('es-CO') %> uds</td>
+                    <td style="padding: 15px; font-size: 16px; font-weight: bold; color: var(--success);"><%= sumaCestas %> cestas</td>
+                    <td style="padding: 15px; font-weight: bold; color: var(--danger);"><%= lote.recorte_kg ? lote.recorte_kg.toFixed(2) : '0.00' %> kg</td>
                     <td style="padding: 15px; font-weight: bold; color: #ea580c;"><%= lote.vena_kg ? lote.vena_kg.toFixed(2) : '0.00' %> kg</td>
                     
                     <td style="padding: 15px;">
                         <% if (lote.estado !== 'pendiente') { %>
-                            <span style="background: rgba(16, 185, 129, 0.1); color: #10b981; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">✔ Liquidada</span>
+                            <span style="background: rgba(16, 185, 129, 0.1); color: var(--success); padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(16, 185, 129, 0.2);">✔ Liquidada</span>
                         <% } else { %>
-                            <span style="background: rgba(245, 158, 11, 0.1); color: #f59e0b; padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.2);">🟡 Abierta</span>
+                            <span style="background: rgba(245, 158, 11, 0.1); color: var(--warning-text); padding: 5px 15px; border-radius: 20px; font-size: 11px; font-weight: bold; border: 1px solid rgba(245, 158, 11, 0.2);">🟡 Abierta</span>
                         <% } %>
                     </td>
                     <td style="padding: 15px; color: #6366f1; font-weight: bold; font-size: 18px;">⊕</td>
@@ -81,11 +81,11 @@
                 <!-- FILA DETALLE (oculta por defecto) -->
                 <tr id="detalle-<%= idx %>" style="display: none; background: #f8fafc;">
                     <td colspan="8" style="padding: 0;">
-                        <div style="padding: 15px 30px; border-top: 2px dashed #e5e7eb;">
-                            <p style="margin: 0 0 10px; font-weight: bold; color: #374151;">📅 Registro día a día — Semana del <%= rangoVisual %></p>
+                        <div style="padding: 15px 30px; border-top: 2px dashed var(--border-color);">
+                            <p style="margin: 0 0 10px; font-weight: bold; color: var(--text-main);">📅 Registro día a día — Semana del <%= rangoVisual %></p>
                             <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
                                 <thead>
-                                    <tr style="background: #1f2937; color: white;">
+                                    <tr style="background: var(--text-main); color: white;">
                                         <th style="padding: 8px 12px;">Día</th>
                                         <th style="padding: 8px 12px;">Fecha</th>
                                         <th style="padding: 8px 12px; color: #93c5fd;">Tabacos Entregados</th>
@@ -95,13 +95,13 @@
                                 <tbody>
                                     <% let nombresDias = ['Lunes','Martes','Miércoles','Jueves','Viernes','Sábado']; %>
                                     <% diasTabs.forEach((tabs, di) => { %>
-                                    <tr style="border-bottom: 1px solid #e5e7eb; <%= tabs > 0 || diasCestas[di] > 0 ? '' : 'opacity: 0.4;' %>">
+                                    <tr style="border-bottom: 1px solid var(--border-color); <%= tabs > 0 || diasCestas[di] > 0 ? '' : 'opacity: 0.4;' %>">
                                         <td style="padding: 8px 12px; font-weight: bold;"><%= nombresDias[di] %></td>
-                                        <td style="padding: 8px 12px; color: #6b7280;"><%= fechasDias[di] %></td>
-                                        <td style="padding: 8px 12px; color: #2563eb; font-weight: bold;">
+                                        <td style="padding: 8px 12px; color: var(--text-muted);"><%= fechasDias[di] %></td>
+                                        <td style="padding: 8px 12px; color: var(--info); font-weight: bold;">
                                             <%= tabs > 0 ? tabs.toLocaleString('es-CO') + ' uds' : '— sin entrega —' %>
                                         </td>
-                                        <td style="padding: 8px 12px; color: #059669; font-weight: bold;">
+                                        <td style="padding: 8px 12px; color: var(--success); font-weight: bold;">
                                             <%= diasCestas[di] > 0 ? diasCestas[di] + ' cestas' : '—' %>
                                         </td>
                                     </tr>
@@ -113,7 +113,7 @@
                 </tr>
                 <% } }); %>
             <% } else { %>
-                <tr><td colspan="8" style="padding: 30px; text-align: center; color: #6b7280; font-style: italic;">No hay registros históricos de entregas en la base de datos.</td></tr>
+                <tr><td colspan="8" style="padding: 30px; text-align: center; color: var(--text-muted); font-style: italic;">No hay registros históricos de entregas en la base de datos.</td></tr>
             <% } %>
         </tbody>
     </table>

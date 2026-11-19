@@ -1,14 +1,9 @@
 <%- include('../partials/header') %>
 
 <style>
-    .btn-guardar   { background: var(--primary); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-liquidar  { background: var(--success); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-prestamo  { background: var(--primary); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-    .btn-extra     { background: #15803d; color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
-    .btn-historial { background: var(--text-muted); color: white; padding: 6px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; }
     .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
-    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
-    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .badge-pendiente.rojo  { background: var(--danger-soft); color: var(--danger); }
+    .badge-pendiente.verde { background: var(--success-soft); color: var(--success); }
     .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
     .inp-dia:focus { outline: 2px solid var(--primary); }
 
@@ -20,8 +15,8 @@
     .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 8000; align-items: center; justify-content: center; backdrop-filter: blur(4px); }
     .modal-overlay.activo { display: flex; }
     .modal-box { background: var(--bg-card); border-radius: 16px; padding: 30px; width: 450px; max-width: 95vw; border: 1px solid var(--border-color); }
-    html.dark-mode .modal-box { background: #1f2937; color: var(--border-color); border-color: #374151; }
-    html.dark-mode .modal-box input, html.dark-mode .modal-box select { background: #111827; color: var(--border-color); border-color: #4b5563; }
+    html.dark-mode .modal-box { background: var(--text-main); color: var(--border-color); border-color: var(--text-main); }
+    html.dark-mode .modal-box input, html.dark-mode .modal-box select { background: #111827; color: var(--border-color); border-color: var(--text-muted); }
 
     /* Historial */
     .historial-box { display: none; border-top: 1px solid var(--border-color); padding: 12px 16px; background: rgba(0,0,0,0.03); }
@@ -41,7 +36,7 @@
 <!-- MODAL PRÉSTAMO -->
 <div class="modal-overlay" id="modal-prestamo">
     <div class="modal-box">
-        <h3 style="margin:0 0 16px 0; color:#92400e;">💳 Registrar Movimiento de Préstamo</h3>
+        <h3 style="margin:0 0 16px 0; color:var(--warning-text);">💳 Registrar Movimiento de Préstamo</h3>
         <p id="modal-emp-nombre" style="font-weight:bold; margin-bottom:12px;"></p>
         <label style="font-size:13px; font-weight:bold;">Tipo de Movimiento:</label>
         <select id="modal-tipo" style="width:100%; padding:8px; margin-bottom:12px; border:1px solid var(--border-color); border-radius:6px; font-size:14px;">
@@ -66,7 +61,7 @@
 <!-- MODAL MATERIAL EXTRA -->
 <div class="modal-overlay" id="modal-extra">
     <div class="modal-box">
-        <h3 style="margin:0 0 16px 0; color:#15803d;">🌿 Material Extra Entre Semana</h3>
+        <h3 style="margin:0 0 16px 0; color:var(--success);">🌿 Material Extra Entre Semana</h3>
         <p id="modal-extra-emp" style="font-weight:bold; margin-bottom:12px;"></p>
         <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">El material extra queda como deuda. Gregorío puede descontarlo en los siguientes despachos.</p>
         <label style="font-size:13px; font-weight:bold;">Material:</label>
@@ -82,7 +77,7 @@
         <label style="font-size:13px; font-weight:bold;">Motivo (opcional):</label>
         <input type="text" id="extra-nota" placeholder="Ej: Capa salió mala, necesitó reemplazo" style="width:100%; padding:8px; margin-bottom:18px; border:1px solid var(--border-color); border-radius:6px; font-size:14px; box-sizing:border-box;">
         <div style="display:flex; gap:10px;">
-            <button onclick="guardarMaterialExtra()" style="flex:1; background:#15803d; color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
+            <button onclick="guardarMaterialExtra()" style="flex:1; background:var(--success); color:white; border:none; padding:10px; border-radius:6px; font-weight:bold; cursor:pointer; font-size:14px;">💾 Guardar</button>
             <button onclick="cerrarModalExtra()" style="flex:1; background:var(--text-muted); color:white; border:none; padding:10px; border-radius:6px; cursor:pointer; font-size:14px;">Cancelar</button>
         </div>
         <p id="extra-error" style="color:var(--danger); font-size:12px; margin-top:8px; display:none;"></p>
@@ -125,14 +120,14 @@
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
             <% if (saldoPrestamo > 0) { %>
-            <span style="font-size: 12px; color: #92400e; font-weight: bold; background: #fef3c7; padding: 4px 10px; border-radius: 6px;">
+            <span style="font-size: 12px; color: var(--warning-text); font-weight: bold; background: var(--warning-soft); padding: 4px 10px; border-radius: 6px;">
                 💳 Préstamo: $<%= saldoPrestamo.toLocaleString('es-CO') %>
             </span>
             <% } %>
-            <button class="btn-extra"     onclick="abrirModalExtra('<%= emp.id %>', '<%= emp.nombre %>')">🌿 Extra</button>
-            <button class="btn-prestamo"  onclick="abrirModalPrestamo('<%= emp.id %>', '<%= emp.nombre %>', '<%= saldoPrestamo %>')">💳 Préstamo</button>
+            <button class="btn btn-success btn-sm btn-extra"     onclick="abrirModalExtra('<%= emp.id %>', '<%= emp.nombre %>')">🌿 Extra</button>
+            <button class="btn btn-primary btn-sm btn-prestamo"  onclick="abrirModalPrestamo('<%= emp.id %>', '<%= emp.nombre %>', '<%= saldoPrestamo %>')">💳 Préstamo</button>
             <% if (histEmp.length > 0) { %>
-            <button class="btn-historial" onclick="toggleHistorial('<%= emp.id %>')">📋 Historial</button>
+            <button class="btn btn-secondary btn-sm btn-historial" onclick="toggleHistorial('<%= emp.id %>')">📋 Historial</button>
             <% } %>
             <% if (despachoId == emp.id) { %>
             <a href="/imprimir_despacho/<%= emp.id %>" target="_blank"
@@ -183,17 +178,17 @@
 
             <!-- COLUMNA EXTRA: SUBPRODUCTOS + PRÉSTAMO + BOTONES -->
             <div>
-                <div style="font-size: 11px; font-weight: bold; color: #b45309; margin-bottom: 4px;">🍂 Recorte (kg)</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--warning-text); margin-bottom: 4px;">🍂 Recorte (kg)</div>
                 <input type="number" name="recorte_kg" step="0.01" min="0"
                        value="<%= reg.recorte_kg || '' %>"
                        class="inp-dia"
-                       style="border-color: #fde68a; background: #fef9c3;" placeholder="0.00">
+                       style="border-color: var(--warning-soft); background: #fef9c3;" placeholder="0.00">
 
-                <div style="font-size: 11px; font-weight: bold; color: #1d4ed8; margin-top: 6px; margin-bottom: 4px;">🌿 Vena (kg)</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--info); margin-top: 6px; margin-bottom: 4px;">🌿 Vena (kg)</div>
                 <input type="number" name="vena_kg" step="0.01" min="0"
                        value="<%= reg.vena_kg || '' %>"
                        class="inp-dia"
-                       style="border-color: #bfdbfe; background: #eff6ff;" placeholder="0.00">
+                       style="border-color: var(--info-soft); background: #eff6ff;" placeholder="0.00">
 
                 <div style="font-size: 11px; font-weight: bold; color: var(--success); margin-top: 6px; margin-bottom: 4px;">✨ Extras (tabs)</div>
                 <input type="number" name="extra_tabacos"
@@ -202,7 +197,7 @@
                        style="border-color: #a7f3d0; background: #ecfdf5;" placeholder="0">
 
                 <% if (prestamo) { %>
-                <div style="font-size: 11px; font-weight: bold; color: #92400e; margin-top: 6px; margin-bottom: 4px;">💳 Abono a Préstamo ($)</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--warning-text); margin-top: 6px; margin-bottom: 4px;">💳 Abono a Préstamo ($)</div>
                 <input type="number" name="abono_prestamo" placeholder="Monto abono"
                        min="0" max="<%= prestamo.saldo_pendiente %>"
                        class="inp-dia"
@@ -211,9 +206,9 @@
                 <% } %>
 
                 <div style="margin-top: 12px; display: flex; flex-direction: column; gap: 6px;">
-                    <button type="submit" class="btn-guardar" style="width:100%;">💾 Guardar</button>
+                    <button type="submit" class="btn btn-primary btn-sm btn-guardar" style="width:100%;">💾 Guardar</button>
                     <% if (reg.id) { %>
-                    <button type="button" class="btn-liquidar" style="width:100%;"
+                    <button type="button" class="btn btn-success btn-sm btn-liquidar" style="width:100%;"
                             onclick="liquidarSemana('<%= reg.id %>')">💰 Liquidar</button>
                     <% } %>
                 </div>
@@ -233,7 +228,7 @@
                     const esCargo = h.monto_abono < 0;
                     const tipoLabel = esCargo ? (h.tipo === 'prestamo' ? '💵 Préstamo' : h.tipo === 'descuento_sueldo' ? '✂️ Desc. Sueldo' : '📦 Cargo') : '💚 Abono';
                 %>
-                <tr style="<%= esCargo ? 'color:#b91c1c;' : 'color:var(--success);' %>">
+                <tr style="<%= esCargo ? 'color:var(--danger);' : 'color:var(--success);' %>">
                     <td><%= h.fecha %></td>
                     <td><%= tipoLabel %></td>
                     <td>$<%= Math.abs(h.monto_abono).toLocaleString('es-CO') %></td>

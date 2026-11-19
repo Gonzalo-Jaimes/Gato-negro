@@ -1,11 +1,9 @@
 <%- include('../partials/header') %>
 
 <style>
-    .btn-guardar  { background-color: var(--primary); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; }
-    .btn-liquidar { background-color: var(--success); color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; width: 100%; margin-top: 6px; }
     .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
-    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
-    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .badge-pendiente.rojo  { background: var(--danger-soft); color: var(--danger); }
+    .badge-pendiente.verde { background: var(--success-soft); color: var(--success); }
     .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
     .inp-dia:focus { outline: 2px solid var(--primary); }
 </style>
@@ -102,7 +100,7 @@
 
             <!-- COLUMNA DE PAPEL + BOTONES -->
             <div>
-                <div style="font-size: 11px; font-weight: bold; color: #b45309; margin-bottom: 4px;">📄 Papel Extra (kg)</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--warning-text); margin-bottom: 4px;">📄 Papel Extra (kg)</div>
                 <input type="number" name="lun_papel_extra" step="0.001" min="0"
                        value="<%= extraTotal || '' %>"
                        class="inp-dia"
@@ -115,12 +113,12 @@
                        style="border-color: #c4b5fd; background: #f5f3ff;" placeholder="0.000">
 
                 <div style="margin-top: 12px;">
-                    <button type="submit" class="btn-guardar">💾 Guardar</button>
+                    <button type="submit" class="btn btn-primary btn-sm btn-guardar">💾 Guardar</button>
                     <% if (totalOut > 0) { %>
                     <button type="submit"
                             formaction="/liquidar_envolvedora/<%= reg.id %>"
-                            class="btn-liquidar"
-                            onclick="return confirm('¿Liquidar a <%= emp.nombre %>?\nPago: $<%= pago.toLocaleString('es-CO') %> por <%= totalOut %> cestas.')">
+                            class="btn btn-success btn-sm btn-liquidar"
+                            data-confirm="Pago: $<%= pago.toLocaleString('es-CO') %> por <%= totalOut %> cestas. La liquidación cierra el registro de esta semana." data-confirm-titulo="¿Liquidar a <%= emp.nombre %>?" data-confirm-ok="Sí, liquidar">
                         ✅ Liquidar
                     </button>
                     <% } %>

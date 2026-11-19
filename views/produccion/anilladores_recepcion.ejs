@@ -1,11 +1,9 @@
 <%- include('../partials/header') %>
 
 <style>
-    .btn-guardar   { background: var(--primary); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
-    .btn-liquidar  { background: var(--success); color: white; padding: 8px 14px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; }
     .badge-pendiente { font-size: 11px; font-weight: bold; padding: 2px 8px; border-radius: 10px; display: inline-block; }
-    .badge-pendiente.rojo  { background: #fee2e2; color: #b91c1c; }
-    .badge-pendiente.verde { background: #dcfce7; color: #15803d; }
+    .badge-pendiente.rojo  { background: var(--danger-soft); color: var(--danger); }
+    .badge-pendiente.verde { background: var(--success-soft); color: var(--success); }
     .inp-dia { width: 100%; padding: 5px; text-align: center; border: 1px solid var(--border-color); border-radius: 4px; background: transparent; color: var(--text-main); font-size: 13px; box-sizing: border-box; }
     .inp-dia:focus { outline: 2px solid var(--primary); }
 </style>
@@ -53,7 +51,7 @@
             </span>
         </div>
         <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
-            <span style="font-size: 12px; color: #b91c1c; font-weight: bold; background: #fee2e2; padding: 4px 10px; border-radius: 6px;">
+            <span style="font-size: 12px; color: var(--danger); font-weight: bold; background: var(--danger-soft); padding: 4px 10px; border-radius: 6px;">
                 🔖 Deuda Anillos: <%= emp.deuda_anillos.toLocaleString('es-CO') %>
             </span>
         </div>
@@ -103,16 +101,16 @@
 
             <!-- COLUMNA MERMAS Y BOTONES -->
             <div>
-                <div style="font-size: 11px; font-weight: bold; color: #b91c1c; margin-bottom: 4px;">❌ Merma Anillos</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--danger); margin-bottom: 4px;">❌ Merma Anillos</div>
                 <input type="number" name="merma_anillos" min="0" value="<%= reg.merma_anillos || '' %>" class="inp-dia" style="border-color: #fca5a5; background: #fef2f2;" placeholder="0">
 
-                <div style="font-size: 11px; font-weight: bold; color: #b91c1c; margin-top: 6px; margin-bottom: 4px;">❌ Merma Tabacos</div>
+                <div style="font-size: 11px; font-weight: bold; color: var(--danger); margin-top: 6px; margin-bottom: 4px;">❌ Merma Tabacos</div>
                 <input type="number" name="merma_tabacos" min="0" value="<%= reg.merma_tabacos || '' %>" class="inp-dia" style="border-color: #fca5a5; background: #fef2f2;" placeholder="0">
 
                 <div style="margin-top: 16px; display: flex; flex-direction: column; gap: 6px;">
-                    <button type="submit" class="btn-guardar" style="width:100%;">💾 Guardar</button>
+                    <button type="submit" class="btn btn-primary btn-sm btn-guardar" style="width:100%;">💾 Guardar</button>
                     <% if (reg.id) { %>
-                    <button type="button" class="btn-liquidar" style="width:100%;" onclick="liquidarSemana('<%= reg.id %>')">💰 Liquidar</button>
+                    <button type="button" class="btn btn-success btn-sm btn-liquidar" style="width:100%;" onclick="liquidarSemana('<%= reg.id %>')">💰 Liquidar</button>
                     <% } %>
                 </div>
             </div>

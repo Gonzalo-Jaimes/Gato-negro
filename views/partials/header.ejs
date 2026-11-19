@@ -42,7 +42,7 @@
             justify-content: space-between;
             position: sticky;
             top: 0;
-            z-index: 1000;
+            z-index: var(--z-sticky);
         }
         .topbar-brand {
             font-family: var(--font-head);
@@ -103,7 +103,7 @@
         }
         .nav-item:hover {
             background: var(--primary-soft);
-            color: var(--primary);
+            color: var(--primary-text);
         }
         .nav-item.active {
             background: var(--primary);
@@ -111,7 +111,7 @@
             box-shadow: 0 4px 12px rgba(var(--primary-rgb), 0.3);
         }
         .submenu a.active {
-            color: var(--primary);
+            color: var(--primary-text);
             background: var(--primary-soft);
             font-weight: 600;
             box-shadow: inset 2px 0 0 var(--primary);
@@ -132,7 +132,20 @@
             border-radius: 0 8px 8px 0;
             transition: all 0.2s;
         }
-        .submenu a:hover { color: var(--primary); background: var(--primary-soft); }
+        .submenu a:hover { color: var(--primary-text); background: var(--primary-soft); }
+
+        /* NAVEGACIÓN: grupos desplegables accesibles */
+        .nav-icon { display: inline-block; width: 1.4em; text-align: center; }
+        .nav-toggle { width: 100%; background: none; border: 0; font: inherit; cursor: pointer; text-align: left; }
+        .nav-toggle::after {
+            content: ''; margin-left: auto; width: 7px; height: 7px;
+            border-right: 2px solid currentColor; border-bottom: 2px solid currentColor;
+            transform: rotate(-45deg); transition: transform 0.15s ease-out;
+        }
+        .nav-toggle[aria-expanded="true"]::after { transform: rotate(45deg); }
+        .nav-toggle.has-active { color: var(--primary-text); font-weight: 600; }
+        .sidebar a:focus-visible, .nav-toggle:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+        @media (prefers-reduced-motion: reduce) { .nav-toggle::after { transition: none; } }
 
         /* CONTENT AREA */
         .content { 
@@ -147,54 +160,7 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* COMPONENTES GLOBALES REFINADOS */
-        .card { 
-            background: var(--bg-card); 
-            border-radius: var(--radius); 
-            border: 1px solid var(--border-color);
-            box-shadow: var(--shadow-sm);
-            padding: 24px;
-            transition: box-shadow 0.3s;
-        }
-        .card:hover { box-shadow: var(--shadow-md); }
-        
-        /* FORMULARIO PREMIUM GLOBAL */
-        input, select, textarea {
-            background: var(--bg-card);
-            color: var(--text-main);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 10px 12px;
-            font-size: 0.95rem;
-            transition: all 0.2s;
-        }
-        input:focus, select:focus {
-            outline: none;
-            border-color: var(--primary);
-            box-shadow: 0 0 0 3px rgba(var(--primary-rgb), 0.18);
-        }
-        label { color: var(--text-muted); font-weight: 500; font-size: 0.9rem; margin-bottom: 6px; display: block; }
-
-        table { 
-            width: 100%; 
-            border-collapse: separate; 
-            border-spacing: 0;
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            overflow: hidden;
-            background: var(--bg-card);
-        }
-        th { 
-            background: var(--primary-soft);
-            padding: 14px; 
-            text-align: left; 
-            font-weight: 600; 
-            color: var(--text-main);
-            border-bottom: 2px solid var(--border-color);
-        }
-        td { padding: 14px; border-bottom: 1px solid var(--border-color); }
-        tr:last-child td { border-bottom: none; }
-        tr:hover { background: var(--primary-soft); }
+        /* Tarjeta, campos, etiqueta y tabla globales: ver public/css/theme.css (sistema de diseño) */
 
         /* BOTONES TOPBAR */
         .btn-icon {
@@ -218,7 +184,7 @@
             .sidebar {
                 position: fixed;
                 left: -100%;
-                z-index: 1100;
+                z-index: var(--z-sidebar-mobile);
                 box-shadow: 20px 0 50px rgba(0,0,0,0.2);
             }
             .sidebar.mobile-open { left: 0; }
@@ -239,34 +205,40 @@
                 sb.classList.toggle('collapsed');
             }
         }
-        function toggleSub(id) {
-            const el = document.getElementById(id);
-            const isOpen = el.style.display === 'block';
-            el.style.display = isOpen ? 'none' : 'block';
-            
-            // Guardar estado en session/local si se desea, pero la detección por URL es mejor
+        function toggleSub(btn) {
+            const el = document.getElementById(btn.getAttribute('aria-controls'));
+            const abierto = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', String(!abierto));
+            el.style.display = abierto ? 'none' : 'block';
         }
 
-        /* AUTO-ACTIVACIÓN DE MENÚ POR URL */
+        /* NAVEGACIÓN: botones de grupo + marcado de la página actual por URL */
         window.addEventListener('DOMContentLoaded', () => {
+            document.querySelectorAll('.nav-toggle').forEach(b => b.addEventListener('click', () => toggleSub(b)));
+
             const path = window.location.pathname;
-            const links = document.querySelectorAll('.sidebar a');
-            
-            links.forEach(link => {
-                if (link.getAttribute('href') === path || (path === '/lista' && link.getAttribute('href') === '/maquinas')) {
-                    link.classList.add('active');
-                    
-                    // Si está en un submenú, abrir el padre
-                    const parentSub = link.closest('.submenu');
-                    if (parentSub) {
-                        parentSub.style.display = 'block';
-                    }
+            document.querySelectorAll('.sidebar nav a[href]').forEach(link => {
+                const extras = (link.dataset.tambien || '').split(',').filter(Boolean);
+                const coincide = link.getAttribute('href') === path ||
+                    extras.some(p => path === p || path.startsWith(p + '/'));
+                if (!coincide) return;
+
+                link.classList.add('active');
+                link.setAttribute('aria-current', 'page');
+
+                const sub = link.closest('.submenu');
+                if (sub) {
+                    sub.style.display = 'block';
+                    const btn = document.querySelector('[aria-controls="' + sub.id + '"]');
+                    if (btn) { btn.setAttribute('aria-expanded', 'true'); btn.classList.add('has-active'); }
                 }
             });
         });
     </script>
+    <script src="/js/ui.js" defer></script>
 </head>
 <body>
+    <a class="skip-link" href="#contenido">Saltar al contenido</a>
     <%- include('cat-loader', { idle: true }) %>
 
 <header class="topbar">
@@ -284,75 +256,101 @@
 <div class="container">
 
 <aside class="sidebar" id="main-sidebar">
-    
-    <% if (session.rol === "admin") { %>
-        <!-- 🏢 ADMINISTRACIÓN -->
+<%
+    /* Fuente única del mapa de navegación (ver documentacion/taller/04_arquitectura_informacion.md).
+       hijos => grupo desplegable; tambien => rutas hijas que mantienen activo el ítem. */
+    let menu;
+    if (session.rol === 'admin') {
+        menu = [
+            { etiqueta: 'Resumen', items: [
+                { icono: '📈', texto: 'Analítica', href: '/analitica' },
+                { icono: '📦', texto: 'Inventario', href: '/inventario' }
+            ]},
+            { etiqueta: 'Producción', items: [
+                { id: 'bodega', icono: '🏬', texto: 'Bodega', hijos: [
+                    { texto: 'Despachar material', href: '/bodega' },
+                    { texto: 'Mermas y compras', href: '/mermas' }
+                ]},
+                { id: 'fabriquines', icono: '🏭', texto: 'Fabriquines', hijos: [
+                    { texto: 'Asignar tarea', href: '/despacho', tambien: ['/imprimir_despacho', '/historial_prestamo'] },
+                    { texto: 'Recibir producción', href: '/recepcion_diaria' },
+                    { texto: 'Recibir tareas y rezagos', href: '/recepcion_general' }
+                ]},
+                { id: 'envolvedoras', icono: '🌯', texto: 'Envolvedoras', hijos: [
+                    { texto: 'Asignar semana', href: '/envolvedoras/despacho' },
+                    { texto: 'Recibir producción', href: '/envolvedoras/control' }
+                ]},
+                { id: 'anilladores', icono: '💍', texto: 'Anilladores', hijos: [
+                    { texto: 'Asignar trabajo', href: '/anilladores/despacho' },
+                    { texto: 'Recibir producción', href: '/anilladores/recepcion' },
+                    { texto: 'Inventario y personal', href: '/anilladores/inventario' }
+                ]},
+                { id: 'empaque', icono: '🎁', texto: 'Empaque', hijos: [
+                    { texto: 'Asignar trabajo', href: '/despachos_empaque', tambien: ['/despacho_empaque'] },
+                    { texto: 'Recibir producción', href: '/empacadores/recepcion' }
+                ]},
+                { icono: '📋', texto: 'Pedidos', href: '/pedidos' },
+                { icono: '🔎', texto: 'Historial de entregas', href: '/entregas_historicas' }
+            ]},
+            { etiqueta: 'Finanzas y control', items: [
+                { icono: '🔄', texto: 'Kardex', href: '/movimientos' },
+                { icono: '💰', texto: 'Nómina', href: '/nomina', tambien: ['/imprimir_nomina_v18'] },
+                { icono: '🖨️', texto: 'Facturas', href: '/facturas', tambien: ['/factura_detalle', '/factura_nomina', '/reimprimir_factura'] }
+            ]},
+            { etiqueta: 'Mantenimiento', items: [
+                { icono: '⚙️', texto: 'Equipos', href: '/maquinas', tambien: ['/lista', '/ficha', '/maquinas/ficha', '/ficha_maquina'] },
+                { icono: '🔧', texto: 'Órdenes', href: '/mantenimiento' },
+                { icono: '🏷️', texto: 'Etiquetas QR', href: '/maquinas/qrs' }
+            ]},
+            { etiqueta: 'Administración', items: [
+                { icono: '👥', texto: 'Empleados', href: '/empleados' },
+                { icono: '👤', texto: 'Accesos', href: '/usuarios' },
+                { icono: '🎨', texto: 'Guía de estilos', href: '/guia_estilos' }
+            ]}
+        ];
+    } else if (session.rol === 'mantenimiento') {
+        menu = [
+            { etiqueta: 'Área técnica', items: [
+                { icono: '⚙️', texto: 'Ver máquinas', href: '/maquinas', tambien: ['/lista', '/ficha', '/maquinas/ficha', '/ficha_maquina'] },
+                { icono: '🔧', texto: 'Subir mantenimiento', href: '/mantenimiento' }
+            ]}
+        ];
+    } else {
+        menu = [
+            { items: [
+                { icono: '📋', texto: 'Pedidos', href: '/pedidos' },
+                { icono: '💵', texto: 'Mi producción', href: '/cierre_diario' }
+            ]}
+        ];
+    }
+%>
+    <nav aria-label="Navegación principal">
+    <% menu.forEach(function (seccion) { %>
         <div class="sidebar-section">
-            <div class="sidebar-label">Administración</div>
-            <a href="#" class="nav-item" onclick="toggleSub('submenu-admin')">🏢 Central de Negocios</a>
-            <div id="submenu-admin" class="submenu">
-                <a href="/inventario">📦 Inventario Global</a>
-                <a href="/movimientos">🔄 Kardex</a>
-                <a href="/nomina">💰 Nómina</a>
-                <a href="/analitica">📈 Analítica BI</a>
-                <a href="/empleados">👥 Empleados</a>
-            </div>
+            <% if (seccion.etiqueta) { %><div class="sidebar-label"><%= seccion.etiqueta %></div><% } %>
+            <% seccion.items.forEach(function (it) { %>
+                <% if (it.hijos) { %>
+                    <button type="button" class="nav-item nav-toggle" aria-expanded="false" aria-controls="submenu-<%= it.id %>">
+                        <span class="nav-icon" aria-hidden="true"><%= it.icono %></span><span><%= it.texto %></span>
+                    </button>
+                    <div id="submenu-<%= it.id %>" class="submenu">
+                        <% it.hijos.forEach(function (h) { %>
+                            <a href="<%= h.href %>"<% if (h.tambien) { %> data-tambien="<%= h.tambien.join(',') %>"<% } %>><%= h.texto %></a>
+                        <% }); %>
+                    </div>
+                <% } else { %>
+                    <a href="<%= it.href %>" class="nav-item"<% if (it.tambien) { %> data-tambien="<%= it.tambien.join(',') %>"<% } %>>
+                        <span class="nav-icon" aria-hidden="true"><%= it.icono %></span><span><%= it.texto %></span>
+                    </a>
+                <% } %>
+            <% }); %>
         </div>
+    <% }); %>
+    </nav>
 
-        <!-- 🏭 PRODUCCIÓN -->
-        <div class="sidebar-section">
-            <div class="sidebar-label">Producción</div>
-            <a href="#" class="nav-item" onclick="toggleSub('submenu-fabs')">🏭 Fabriquines</a>
-            <div id="submenu-fabs" class="submenu">
-                <a href="/despacho">📝 Asignar Hojas</a>
-                <a href="/facturas">🖨️ Facturas</a>
-                <a href="/recepcion_diaria">⚖️ Recepción</a>
-                <a href="/bodega">📦 Bodega Central</a>
-            </div>
-            
-            <a href="#" class="nav-item" onclick="toggleSub('submenu-anilladores')">💍 Anilladores</a>
-            <div id="submenu-anilladores" class="submenu">
-                <a href="/anilladores/despacho">📝 Asignar Trabajo</a>
-                <a href="/anilladores/recepcion">⚖️ Recepción</a>
-                <a href="/anilladores/inventario">📊 Inv / Empleados</a>
-            </div>
-
-            <a href="#" class="nav-item" onclick="toggleSub('submenu-envolvedoras')">🌯 Envolvedoras</a>
-            <div id="submenu-envolvedoras" class="submenu">
-                <a href="/envolvedoras/despacho" class="nav-item-sub <%= locals.currentUrl === '/envolvedoras/despacho' ? 'active' : '' %>">📄 Asignar Semana</a>
-                <a href="/envolvedoras/control" class="nav-item-sub <%= locals.currentUrl === '/envolvedoras/control' ? 'active' : '' %>">📅 Recepción Diaria</a>
-            </div>
-            <a href="/empacadores/recepcion" class="nav-item">📦 Empacado</a>
-        </div>
-
-        <!-- ⚙️ TÉCNICO -->
-        <div class="sidebar-section">
-            <div class="sidebar-label">Técnico</div>
-            <a href="#" class="nav-item" onclick="toggleSub('submenu-maint')">⚙️ Mantenimiento</a>
-            <div id="submenu-maint" class="submenu">
-                <a href="/maquinas">⚙️ Equipos</a>
-                <a href="/mantenimiento">🔧 Órdenes</a>
-                <a href="/maquinas/qrs">🖨️ Etiquetas QR</a>
-            </div>
-            <a href="/usuarios" class="nav-item">👤 Accesos</a>
-        </div>
-        
-    <% } else if (session.rol === "mantenimiento") { %>
-        <!-- ⚙️ MENÚ MANTENIMIENTO (MANOLO) -->
-        <div class="sidebar-section">
-            <div class="sidebar-label">Área Técnica</div>
-            <a href="/maquinas" class="nav-item">⚙️ Ver Máquinas</a>
-            <a href="/mantenimiento" class="nav-item">🔧 Subir Mantenimiento</a>
-        </div>
-    <% } else { %>
-        <!-- MENU OPERATIVO -->
-        <a href="/pedidos" class="nav-item">📋 Pedidos</a>
-        <a href="/cierre_diario" class="nav-item">💵 Mi Producción</a>
-    <% } %>
-    
     <div style="margin-top: 40px; padding: 0 12px;">
-        <a href="/logout" class="premium-btn" style="display: block; text-align: center; text-decoration: none; padding: 12px; font-size: 0.9rem; background: transparent; color: var(--danger); border: 1px solid var(--danger);">SALIR DEL SISTEMA</a>
+        <a href="/logout" class="btn" style="display: block; text-align: center; text-decoration: none; padding: 12px; font-size: 0.9rem; background: transparent; color: var(--danger); border: 1px solid var(--danger);">SALIR DEL SISTEMA</a>
     </div>
 </aside>
 
-<main class="content">
+<main class="content" id="contenido" tabindex="-1">

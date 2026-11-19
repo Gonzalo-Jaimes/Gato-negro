@@ -251,17 +251,13 @@ router.get('/entregas_historicas', isAdmin, async (req, res) => {
 
 // ---------------- ÁREA DE EMPAQUE (RESTAURADA) ----------------
 
-router.get('/recepcion_empaque', isAdmin, async (req, res) => {
-    const { data: empaquetadores } = await supabase.from('usuarios').select('*').eq('rol', 'empacador');
-    const { data: registros } = await supabase.from('recepcion_empaque').select('*').eq('estado', 'pendiente').order('id', { ascending: false });
-    res.render('produccion/empaque_recepcion', { personal: empaquetadores || [], registros: registros || [] });
-});
+// La vista empaque_recepcion espera empleados/registros que arma empacadores.js en /empacadores/recepcion.
+// Esta ruta pasaba otras variables y devolvia 500; se mantiene la URL y se redirige a la ruta canonica.
+router.get('/recepcion_empaque', isAdmin, (req, res) => res.redirect('/empacadores/recepcion'));
 
-router.get('/despacho_empaque', isAdmin, async (req, res) => {
-    const { data: empaquetadores } = await supabase.from('usuarios').select('*').eq('rol', 'empacador');
-    const { data: registros } = await supabase.from('despacho_empaque').select('*').eq('estado', 'pendiente');
-    res.render('produccion/empaque_despacho', { personal: empaquetadores || [], registros: registros || [] });
-});
+// La vista empaque_despacho espera usuarios/inventario/despachos_activos, que arma operario.js en /despachos_empaque.
+// Esta ruta pasaba otras variables y devolvia 500; se mantiene la URL y se redirige a la ruta canonica.
+router.get('/despacho_empaque', isAdmin, (req, res) => res.redirect('/despachos_empaque'));
 
 // ---------------- MERMAS Y COMPRAS (RESTAURADA) ----------------
 

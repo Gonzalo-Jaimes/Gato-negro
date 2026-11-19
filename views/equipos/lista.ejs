@@ -31,7 +31,7 @@
     <div style="grid-column: span 3;"><label><strong>Otras Observaciones:</strong></label><br><input type="text" name="observaciones" placeholder="Ninguna" style="width: 100%;"></div>
     
     <div style="grid-column: span 3;">
-        <button type="submit" class="premium-btn" style="background: var(--primary); color: var(--on-primary); font-weight: bold; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Máquina</button>
+        <button type="submit" class="btn" style="background: var(--primary); color: var(--on-primary); font-weight: bold; width: 100%; padding: 12px; font-size: 16px;">💾 Guardar Máquina</button>
     </div>
 </form>
 
@@ -90,7 +90,7 @@
             <% if (session && session.rol === 'admin') { %>
             <button onclick="document.getElementById('modal-editar-<%= m.id %>').classList.add('activo')" style="background: var(--primary); padding: 6px 12px; margin-bottom: 5px; color: var(--on-primary); font-weight: bold; border-radius: 6px; border: none; cursor: pointer;">✏️ Editar</button>
             <br>
-            <a href="/eliminar/<%= m.id %>" onclick="return confirm('¿Seguro que deseas borrar permanentemente esta máquina?')">
+            <a href="/eliminar/<%= m.id %>" data-confirm="Se borrará la máquina «<%= m.nombre %>» de forma permanente. Esta acción no se puede deshacer." data-confirm-titulo="¿Borrar la máquina <%= m.nombre %>?" data-confirm-ok="Sí, borrar" data-confirm-tipo="peligro">
                 <button style="background: var(--danger); padding: 6px 12px; color: white; border-radius: 6px; border: none; cursor: pointer;">🗑 Borrar</button>
             </a>
             <% } %>
@@ -138,7 +138,7 @@
                 <input type="text" name="observaciones" value="<%= m.observaciones %>" placeholder="Observaciones generales">
                 <input type="hidden" name="fabricante" value="<%= m.fabricante %>">
 
-                <button type="submit" class="premium-btn" style="background: var(--primary); color: var(--on-primary); font-weight: bold; padding: 12px; margin-top: 10px;">💾 Aplicar Cambios</button>
+                <button type="submit" class="btn" style="background: var(--primary); color: var(--on-primary); font-weight: bold; padding: 12px; margin-top: 10px;">💾 Aplicar Cambios</button>
             </form>
         </div>
     </div>
@@ -205,7 +205,7 @@
             </div>
 
             <div style="margin-top:18px; text-align:center;">
-                <a id="ft-link-full" href="#" target="_blank" class="premium-btn" style="background:var(--primary); color:var(--on-primary); padding:10px 22px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-block;">
+                <a id="ft-link-full" href="#" target="_blank" class="btn" style="background:var(--primary); color:var(--on-primary); padding:10px 22px; border-radius:8px; text-decoration:none; font-weight:bold; font-size:14px; display:inline-block;">
                     📄 Ver Ficha Técnica Completa con Historial
                 </a>
             </div>

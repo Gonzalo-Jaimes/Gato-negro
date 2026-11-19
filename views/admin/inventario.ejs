@@ -129,18 +129,18 @@
                 let colorBorde = "var(--primary)"; 
                 let nombreM = item.material.toLowerCase();
                 
-                if (nombreM.includes("capa")) { colorBorde = "#eab308"; }
-                else if (nombreM.includes("capote")) { colorBorde = "#d97706"; }
+                if (nombreM.includes("capa")) { colorBorde = "var(--warning)"; }
+                else if (nombreM.includes("capote")) { colorBorde = "var(--warning)"; }
                 else if (nombreM.includes("tripa") || nombreM.includes("material")) { colorBorde = "#84cc16"; }
                 else if (nombreM.includes("cesta")) { colorBorde = "#64748b"; }
                 else if (nombreM.includes("papel")) { colorBorde = "#8b5cf6"; }
                 else if (nombreM.includes("tabaco")) { colorBorde = "var(--text-main)"; }
-                else if (nombreCategoria.includes("Producto")) { colorBorde = "#10b981"; }
+                else if (nombreCategoria.includes("Producto")) { colorBorde = "var(--success)"; }
             %>
                 <div class="tarjeta-material card <%= item.esAgrupado ? 'interactiva' : '' %>" 
                      data-nombre="<%= item.material.toLowerCase() %>" 
                      data-cat="<%= nombreCategoria.toLowerCase() %>" 
-                     style="border-left: 6px solid <%= colorBorde %>; width: 220px; background: rgba(var(--text-muted), 0.03); cursor: <%= item.esAgrupado ? 'pointer' : 'default' %>;"
+                     style="border-left: 6px solid <%= colorBorde %>; width: 220px; background: var(--bg-sunken); cursor: <%= item.esAgrupado ? 'pointer' : 'default' %>;"
                      <% if (item.esAgrupado) { %> onclick="toggleBreakdown(this)" <% } %>>
                     
                     <h3 style="margin: 0 0 10px 0; color: var(--text-main); text-transform: capitalize; font-size: 18px;">
@@ -166,7 +166,7 @@
                             <% if (item.material.includes('Sacas')) { %>
                             <div style="display: flex; justify-content: space-between; margin-top: 8px; border-top: 1px solid var(--border-color); padding-top: 4px;">
                                 <strong>Peso Total Aprox:</strong>
-                                <strong style="color: #10b981;"><%= totalKg %> kg</strong>
+                                <strong style="color: var(--success);"><%= totalKg %> kg</strong>
                             </div>
                             <% } %>
                         </div>

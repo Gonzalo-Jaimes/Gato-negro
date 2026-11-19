@@ -1,0 +1,15 @@
+<%- include('partials/header') %>
+<%
+    /* Pantalla de inicio según el rol, para que "Volver" lleve a algo que sí puede usar. */
+    const inicio = { admin: '/inventario', mantenimiento: '/mantenimiento', anillador: '/cierre_diario', empacador: '/cierre_diario' }[session.rol] || '/pedidos';
+%>
+<div class="state state-denied" role="alert" style="margin-top: var(--space-8);">
+    <div class="state-icon" aria-hidden="true">🔒</div>
+    <h1 class="state-title" style="font-size: var(--text-xl);">No tienes permiso para ver esta sección</h1>
+    <p class="state-text">Tu cuenta (<strong><%= session.usuario %></strong>, rol <strong><%= session.rol %></strong>) no tiene acceso a esta página. Si crees que deberías tenerlo, pídele acceso a un administrador.</p>
+    <div class="state-actions">
+        <a class="btn btn-primary" href="<%= inicio %>">Volver a mi inicio</a>
+        <a class="btn btn-ghost" href="/logout">Cambiar de usuario</a>
+    </div>
+</div>
+<%- include('partials/footer') %>

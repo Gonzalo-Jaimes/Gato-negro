@@ -23,7 +23,7 @@
                 <% insumos.forEach(i => { %>
                     <tr>
                         <td style="font-weight: 500;"><%= i.material %></td>
-                        <td style="font-weight: bold; color: <%= i.cantidad < 100 ? '#ef4444' : '#10b981' %>"><%= i.cantidad %></td>
+                        <td style="font-weight: bold; color: <%= i.cantidad < 100 ? 'var(--danger)' : 'var(--success)' %>"><%= i.cantidad %></td>
                         <td><%= i.unidad_medida %></td>
                     </tr>
                 <% }) %>
@@ -32,7 +32,7 @@
     </div>
 
     <!-- NUEVO EMPLEADO -->
-    <div class="card" style="border-top: 4px solid #6b7280;">
+    <div class="card" style="border-top: 4px solid var(--text-muted);">
         <h3 style="margin-top: 0;">Registrar Nuevo Anillador</h3>
         <form action="/api/anilladores/empleados" method="POST">
             <div style="margin-bottom: 15px;">
@@ -43,7 +43,7 @@
                 <label>Cédula de Identidad</label>
                 <input type="text" name="cedula" style="width: 100%;" required>
             </div>
-            <button type="submit" style="width: 100%; background: #374151; color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+            <button type="submit" style="width: 100%; background: var(--text-main); color: white; border: none; padding: 12px; border-radius: 8px; font-size: 16px; cursor: pointer;">
                 Crear Empleado
             </button>
         </form>
