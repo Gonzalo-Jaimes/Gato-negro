@@ -94,7 +94,8 @@ Menú lateral nuevo (24 enlaces; 12 a un clic, 12 a dos clics)
 │  │  ├─ Asignar trabajo          /despachos_empaque      ← nuevo en menú
 │  │  └─ Recibir producción       /empacadores/recepcion
 │  ├─ Pedidos                     /pedidos                ← nuevo en menú admin
-│  └─ Historial de entregas       /entregas_historicas    ← nuevo en menú
+│  ├─ Historial de entregas       /entregas_historicas    ← nuevo en menú
+│  └─ Historial de despachos      /despachos_historicos   ← nuevo (órdenes de material y su estado)
 ├─ FINANZAS Y CONTROL
 │  ├─ Kardex                      /movimientos
 │  ├─ Nómina                      /nomina

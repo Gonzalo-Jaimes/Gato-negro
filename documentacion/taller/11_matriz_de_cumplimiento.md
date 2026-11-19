@@ -13,7 +13,7 @@ Estado a 2026-11-17, rama `feature/taller-mejoramiento` (sin *merge* a `main`). 
 | Formularios / Tablas: estados y datos | 10 % | **Cumple** | `06_fase4_mejoras.md`: 5 estados de campo, validación específica en cliente y servidor, tablas con búsqueda, filtro, orden y paginación, 7 estados en Empleados y Kardex, con capturas | Altas y bajas reales en la base de datos no se probaron (respuestas simuladas) |
 | Responsive y accesibilidad: mejoras verificadas | 10 % | **Parcial** | Responsive en 3 tamaños sin desborde; 5 mejoras de accesibilidad medidas antes y después con `herramientas/auditoria_a11y.js` | **No se ejecutó Lighthouse** (ni axe-core: el control de permisos bloqueó su carga). 14 textos de Despacho sobre degradado sin evaluar. Solo se auditaron las 5 pantallas base y la guía |
 | Uso crítico de IA: 5 interacciones con registro y criterio | 10 % | **Cumple** | `07_uso_de_ia.md`: 5 fichas con herramienta, prompt, respuesta, aceptado, rechazado, modificaciones y evidencia; comparación de prompts con rúbrica (6/20 frente a 18/20) y salidas íntegras en `ia/` | Las 5 fichas usan **la misma herramienta** (Claude Code); el equipo puede añadir las que hizo con otras. El experimento es de una sola ejecución por prompt |
-| Implementación: cambios demostrables en código | 15 % | **Cumple** | 27 commits sobre `main` al iniciar la Fase 7 (más los de esta fase); app funcional con sesión real; 42 plantillas compilan; 34 rutas verificadas (ver sección 3) | Otras ~30 vistas siguen con estilos y manejadores en línea |
+| Implementación: cambios demostrables en código | 15 % | **Cumple** | 34 commits sobre `main` en la rama (27 al iniciar la Fase 7, más los de esta fase y 4 correcciones funcionales halladas al preparar las pruebas con usuarios: despacho sin rastro en el Kardex, selector de fabriquín, 404 y despacho sin guardar, orden del menú); app funcional con sesión real; 42 plantillas compilan; 34 rutas verificadas (ver sección 3) | Otras ~30 vistas siguen con estilos y manejadores en línea |
 | Antes y después: 5 comparaciones justificadas | 5 % | **Cumple** | `08_antes_y_despues.md`: 5 comparaciones con capturas reales del commit original, problema, principio, cambio en código y resultado | Bodega quedó **parcial**: sus 8 indicadores siguen apilados en móvil (hallazgos 11 y 12 abiertos) |
 | Sustentación: pruebas y conclusiones | 5 % | **Pendiente** | `12_guia_y_sustentacion.md` (guion de 10 minutos) y `10_reflexion_critica.md` | La claridad en vivo depende del equipo |
 
@@ -41,8 +41,8 @@ Estado a 2026-11-17, rama `feature/taller-mejoramiento` (sin *merge* a `main`). 
 1. **Pruebas con usuarios reales:** pendientes; sin ellas no se puede afirmar mejora de usabilidad percibida.
 2. **Aprendizaje del equipo:** pendiente de redactar por el equipo.
 3. **Lighthouse:** no se ejecutó.
-4. **Altas y bajas reales** en la base de datos: no se probaron.
+4. **Altas y bajas reales** en la base de datos: probadas solo para el flujo de Despacho (despacho, entrega en Bodega, Kardex e inventario, con reversión posterior); las altas de empleados siguen sin probarse.
 5. **Bodega en móvil** (hallazgos 11 y 12): abierto.
 6. **Migración de los 98 manejadores en línea** a `addEventListener` y vuelta a `script-src-attr 'none'`: abierta (87 restantes).
-7. **Despliegue, *merge* a `main`, *push* y *pull request*:** no realizados, a la espera de aprobación.
+7. **Despliegue, *merge* a `main` y *pull request*:** no realizados (los hará el equipo). La rama `feature/taller-mejoramiento` sí está subida al repositorio. Si las pruebas con usuarios se hacen en el sitio desplegado, no incluirá estos cambios hasta el *merge*.
 8. **Token de Telegram:** el de `.env` está rechazado (401); el bot no arranca en local. No afecta a la web.
