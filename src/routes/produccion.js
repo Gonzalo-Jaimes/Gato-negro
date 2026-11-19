@@ -97,26 +97,12 @@ router.post('/despachar_tarea', isAdmin, async (req, res) => {
         return res.send(mostrarAlerta('Despacho NO guardado', 'No se pudo registrar el despacho en la base de datos (' + (e.message || 'error desconocido') + '). No entregue el material hasta resolverlo.', 'error', '/despacho'));
     }
 
-    res.render('produccion/hoja_despacho', {
-        empleado: { id: empleado.id, nombre: empleado.nombre, codigo: empleado.codigo },
-        despacho: {
-            id:           despachoId,
-            fecha_semana: `${tiempo.fecha} ${tiempo.hora}`,
-            meta_tabacos: nuevaMeta,
-            color_cesta:  colorCesta,
-            cestas_cant:  cestasCant,
-            capa_kg:      capaKgBase,
-            capote_kg:    capoteKgBase,
-            picadura_kg:  picaduraKgBase,
-            deuda_anterior: saldoEnCasa,
-            goma_uds:     goma_uds,
-            goma_num:     goma_num,
-            periodico_kg: periodico_kg,
-            notas: null
-        },
-        sacos: []
-    });
+    // Post/Redirect/Get: la hoja vive en una URL GET estable, asi recargar o volver atras no da 404.
+    res.redirect('/reimprimir_factura/' + despachoId + '?nuevo=1');
 });
+
+// Una URL POST abierta por GET (recarga, marcador, historial) vuelve a la pantalla de despacho.
+router.get('/despachar_tarea', isAdmin, (req, res) => res.redirect('/despacho'));
 
 // ---------------- KARDEX DE DESPACHOS ----------------
 // La salida de materia prima se registra cuando el material sale fisicamente de bodega
@@ -359,7 +345,7 @@ router.get('/reimprimir_factura/:id', isAdmin, async (req, res) => {
         const emp = d.empleados_fabriquines || {};
         res.render('produccion/hoja_despacho', {
             empleado: { id: d.empleado_id, nombre: emp.nombre || '—', codigo: emp.codigo || '—' },
-            despacho: { id: d.id, fecha_semana: d.fecha, meta_tabacos: d.meta_tabacos, color_cesta: d.color_cesta,
+            despacho: { id: d.id, fecha_semana: d.fecha, meta_tabacos: (parseInt(d.meta_tabacos) || 0) + (parseInt(d.deuda_anterior) || 0), color_cesta: d.color_cesta,
                 cestas_cant: d.cestas_cant, capa_kg: d.capa_kg, capote_kg: d.capote_kg, picadura_kg: d.picadura_kg,
                 deuda_anterior: d.deuda_anterior, goma_uds: d.goma_uds, goma_num: d.goma_num,
                 periodico_kg: d.periodico_kg, notas: null },

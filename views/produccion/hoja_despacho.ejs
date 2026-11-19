@@ -230,13 +230,14 @@
     <!-- AUTO-PRINT -->
     <div class="no-print" style="text-align:center; margin-top:20px;">
         <button onclick="window.print()" style="background:#1d4ed8; color:white; border:none; padding:12px 32px; border-radius:8px; font-size:15px; font-weight:bold; cursor:pointer;">🖨️ Imprimir Hoja</button>
-        <button onclick="window.close()" style="background:#6b7280; color:white; border:none; padding:12px 24px; border-radius:8px; font-size:15px; cursor:pointer; margin-left:10px;">✖ Cerrar</button>
+        <a href="/despacho" style="display:inline-block; background:#6b7280; color:white; padding:12px 24px; border-radius:8px; font-size:15px; text-decoration:none; margin-left:10px;">← Volver a Despacho</a>
+        <a href="/despachos_historicos" style="display:inline-block; background:#374151; color:white; padding:12px 24px; border-radius:8px; font-size:15px; text-decoration:none; margin-left:10px;">Ver historial</a>
     </div>
 
     <script>
-        // Imprimir automáticamente al abrir la página
+        // Imprimir automáticamente solo justo después de registrar el despacho (?nuevo=1), no al recargar
         window.addEventListener('load', () => {
-            setTimeout(() => window.print(), 600);
+            if (new URLSearchParams(location.search).get('nuevo') === '1') setTimeout(() => window.print(), 600);
         });
     </script>
 </body>
