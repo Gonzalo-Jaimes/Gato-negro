@@ -62,7 +62,7 @@ Páginas del rol admin SIN entrada en el menú:
 Los roles `anillador` y `empacador` son redirigidos tras el login a `/cierre_diario` (`admin.js` líneas 31 y 59), pero esa ruta exige `isAdmin` (`admin.js` línea 157, `middleware.js`). Resultado: vuelven a `/login`. El menú operativo ("Mi producción") apunta a la misma ruta. Además la ruta fallaba con 500 para cualquier rol (renderizaba sin datos). Corregido en un commit aparte; ver sección 5.
 
 ## 2. Principios usados para el rediseño
-1. **Agrupar por proceso**, no por quién usa la pantalla: la cadena real es Bodega → Fabriquines → Envolvedoras → Anilladores → Empaque.
+1. **Agrupar por proceso**, no por quién usa la pantalla: la cadena real es Fabriquines (asignar tarea) → Bodega (entregar material) → Fabriquines (recibir) → Anilladores → Envolvedoras → Empaque, como describe `documentacion/LINEA_DE_PRODUCCION_PLATAFORMA.md`.
 2. **Mismo patrón en cada eslabón:** *Asignar* (despacho de material) y *Recibir producción* (recepción). Mismos verbos, mismos nombres.
 3. **Frecuente a un clic:** lo que no pertenece a un eslabón (resumen, finanzas, mantenimiento, administración) queda como enlace directo.
 4. **Todo lo que existe se puede llegar desde el menú** (benchmarking: SaaSFrame y Mobbin muestran menús compactos y completos).
@@ -76,20 +76,20 @@ Menú lateral nuevo (24 enlaces; 12 a un clic, 12 a dos clics)
 │  ├─ Analítica                   /analitica
 │  └─ Inventario                  /inventario
 ├─ PRODUCCIÓN                      (en el orden de la cadena)
-│  ├─ Bodega ▾
-│  │  ├─ Despachar material       /bodega
-│  │  └─ Mermas y compras         /mermas                 ← nuevo en menú
 │  ├─ Fabriquines ▾
 │  │  ├─ Asignar tarea            /despacho
 │  │  ├─ Recibir producción       /recepcion_diaria
 │  │  └─ Recibir tareas y rezagos /recepcion_general      ← nuevo en menú
-│  ├─ Envolvedoras ▾
-│  │  ├─ Asignar semana           /envolvedoras/despacho
-│  │  └─ Recibir producción       /envolvedoras/control
+│  ├─ Bodega ▾
+│  │  ├─ Despachar material       /bodega
+│  │  └─ Mermas y compras         /mermas                 ← nuevo en menú
 │  ├─ Anilladores ▾
 │  │  ├─ Asignar trabajo          /anilladores/despacho
 │  │  ├─ Recibir producción       /anilladores/recepcion
 │  │  └─ Inventario y personal    /anilladores/inventario
+│  ├─ Envolvedoras ▾
+│  │  ├─ Asignar semana           /envolvedoras/despacho
+│  │  └─ Recibir producción       /envolvedoras/control
 │  ├─ Empaque ▾
 │  │  ├─ Asignar trabajo          /despachos_empaque      ← nuevo en menú
 │  │  └─ Recibir producción       /empacadores/recepcion

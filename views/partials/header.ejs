@@ -267,23 +267,23 @@
                 { icono: '📦', texto: 'Inventario', href: '/inventario' }
             ]},
             { etiqueta: 'Producción', items: [
-                { id: 'bodega', icono: '🏬', texto: 'Bodega', hijos: [
-                    { texto: 'Despachar material', href: '/bodega' },
-                    { texto: 'Mermas y compras', href: '/mermas' }
-                ]},
                 { id: 'fabriquines', icono: '🏭', texto: 'Fabriquines', hijos: [
                     { texto: 'Asignar tarea', href: '/despacho', tambien: ['/imprimir_despacho', '/historial_prestamo'] },
                     { texto: 'Recibir producción', href: '/recepcion_diaria' },
                     { texto: 'Recibir tareas y rezagos', href: '/recepcion_general' }
                 ]},
-                { id: 'envolvedoras', icono: '🌯', texto: 'Envolvedoras', hijos: [
-                    { texto: 'Asignar semana', href: '/envolvedoras/despacho' },
-                    { texto: 'Recibir producción', href: '/envolvedoras/control' }
+                { id: 'bodega', icono: '🏬', texto: 'Bodega', hijos: [
+                    { texto: 'Despachar material', href: '/bodega' },
+                    { texto: 'Mermas y compras', href: '/mermas' }
                 ]},
                 { id: 'anilladores', icono: '💍', texto: 'Anilladores', hijos: [
                     { texto: 'Asignar trabajo', href: '/anilladores/despacho' },
                     { texto: 'Recibir producción', href: '/anilladores/recepcion' },
                     { texto: 'Inventario y personal', href: '/anilladores/inventario' }
+                ]},
+                { id: 'envolvedoras', icono: '🌯', texto: 'Envolvedoras', hijos: [
+                    { texto: 'Asignar semana', href: '/envolvedoras/despacho' },
+                    { texto: 'Recibir producción', href: '/envolvedoras/control' }
                 ]},
                 { id: 'empaque', icono: '🎁', texto: 'Empaque', hijos: [
                     { texto: 'Asignar trabajo', href: '/despachos_empaque', tambien: ['/despacho_empaque'] },
