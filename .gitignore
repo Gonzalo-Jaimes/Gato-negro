@@ -2,3 +2,11 @@ node_modules
 empresa.db
 .env
 ask-argon.bat
+
+# MemPalace per-project files (issue #185)
+mempalace.yaml
+entities.json
+
+# Generados localmente
+documentacion/taller/.omc/
+documentacion/taller/__pycache__/
