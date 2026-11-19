@@ -107,7 +107,7 @@
                style="width: 100%; font-size: 16px; padding: 10px; box-sizing: border-box; border: 2px solid var(--primary); border-radius: 8px; margin-bottom: 4px;"
                oninput="filtrarFabriquines()" onfocus="mostrarDropdown()" onblur="setTimeout(cerrarDropdown, 200)" onkeydown="tecladoFab(event)">
         <span id="buscar_fab_ayuda" class="field-hint" style="display:block; margin-bottom:6px;">Escribe el código o el nombre; usa ↑ ↓ para recorrer la lista y Enter para elegir.</span>
-        <div id="fab_dropdown" role="listbox" aria-label="Fabriquines disponibles" style="display:none; background:var(--bg-card); border: 1px solid var(--primary); border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
+        <div id="fab_dropdown" role="listbox" onmousedown="event.preventDefault()" aria-label="Fabriquines disponibles" style="display:none; background:var(--bg-card); border: 1px solid var(--primary); border-radius: 8px; max-height: 200px; overflow-y: auto; margin-bottom: 20px; position: relative; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.2);">
             <% empleados.forEach(emp => { 
                 const prest = prestamos.find(p => p.empleado_id === emp.id);
                 const saldoPrest = prest ? prest.saldo_pendiente : 0;
@@ -120,7 +120,7 @@
                  data-picadura="<%= emp.saldo_picadura_kg || 0 %>"
                  data-prestamo="<%= saldoPrest %>"
                  data-texto="<%= emp.codigo %> - <%= emp.nombre %>"
-                 onclick="seleccionarFab(this)"
+                 onmousedown="event.preventDefault()" onclick="seleccionarFab(this)"
                  style="padding: 10px 14px; cursor: pointer; color: var(--text-main); border-bottom: 1px solid var(--border-color); font-size: 15px;">
                 <strong><%= emp.codigo %></strong> &ndash; <%= emp.nombre %>
                 <span class="fab-deuda-badge <%= emp.deuda_tabacos > 0 ? 'deuda-roja' : 'deuda-verde' %>">
@@ -311,6 +311,14 @@
     function cerrarDropdown()  { document.getElementById('fab_dropdown').style.display = 'none'; const c = document.getElementById('buscar_fab'); c.setAttribute('aria-expanded', 'false'); marcarOpcion(null); }
     function filtrarFabriquines() {
         const q = document.getElementById('buscar_fab').value.toLowerCase();
+        // Si cambia el texto, la selección anterior deja de ser válida (evita despachar a otra persona)
+        const prev = document.querySelector('.fab-opcion[aria-selected="true"]');
+        if (prev && prev.getAttribute('data-texto').toLowerCase() !== q) {
+            document.getElementById('empleado_id').value = '';
+            prev.setAttribute('aria-selected', 'false');
+            document.getElementById('btn_submit').disabled = true;
+            document.getElementById('resultado_calculo').style.display = 'none';
+        }
         mostrarDropdown();
         marcarOpcion(null);
         document.querySelectorAll('.fab-opcion').forEach(div => {

@@ -93,3 +93,9 @@ Al ejecutar la Tarea 3 (Despacho) con usuarios reales, los datos no aparecían n
 | **Cambio en código** | `src/routes/produccion.js`: el insert ahora valida el error y, si falla, muestra alerta y no emite la hoja; nueva función `registrarSalidaDespacho` que, al confirmar la entrega (`/entregar_sacos` y `/confirmar_entrega_bodega`), descuenta `inventario` y escribe una fila SALIDA por material en el Kardex; nueva pantalla `/despachos_historicos` (`views/produccion/historial_despachos.ejs`) con búsqueda y estado pendiente/entregado, enlazada en el menú. |
 | **Decisión de diseño** | La salida se registra al **entregar** el material (cuando sale físicamente), como definió la versión 2.9.0 al separar factura y entrega; el despacho solo emite la orden. |
 | **Verificación** | Prueba del helper con base simulada (3 filas de Kardex y 3 descuentos de inventario) y render de la vista. Falta la prueba de extremo a extremo con sesión de administrador. |
+
+| Campo | Registro (selector de fabriquín en Despacho) |
+|---|---|
+| **Problema** | Al elegir un fabriquín de la lista con el ratón, la selección no quedaba guardada: el campo se quedaba vacío y `empleado_id` sin valor. Al hacer clic en una opción, el campo de texto perdía el foco y su `onblur` cerraba la lista 200 ms antes de que llegara el clic. |
+| **Cambio en código** | `views/produccion/despacho.ejs`: las opciones y el contenedor evitan quitar el foco al campo (`mousedown` con `preventDefault`), y si el texto cambia después de elegir, se invalida la selección previa para no despachar a otra persona. |
+| **Verificación** | Con ratón: antes `empleado_id` vacío; después `empleado_id = 3` y texto «F06 - ELVIRA LOPEZ». Prueba completa en la base real con F64: despacho HD-000018, entrega en Bodega con una saca de 7 kg, 3 filas SALIDA en el Kardex (capa 1, capote 1,8, picadura 7), inventario descontado, deuda +1000, despacho «Entregado» en el historial. Todos los datos de prueba se revirtieron. |
